@@ -1,0 +1,150 @@
+<main class="flex min-h-screen items-center justify-center px-4">
+
+  <!-- OTP CARD -->
+  <div class="relative w-full max-w-md rounded-2xl bg-[#0b0c10]
+              border border-primary/40
+              shadow-[0_0_40px_rgba(79,70,229,0.18)]
+              p-8 text-center">
+
+    <!-- Accent line -->
+    <div class="absolute inset-x-0 top-0 h-[2px]
+                bg-gradient-to-r from-transparent via-primary to-transparent">
+    </div>
+
+    <h2 class="text-3xl font-bold text-white mb-2">
+      Verify Your Email
+    </h2>
+    <p class="text-gray-400 mb-8">
+      Enter the 6-digit code sent to your email address.
+    </p>
+
+    <!-- OTP INPUTS -->
+    <div class="flex justify-center gap-3 mb-6">
+      <input class="otp-input" maxlength="1" />
+      <input class="otp-input" maxlength="1" />
+      <input class="otp-input" maxlength="1" />
+      <input class="otp-input" maxlength="1" />
+      <input class="otp-input" maxlength="1" />
+      <input class="otp-input" maxlength="1" />
+    </div>
+
+    <!-- VERIFY BUTTON -->
+    <button
+      class="w-full h-12 rounded-lg bg-primary
+             text-white font-bold text-base
+             hover:bg-primary/90 transition-all mb-4">
+      Verify Email
+    </button>
+
+    <!-- TIMER + RESEND -->
+    <p id="timerText" class="text-sm text-gray-400">
+      Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s
+    </p>
+
+    <button
+      id="resendBtn"
+      class="mt-2 text-sm font-semibold text-primary opacity-40 cursor-not-allowed"
+      disabled
+      onclick="resendOTP()">
+      Resend OTP
+    </button>
+
+  </div>
+</main>
+
+<!-- OTP STYLES -->
+<style>
+  .otp-input {
+    width: 3.5rem;
+    height: 3.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    background-color: #0d0d0d;
+    border: 1px solid #3a3a3a;
+    color: white;
+    outline: none;
+  }
+
+  .otp-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4);
+  }
+</style>
+
+<!-- OTP LOGIC -->
+<script>
+  /* ---------------- OTP INPUT LOGIC ---------------- */
+  const inputs = document.querySelectorAll(".otp-input");
+
+  inputs.forEach((input, index) => {
+
+    input.addEventListener("input", (e) => {
+      const value = e.target.value;
+
+      if (!/^[0-9]$/.test(value)) {
+        e.target.value = "";
+        return;
+      }
+
+      if (index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !e.target.value && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+  });
+
+  inputs[0].focus();
+
+  /* ---------------- TIMER LOGIC ---------------- */
+  let timeLeft = 60;
+  const timerEl = document.getElementById("timer");
+  const resendBtn = document.getElementById("resendBtn");
+  const timerText = document.getElementById("timerText");
+
+  const countdown = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(countdown);
+      timerText.textContent = "Didn’t receive the code?";
+      resendBtn.disabled = false;
+      resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
+      resendBtn.classList.add("hover:underline");
+    }
+  }, 1000);
+
+  /* ---------------- RESEND HANDLER ---------------- */
+  function resendOTP() {
+    resendBtn.disabled = true;
+    resendBtn.classList.add("opacity-40", "cursor-not-allowed");
+    resendBtn.classList.remove("hover:underline");
+
+    timeLeft = 60;
+    timerEl.textContent = timeLeft;
+    timerText.innerHTML = 'Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s';
+
+    // restart timer
+    setInterval(() => {
+      timeLeft--;
+      document.getElementById("timer").textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        timerText.textContent = "Didn’t receive the code?";
+        resendBtn.disabled = false;
+        resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
+        resendBtn.classList.add("hover:underline");
+      }
+    }, 1000);
+
+    // 👉 here you will call backend API to resend OTP
+    console.log("OTP resent");
+  }
+</script>

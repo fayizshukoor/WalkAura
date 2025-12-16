@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WalkAura Admin Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class", 
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#4F46E5", 
+                    "background-light": "#f6f6f8", 
+                    "background-dark": "#121121"
+                }, 
+                fontFamily: {
+                    display: "Manrope"
+                }, 
+                borderRadius: {
+                    DEFAULT: "0.25rem", 
+                    lg: "0.5rem", 
+                    xl: "0.75rem", 
+                    full: "9999px"
+                }
+            }
+        }
+    };
+</script>
+<style>
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #101422; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #282c39; 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #3f4454; 
+    }
+</style>
+</head>
+<body class="bg-background-dark text-white font-display min-h-screen flex items-center justify-center overflow-hidden selection:bg-primary selection:text-white relative">
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]"></div>
+</div>
+<main class="w-full flex items-center justify-center p-4 relative z-10">
+<div class="w-full max-w-[420px] bg-[#181a25] rounded-2xl shadow-2xl border border-[#282c39] p-8 md:p-10 relative">
+<div class="text-center mb-8">
+
+<h2 class="text-2xl md:text-3xl font-bold text-white mb-2">WalkAura</h2>
+<p class="text-gray-400 text-sm">Authorized access only</p>
+</div>
+<form class="flex flex-col gap-5">
+<div class="space-y-1.5">
+<label class="sr-only" for="identity">Email or Username</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+<input autocomplete="username" class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-4 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" id="identity" placeholder="Email or Username" type="text"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="sr-only" for="password">Password</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<input autocomplete="current-password" class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-10 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" id="password" placeholder="Password" type="password"/>
+
+<div
+  class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-white"
+  onclick="togglePassword()"
+>
+  <span id="eyeIcon" class="material-symbols-outlined text-[20px]">
+    visibility
+  </span>
+</div>
+
+</div>
+</div>
+<button class="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 text-white text-base font-bold leading-normal tracking-[0.015em] transition-all duration-200 shadow-lg shadow-primary/20" type="submit">
+                Log In
+            </button>
+</form>
+</div>
+</main>
+
+<script>
+  function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      eyeIcon.textContent = "visibility_off";
+    } else {
+      passwordInput.type = "password";
+      eyeIcon.textContent = "visibility";
+    }
+  }
+</script>
+
+</body></html>

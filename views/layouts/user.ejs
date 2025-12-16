@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>WalkAura</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5",
+            "background-light": "#f6f6f8",
+            "background-dark": "#121121",
+          },
+          fontFamily: {
+            display: "Manrope",
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px",
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Scrollbar -->
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #101422;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #282c39;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f4454;
+    } 
+  </style>
+
+
+
+</head>
+
+<body
+  class="text-white font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-primary selection:text-white"
+  style="background-color: #07090f;"
+>
+  <!-- Navbar -->
+  <%- include("../partials/navbar") %>
+
+  <!-- Page Content -->
+  <%- body %>
+
+<!-- Footer-->
+<%- include("../partials/footer") %>
+
+
+  <!-- Navbar Functionalities -->
+
+  <script>
+  function toggleMenu() {
+    const menu = document.getElementById("mobileMenu");
+    if (menu) menu.classList.toggle("hidden");
+  }
+
+  function toggleProfile() {
+    const profile = document.getElementById("profileMenu");
+    if (profile) profile.classList.toggle("hidden");
+  }
+
+  // close profile popup when clicking outside
+  document.addEventListener("click", (e) => {
+    const profile = document.getElementById("profileMenu");
+    if (!profile) return;
+    if (!e.target.closest("[onclick='toggleProfile()']") &&
+        !e.target.closest("#profileMenu")) {
+      profile.classList.add("hidden");
+    }
+  });
+</script>
+
+
+</body>
+</html>
