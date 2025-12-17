@@ -1,43 +1,7 @@
-<!-- <!DOCTYPE html>
-
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>WalkAura Signup</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#4F46E5", "background-light": "#f6f6f8", "background-dark": "#121121"}, fontFamily: {display: "Manrope"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
-<style>::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #101422; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #282c39; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3f4454; 
-        }
-    </style>
-</head>
-<body class="text-white font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-primary selection:text-white" style="background-color: #07090f;">
 
 
 
-
-
-
-
-
-</body></html> -->
-
-
-<main class="flex-grow flex items-center justify-center p-4 py-28 relative w-full">
+<main  class="flex-grow flex items-center justify-center p-4 py-28 relative w-full min-h-[120vh]">
 <div class="absolute inset-0 overflow-hidden pointer-events-none">
 <div class="absolute -top-[10%] left-[50%] -translate-x-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-[120px]"></div>
 </div>
@@ -66,15 +30,18 @@
 <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Or sign up with email</span>
 <div class="h-px flex-1 bg-[#282c39]"></div>
 </div>
-<form class="flex flex-col gap-4">
+<form action="" method="post" class="flex flex-col gap-4">
 <div class="space-y-1">
 <label class="sr-only" for="name">Full Name</label>
 <div class="relative">
 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
 <span class="material-symbols-outlined text-[20px]">person</span>
 </div>
-<input class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-4 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" id="name" placeholder="Full Name" type="text"/>
+<input class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-4 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" name="name" id="name" placeholder="Full Name" type="text"/>
 </div>
+
+<p id="nameError" class="text-sm text-red-500 mt-1 hidden"></p>
+
 </div>
 <div class="space-y-1">
 <label class="sr-only" for="email">Email Address</label>
@@ -82,8 +49,11 @@
 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
 <span class="material-symbols-outlined text-[20px]">mail</span>
 </div>
-<input class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-4 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" id="email" placeholder="Email Address" type="email"/>
+<input class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-4 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm" name="email" id="email" placeholder="Email Address" type="email"/>
 </div>
+
+<p id="emailError" class="text-sm text-red-500 mt-1 hidden"></p>
+
 </div>
 <div class="space-y-1">
 <label class="sr-only" for="phone">Phone Number</label>
@@ -92,8 +62,11 @@
 <span class="material-symbols-outlined text-[18px] mr-1">call</span>
 <span class="font-medium">+91</span>
 </div>
-<input class="block flex-1 h-12 border-0 bg-transparent py-1.5 pl-3 text-white placeholder:text-gray-500 focus:ring-0 sm:text-sm sm:leading-6" id="phone" name="phone" placeholder="Phone Number" type="tel"/>
+<input class="block flex-1 h-12 border-0 bg-transparent py-1.5 pl-3 text-white placeholder:text-gray-500 focus:ring-0 sm:text-sm sm:leading-6" name="phone" id="phone" name="phone" placeholder="Phone Number" type="tel"/>
 </div>
+
+<p id="phoneError" class="text-sm text-red-500 mt-1 hidden"></p>  
+
 </div>
 
 <div class="space-y-1">
@@ -105,10 +78,13 @@
 
 <input
   class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-10 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm"
+  name="password"
   id="password"
   placeholder="Password"
   type="password"
 />
+
+
 
 <div
   class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-white"
@@ -119,6 +95,9 @@
   </span>
 </div>
 </div>
+
+<p id="passwordError" class="text-sm text-red-500 mt-1 hidden"></p>
+
 </div>
 
 <div class="space-y-1">
@@ -130,6 +109,7 @@
 
 <input
   class="block w-full h-12 rounded-lg border-0 bg-[#111218] pl-10 pr-10 text-white ring-1 ring-inset ring-[#282c39] placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-[#0b0c10] transition-all sm:text-sm sm:leading-6 shadow-sm"
+  name="confirm_password"
   id="confirm_password"
   placeholder="Confirm Password"
   type="password"
@@ -144,6 +124,9 @@
   </span>
 </div>
 </div>
+
+<p id="confirmPasswordError" class="text-sm text-red-500 mt-1 hidden"></p>
+
 </div>
 
 
@@ -174,4 +157,90 @@
       icon.textContent = "visibility";
     }
   }
+
+  const form = document.querySelector("form");
+
+  function showError(id, message) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.remove("hidden");
+  }
+
+  function clearErrors() {
+    document.querySelectorAll("p[id$='Error']").forEach(el => {
+      el.textContent = "";
+      el.classList.add("hidden");
+    });
+  }
+
+   ["name", "email", "phone", "password", "confirm_password"].forEach(id => {
+    const input = document.getElementById(id);
+    const errorEl = document.getElementById(id + "Error");
+
+    if (input && errorEl) {
+      input.addEventListener("input", () => {
+        errorEl.textContent = "";
+        errorEl.classList.add("hidden");
+      });
+    }
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    clearErrors();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirm_password").value;
+
+    let isValid = true;
+
+    // Name validation (no numbers, max 30)
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (name.length < 6) {
+      showError("nameError", "Name must be at least 6 characters");
+      isValid = false;
+    } else if (!nameRegex.test(name)) {
+      showError("nameError", "Name should contain only letters and spaces");
+      isValid = false;
+    } else if (name.length > 30) {
+      showError("nameError", "Name must not exceed 30 characters");
+      isValid = false;
+    }
+
+    // Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showError("emailError", "Please enter a valid email address");
+      isValid = false;
+    }
+
+    // Phone (India)
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      showError("phoneError", "Enter a valid 10-digit phone number");
+      isValid = false;
+    }
+
+    // Password
+    if (password.length < 6) {
+      showError("passwordError", "Password must be at least 6 characters");
+      isValid = false;
+    }
+
+    // Confirm password
+    if (password !== confirmPassword) {
+      showError("confirmPasswordError", "Passwords do not match");
+      isValid = false;
+    }
+
+    if (isValid) {
+      form.submit();
+    }
+  });
 </script>
+
+
+
