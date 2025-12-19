@@ -5,6 +5,7 @@
     import expressLayouts from "express-ejs-layouts";
     import { fileURLToPath } from "url";
     import cookieParser from "cookie-parser";
+    import session from "express-session";
     import userRoutes from "./routes/user.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
 
@@ -17,6 +18,17 @@
     app.use(express.urlencoded({extended:true}));
 
     app.use(cookieParser());
+
+    app.use(session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        cookie: { 
+            secure: false, // Set to true if using HTTPS
+            httpOnly: true, 
+            maxAge: 24 * 60 * 60 * 1000
+        }
+    }))
 
     app.use(express.static(path.join(__dirname,"public")))
 
@@ -31,10 +43,12 @@
 
     app.use("/",userRoutes);
 
-
-    app.get("/home",(req,res)=>{
-        res.render("user/home");
+    app.get("/",(req,res)=>{
+        res.redirect("/home");
     })
+
+
+   
 
 
 

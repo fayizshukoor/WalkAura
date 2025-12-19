@@ -25,11 +25,24 @@ const userSchema = new Schema(
 
     googleId:{
         type:String,
-        unique:true
+        unique:true,
+        sparse:true
     },
 
     password:{
         type:String
+    },
+
+    otp:{
+        type:String,
+    },
+    
+    otpExpiry:{
+        type:Date
+    },
+
+    isVerified:{
+        type:Boolean,default:false
     },
     
     isAdmin:{
@@ -44,11 +57,6 @@ const userSchema = new Schema(
 
     profileImage:{
         type:String
-    },
-
-    referralCode:{
-        type:String,
-        unique:true     
     },
 
     passwordChangedAt:{

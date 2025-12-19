@@ -1,3 +1,5 @@
+<form action="/verify-otp" method="post" id="otpForm">
+
 <main class="flex min-h-screen items-center justify-center px-4">
 
   <!-- OTP CARD -->
@@ -18,18 +20,22 @@
       Enter the 6-digit code sent to your email address.
     </p>
 
+
     <!-- OTP INPUTS -->
-    <div class="flex justify-center gap-3 mb-6">
-      <input class="otp-input" maxlength="1" />
-      <input class="otp-input" maxlength="1" />
-      <input class="otp-input" maxlength="1" />
-      <input class="otp-input" maxlength="1" />
-      <input class="otp-input" maxlength="1" />
-      <input class="otp-input" maxlength="1" />
-    </div>
+    <input type="hidden" name="otp" id="finalOtp"> 
+
+  <div class="flex justify-center gap-3 mb-6">
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+  </div>
 
     <!-- VERIFY BUTTON -->
     <button
+      type="submit"
       class="w-full h-12 rounded-lg bg-primary
              text-white font-bold text-base
              hover:bg-primary/90 transition-all mb-4">
@@ -51,6 +57,8 @@
 
   </div>
 </main>
+
+</form>
 
 <!-- OTP STYLES -->
 <style>
@@ -76,31 +84,64 @@
 <!-- OTP LOGIC -->
 <script>
   /* ---------------- OTP INPUT LOGIC ---------------- */
-  const inputs = document.querySelectorAll(".otp-input");
+ const otpInputs = document.querySelectorAll(".otp-input");
+const otpForm = document.getElementById("otpForm");
+const finalOtpInput = document.getElementById("finalOtp");
 
-  inputs.forEach((input, index) => {
-
-    input.addEventListener("input", (e) => {
-      const value = e.target.value;
-
-      if (!/^[0-9]$/.test(value)) {
-        e.target.value = "";
-        return;
-      }
-
-      if (index < inputs.length - 1) {
-        inputs[index + 1].focus();
-      }
-    });
-
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !e.target.value && index > 0) {
-        inputs[index - 1].focus();
-      }
-    });
+// 1. Handle Typing and Backspace (Your existing logic + focus fix)
+otpInputs.forEach((input, index) => {
+  input.addEventListener("input", (e) => {
+    if (e.target.value.length > 1) {
+      e.target.value = e.target.value.slice(0, 1); // Prevent extra chars
+    }
+    if (e.target.value && index < otpInputs.length - 1) {
+      otpInputs[index + 1].focus();
+    }
   });
 
-  inputs[0].focus();
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !e.target.value && index > 0) {
+      otpInputs[index - 1].focus();
+    }
+  });
+
+  // 2. THE PASTE LOGIC
+  input.addEventListener("paste", (e) => {
+    e.preventDefault(); // Stop default paste behavior
+    const data = e.clipboardData.getData("text").trim();
+    
+    // Check if pasted data is numeric and roughly the right length
+    if (!/^\d+$/.test(data)) return; 
+
+    const characters = data.split("");
+    
+    characters.forEach((char, i) => {
+      if (index + i < otpInputs.length) {
+        otpInputs[index + i].value = char;
+      }
+    });
+
+    // Set focus to the last filled box or the next empty one
+    const nextIndex = index + characters.length;
+    if (nextIndex < otpInputs.length) {
+      otpInputs[nextIndex].focus();
+    } else {
+      otpInputs[otpInputs.length - 1].focus();
+    }
+  });
+});
+
+// 3. Prepare data for Backend on Submit
+otpForm.addEventListener("submit", (e) => {
+  let code = "";
+  otpInputs.forEach(input => code += input.value);
+  finalOtpInput.value = code; // Put the 6 digits into the hidden input
+
+  if (code.length < 6) {
+    e.preventDefault();
+    alert("Please enter the full 6-digit code");
+  }
+});
 
   /* ---------------- TIMER LOGIC ---------------- */
   let timeLeft = 60;
