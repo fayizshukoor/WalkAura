@@ -45,6 +45,8 @@ export const sendOTP = async(email)=>{
             otp
         });
 
+        return true;
+
          }catch(error){
             console.error("Error sending OTP",error);
 

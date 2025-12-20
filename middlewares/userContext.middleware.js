@@ -26,7 +26,7 @@ export const userContext = async(req,res,next)=>{
 
         req.user = user;
 
-        req.locals.user = user;
+        res.locals.user = user;
 
         next();
 
@@ -34,7 +34,7 @@ export const userContext = async(req,res,next)=>{
     }catch(error){
 
         res.clearCookie("token");
-        res.user = null;
+        res.locals.user = null;
         next();
     }
 }

@@ -1,5 +1,6 @@
 import OTP from "../../models/OTP.model.js";
 import User from "../../models/User.model.js"
+import jwt from "jsonwebtoken";
 
 
 export const verifyOTP = async(req,res)=>{
@@ -34,8 +35,29 @@ export const verifyOTP = async(req,res)=>{
             return res.status(400).render("user/verify-otp",{error:`Invalid OTP. ${5 - otpRecord.attempts} attempts remaining` });
         }
 
-        let updated = await User.updateOne({email},{isVerified:true});
-        console.log("User verified succesfully",updated);
+        let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
+
+        if(!user){
+            return res.render("user/verify-otp",{error:"User Not Found"});
+        }
+
+        const token = jwt.sign(
+            {userId:user._id},
+            process.env.JWT_SECRET,
+            {expiresIn:"1d"}
+        );
+
+        res.cookie("token",token,{
+            httpOnly:true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite:"strict"
+        });
+
+
+        await OTP.deleteMany({email});
+        req.session.email=null;
+        
+        console.log("User verified succesfully",user);
 
         res.status(200).redirect("/home");
 

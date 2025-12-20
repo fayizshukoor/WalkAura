@@ -53,7 +53,7 @@ export const signup = async (req, res) => {
 
     
     console.log(newUser);
-    return res.render("user/verify-otp");
+    return res.redirect("/verify-otp");
   } catch (error) {
     console.error("Error Saving User", error);
     res.status(500).send("Internal Server Error");

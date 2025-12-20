@@ -12,7 +12,7 @@ const otpSchema = new mongoose.Schema({
     },
     createdAt:{
         type:Date,
-        default:Date.now(),
+        default:Date.now,
         expires:300
     },
     attempts:{
@@ -22,6 +22,5 @@ const otpSchema = new mongoose.Schema({
     },
 })
 
-otpSchema.index({email:1});
 
 export default mongoose.model("OTP",otpSchema);
