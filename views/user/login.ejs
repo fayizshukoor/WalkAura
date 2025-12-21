@@ -55,6 +55,16 @@
       >
       <div class="h-px flex-1 bg-[#282c39]"></div>
     </div>
+
+    <% if (typeof error !== "undefined") { %>
+    <div
+      id="flashAlert"
+      class="mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center"
+    >
+      <%= error %>
+    </div>
+    <% } %>
+
     <form action="/login" method="post" class="flex flex-col gap-4">
       <div class="space-y-1">
         <label class="sr-only" for="email">Email Address</label>
@@ -116,7 +126,9 @@
     <div class="mt-8 text-center">
       <p class="text-sm text-gray-400">
         Don’t have an account?
-        <a class="font-bold text-primary hover:text-primary/80 ml-1" href="#"
+        <a
+          class="font-bold text-primary hover:text-primary/80 ml-1"
+          href="/signup"
           >Sign up</a
         >
       </p>

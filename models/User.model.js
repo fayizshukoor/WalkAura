@@ -32,21 +32,19 @@ const userSchema = new Schema(
         type:String
     },
 
-    otp:{
-        type:String,
-    },
-    
-    otpExpiry:{
-        type:Date
-    },
-
     isVerified:{
         type:Boolean,default:false
     },
+
+    refreshToken:{
+        type:String,
+        default:null
+    },
     
-    isAdmin:{
-        type:Boolean,
-        default:false
+    role:{
+        type:String,
+        enum:["user","admin"],
+        default:"user"
     },
 
     isBlocked:{

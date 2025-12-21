@@ -8,6 +8,7 @@
     import session from "express-session";
     import userRoutes from "./routes/user.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
+    import { authenticateUser } from "./middlewares/auth.middleware.js";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@
 
     app.set("layout","layouts/user")
 
+    app.use(authenticateUser);
     app.use(userContext);
 
     app.use("/",userRoutes);

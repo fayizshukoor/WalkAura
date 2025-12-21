@@ -1,7 +1,5 @@
 import OTP from "../../models/OTP.model.js";
 import User from "../../models/User.model.js"
-import jwt from "jsonwebtoken";
-
 
 export const verifyOTP = async(req,res)=>{
 
@@ -41,25 +39,12 @@ export const verifyOTP = async(req,res)=>{
             return res.render("user/verify-otp",{error:"User Not Found"});
         }
 
-        const token = jwt.sign(
-            {userId:user._id},
-            process.env.JWT_SECRET,
-            {expiresIn:"1d"}
-        );
-
-        res.cookie("token",token,{
-            httpOnly:true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite:"strict"
-        });
-
-
         await OTP.deleteMany({email});
-        req.session.email=null;
+        req.session.destroy();
         
         console.log("User verified succesfully",user);
 
-        res.status(200).redirect("/home");
+        res.redirect("/login");
 
 
     }catch(error){

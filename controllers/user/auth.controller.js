@@ -1,7 +1,7 @@
 import User from "../../models/User.model.js";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import {sendOTP} from "../../utils/sendOtp.util.js";
+import {sendOTP} from "../../utils/generateAndSendOtp.util.js";
+import { generateAccessToken,generateRefreshToken } from "../../utils/jwt.utils.js";
 
 
 export const showSignup = async (req, res) => {
@@ -85,17 +85,63 @@ export const showLogin = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
-  // DB
+  const user = await User.findOne({email});
 
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
+  if(!user || !user.isVerified){
+    return res.render("user/login",{error:"Invalid Email"})
+  }
+
+  const isMatch = await bcrypt.compare(password,user.password);
+
+  if(!isMatch){
+    return res.render("user/login",{error:"Password Incorrect"});
+  }
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  res.cookie("accessToken",accessToken,{
+    httpOnly:true,
+    secure:process.env.NODE_ENV === "production",
+    maxAge:15*60*1000
   });
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.cookie("refreshToken",refreshToken,{
+    httpOnly:true,
+    secure:process.env.NODE_ENV === "production",
+    maxAge:7*24*60*60*1000
+  })
+
 
   res.redirect("/home");
 };
+
+
+export const logout = async(req,res)=>{
+
+  try{
+
+    if(req.user?.userId){
+    await User.findOneAndUpdate(
+      {_id:req.user.userId},
+      {refreshToken:null}
+    );
+  }
+
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  return res.redirect("/login");
+
+  }catch(error){
+
+    console.error("Logout Error:",error);
+    return res.redirect("/login");
+
+  }
+
+
+}

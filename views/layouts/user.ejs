@@ -81,27 +81,27 @@
 
   <!-- Navbar Functionalities -->
 
-  <script>
-  function toggleMenu() {
-    const menu = document.getElementById("mobileMenu");
-    if (menu) menu.classList.toggle("hidden");
-  }
-
-  function toggleProfile() {
-    const profile = document.getElementById("profileMenu");
-    if (profile) profile.classList.toggle("hidden");
-  }
-
-  // close profile popup when clicking outside
-  document.addEventListener("click", (e) => {
-    const profile = document.getElementById("profileMenu");
-    if (!profile) return;
-    if (!e.target.closest("[onclick='toggleProfile()']") &&
-        !e.target.closest("#profileMenu")) {
-      profile.classList.add("hidden");
+    <script>
+    function toggleMenu() {
+      const menu = document.getElementById("mobileMenu");
+      if (menu) menu.classList.toggle("hidden");
     }
-  });
-</script>
+
+    function toggleProfile() {
+      const profile = document.getElementById("profileMenu");
+      if (profile) profile.classList.toggle("hidden");
+    }
+
+    // close profile popup when clicking outside
+    document.addEventListener("click", (e) => {
+      const profile = document.getElementById("profileMenu");
+      if (!profile) return;
+      if (!e.target.closest("[onclick='toggleProfile()']") &&
+          !e.target.closest("#profileMenu")) {
+        profile.classList.add("hidden");
+      }
+    });
+  </script>
 
 
 </body>

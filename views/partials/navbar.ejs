@@ -30,37 +30,59 @@
       </a>
 
       <!-- Profile -->
-      <div class="relative">
-        <button onclick="toggleProfile()" class="text-gray-300 hover:text-white">
-          <span class="material-symbols-outlined text-[26px]">account_circle</span>
-        </button>
+     <% const user = locals.user || null; %>
 
-        <!-- PROFILE POPUP -->
-        <div
-          id="profileMenu"
-          class="absolute right-0 mt-3 w-40 bg-[#181a25]
-                border border-[#282c39] rounded-xl shadow-xl
-                hidden z-50"
-        >
-        <% const user = locals.user || null; %>
+<!-- AUTH / PROFILE SECTION -->
+<% if (user) { %>
+  <!-- LOGGED IN -->
+  <div class="relative flex items-center gap-2 cursor-pointer"
+       onclick="toggleProfile()">
 
-          <% if (typeof user !== "undefined" && user) { %>
+    <span class="material-symbols-outlined text-[26px] text-gray-300">
+      account_circle
+    </span>
+
+    <!-- User name (desktop only) -->
+    <span class="text-sm text-white font-medium hidden md:block">
+      <%= user.name %>
+    </span>
+
+    <!-- PROFILE DROPDOWN -->
+    <div
+      id="profileMenu"
+      class="absolute right-0 top-12 w-40 bg-[#181a25]
+             border border-[#282c39] rounded-xl shadow-xl
+             hidden z-50"
+    >
       <a href="/profile" class="mobile-link flex gap-2 py-2">
-        <span class="material-symbols-outlined">person</span> Profile
+        <span class="material-symbols-outlined">person</span>
+        Profile
       </a>
-      <a href="/logout" class="mobile-link text-red-400 flex gap-2 py-2">
-        <span class="material-symbols-outlined">logout</span> Logout
+
+      <a href="/logout"
+         class="mobile-link text-red-400 flex gap-2 py-2">
+        <span class="material-symbols-outlined">logout</span>
+        Logout
       </a>
-    <% } else { %>
-      <a href="/login" class="mobile-link flex gap-2 py-2">
-        <span class="material-symbols-outlined">login</span> Login
-      </a>
-      <a href="/signup" class="mobile-link flex gap-2 py-2">
-        <span class="material-symbols-outlined">person_add</span> Sign Up
-      </a>
-    <% } %>
-        </div>
-      </div>
+    </div>
+  </div>
+
+<% } else { %>
+  <!-- LOGGED OUT -->
+  <div class="flex items-center gap-4">
+    <a href="/login"
+       class="text-sm font-medium text-gray-300 hover:text-white transition">
+      Login
+    </a>
+
+    <a href="/signup"
+       class="px-4 py-2 text-sm font-semibold text-white
+              bg-primary rounded-lg hover:bg-primary/90 transition">
+      Sign Up
+    </a>
+  </div>
+<% } %>
+
 
       <!-- Hamburger -->
       <button class="md:hidden text-gray-300 hover:text-white" onclick="toggleMenu()">
