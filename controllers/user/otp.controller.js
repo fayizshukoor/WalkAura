@@ -1,10 +1,12 @@
 import OTP from "../../models/OTP.model.js";
-import User from "../../models/User.model.js"
+import User from "../../models/User.model.js";
+import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 
 export const verifyOTP = async(req,res)=>{
 
     try{
         const email = req.session.email;
+        console.log(email);
 
         if(!email){
             return res.redirect("/signup");
@@ -53,4 +55,33 @@ export const verifyOTP = async(req,res)=>{
         res.status(500).render("user/verify-otp",{ error: "Failed to verify OTP" });
     }
 }
+
+export const resendOTP = async (req,res)=>{
+    try{
+
+        const email = req.session.email;
+        console.log(email);
+        
+
+        if(!email){
+            return res.status(400).json({message:"Session expired.Please signup again."});
+        }
+
+        await sendOTP(email);
+       
+
+        return res.status(200).json({message:"OTP resent successfully"});
+
+    }catch(error){
+
+        if(error.message === "OTP_RATE_LIMIT"){
+            return res.status(429).json({message:"Please wait 60 seconds before sending next OTP"});
+        }
+
+        console.error("Resend OTP error:",error);
+
+        return res.status(500).json({message:"Failed to resend OTP"});
+
+    }
+};
 

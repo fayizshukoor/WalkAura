@@ -8,7 +8,7 @@ export const generateAccessToken = (user)=>{
         },
         process.env.JWT_ACCESS_SECRET,
         {
-            expiresIn:"15m"
+            expiresIn:"15s"
         }
     );
 };
@@ -21,7 +21,7 @@ export const generateRefreshToken = (user)=>{
         },
         process.env.JWT_REFRESH_SECRET,
         {
-            expiresIn:"1d"
+            expiresIn:"7d"
         }
     );
 };

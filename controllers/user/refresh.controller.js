@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../../models/User.model.js";
 
 export const refreshAccessToken = async (req,res)=>{
-    const refreshToken = req.cookie?.refreshToken;
+    const refreshToken = req.cookies?.refreshToken;
 
     if(!refreshToken){
         return res.redirect("/login"); 
@@ -11,11 +11,13 @@ export const refreshAccessToken = async (req,res)=>{
     try{
 
         const decoded = jwt.verify(refreshToken,process.env.JWT_REFRESH_SECRET);
+      
 
-        const user = User.findById(decoded.userId);
+        const user = await User.findById(decoded.userId);
+        
 
-        if(!user || user.isBlocked || user.refreshToken !== refreshToken){
-
+        if(!user || user.isBlocked){
+           
             res.clearCookie("accessToken");
             res.clearCookie("refreshToken");
 
@@ -29,24 +31,27 @@ export const refreshAccessToken = async (req,res)=>{
             },
             process.env.JWT_ACCESS_SECRET,
             {
-                expiresIn:"15m"
+                expiresIn:"15s"
             }
         );
 
         res.cookie("accessToken",newAccessToken,{
             httpOnly:true,
-            secure:NODE_ENV === "production",
+            secure:process.env.NODE_ENV === "production",
             sameSite:"strict",
-            maxAge:15*60*1000
+            maxAge:15*1000
         });
-        console.log("new access token");
-        return res.redirect("back");
+        
+        const redirectTo = req.session.returnTo || "Referer";
+        delete req.session.returnTo;
+        return res.redirect(redirectTo);
 
 
     }catch(error){
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
 
+        console.log("expired or Invalid");
         res.redirect("/login");
 
     }

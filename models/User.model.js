@@ -35,11 +35,6 @@ const userSchema = new Schema(
     isVerified:{
         type:Boolean,default:false
     },
-
-    refreshToken:{
-        type:String,
-        default:null
-    },
     
     role:{
         type:String,

@@ -206,7 +206,7 @@
 
     // Name validation (no numbers, max 30)
     const nameRegex = /^[A-Za-z\s]+$/;
-    if (name.length < 3) {
+    if (name.trim().length < 3) {
       showError("nameError", "Name must be at least 3 characters");
       isValid = false;
     } else if (!nameRegex.test(name)) {

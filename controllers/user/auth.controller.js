@@ -22,6 +22,26 @@ export const signup = async (req, res) => {
         .render("user/signup", { error: "Name can only contain letters" });
     }
 
+    if (name.length > 30 || name.length < 3) {
+      return res.render("user/signup", {
+        error: "Name should be between 3-30 characters",
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.render("user/signup", {
+        error: "Please enter a valid email address",
+      });
+    }
+
+    const phoneRegex =  /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.render("user/signup", {
+        error: "Please enter a valid Phone Number",
+      });
+    }
+
     if (password.length < 6) {
       return res.render("user/signup", {
         error: "Password need minimum 6 characters",
@@ -100,13 +120,11 @@ export const login = async (req, res) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   
-  user.refreshToken = refreshToken;
-  await user.save();
 
   res.cookie("accessToken",accessToken,{
     httpOnly:true,
     secure:process.env.NODE_ENV === "production",
-    maxAge:15*60*1000
+    maxAge:15*1000
   });
 
   res.cookie("refreshToken",refreshToken,{
@@ -124,22 +142,15 @@ export const logout = async(req,res)=>{
 
   try{
 
-    if(req.user?.userId){
-    await User.findOneAndUpdate(
-      {_id:req.user.userId},
-      {refreshToken:null}
-    );
-  }
-
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
 
-  return res.redirect("/login");
+  return res.redirect("/home");
 
   }catch(error){
 
     console.error("Logout Error:",error);
-    return res.redirect("/login");
+    return res.redirect("/home");
 
   }
 

@@ -70,7 +70,9 @@
   style="background-color: #07090f;"
 >
   <!-- Navbar -->
-  <%- include("../partials/navbar") %>
+   <% if (!locals.hideHeader) { %>
+      <%- include("../partials/navbar") %>
+    <% } %>
 
   <!-- Page Content -->
   <%- body %>

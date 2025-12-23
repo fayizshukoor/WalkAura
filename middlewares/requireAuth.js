@@ -3,9 +3,10 @@ export const requireAuth = (req,res,next)=>{
         return next();
     }
 
-    if(req.cookie?.refreshToken){
-        
+    if(req.cookies?.refreshToken){
+       req.session.returnTo = req.originalUrl;
         return res.redirect("/refresh");
     }
+  
     return res.redirect("/login");
 }

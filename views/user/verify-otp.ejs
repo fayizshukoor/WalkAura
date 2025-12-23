@@ -20,6 +20,13 @@
       Enter the 6-digit code sent to your email address.
     </p>
 
+    <% if (typeof error !== "undefined" && error) { %>
+  <div class="mb-4 text-sm text-red-400 bg-red-500/10
+              border border-red-500/20 rounded-lg px-4 py-3">
+    <%= error %>
+  </div>
+<% } %>
+
 
     <!-- OTP INPUTS -->
     <input type="hidden" name="otp" id="finalOtp"> 
@@ -144,7 +151,7 @@ otpForm.addEventListener("submit", (e) => {
 });
 
   /* ---------------- TIMER LOGIC ---------------- */
-  let timeLeft = 60;
+  let timeLeft = 30;
   const timerEl = document.getElementById("timer");
   const resendBtn = document.getElementById("resendBtn");
   const timerText = document.getElementById("timerText");
@@ -163,21 +170,39 @@ otpForm.addEventListener("submit", (e) => {
   }, 1000);
 
   /* ---------------- RESEND HANDLER ---------------- */
-  function resendOTP() {
+
+  async function resendOTP() {
+  try {
     resendBtn.disabled = true;
     resendBtn.classList.add("opacity-40", "cursor-not-allowed");
     resendBtn.classList.remove("hover:underline");
 
-    timeLeft = 60;
-    timerEl.textContent = timeLeft;
-    timerText.innerHTML = 'Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s';
+    const res = await fetch("/resend-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
 
-    // restart timer
-    setInterval(() => {
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Please wait before resending OTP");
+      return;
+    }
+
+    // Reset timer UI
+    timeLeft = 30;
+    timerText.innerHTML =
+      'Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s';
+    timerEl.textContent = timeLeft;
+
+    const interval = setInterval(() => {
       timeLeft--;
-      document.getElementById("timer").textContent = timeLeft;
+      timerEl.textContent = timeLeft;
 
       if (timeLeft <= 0) {
+        clearInterval(interval);
         timerText.textContent = "Didn’t receive the code?";
         resendBtn.disabled = false;
         resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
@@ -185,7 +210,14 @@ otpForm.addEventListener("submit", (e) => {
       }
     }, 1000);
 
-    // 👉 here you will call backend API to resend OTP
-    console.log("OTP resent");
+  } catch (err) {
+    alert("Something went wrong. Try again.");
   }
+
+  // 👉 here you will call backend API to resend OTP
+    console.log("OTP resent");
+}
+
+    
+  
 </script>

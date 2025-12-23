@@ -1,20 +1,20 @@
 import User from "../models/User.model.js";
 
 export const userContext = async(req,res,next)=>{
-    
-    if(!req.user?.userId){
-        res.locals.user=null;
-        return next();
+
+    res.locals.hasRefreshSession = !!req.cookies?.refreshToken;
+
+    res.locals.user = null;
+
+    if(req.user?.userId){
+
+        const user = await User.findById(req.user.userId).lean();
+
+        if(user || !user.isBlocked){
+            
+            res.locals.user = user;
+        }
     }
-
-    const user = await User.findById(req.user.userId).lean();
-
-    if(!user || user.isBlocked){
-        res.locals.user = null;
-        return next();
-    }
-
-    res.locals.user = user;
-    console.log(user);
+       
     next();
 };

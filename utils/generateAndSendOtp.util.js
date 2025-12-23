@@ -11,7 +11,7 @@ export const sendOTP = async(email)=>{
 
         const recentOTP = await OTP.findOne({
             email,
-            createdAt:{$gte: new Date(Date.now()-60000)}
+            createdAt:{$gte: new Date(Date.now()-30000)}
         });
 
         if(recentOTP){
@@ -49,6 +49,7 @@ export const sendOTP = async(email)=>{
 
          }catch(error){
             console.error("Error sending OTP",error);
+            throw error;
 
          }
        
