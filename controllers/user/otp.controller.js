@@ -18,33 +18,57 @@ export const verifyOTP = async(req,res)=>{
         }).sort({createdAt:-1});
 
         if(!otpRecord){
-            return res.render("user/verify-otp",{error:"OTP Invalid or expired"});
+            req.session.flash = {
+                type:"error",
+                message:"OTP Invalid or expired"
+            };
+            return res.redirect("/verify-otp");
         }
 
         if(otpRecord.attempts >=5){
             await OTP.deleteOne({_id:otpRecord._id});
              console.log("Too many attempts");
-            return res.status(400).render("user/verify-otp",{error:"Too many failed attempts. Please request a new OTP"});
+            req.session.flash = {
+                type:"error",
+                message:"Too many failed attempts. Please request a new OTP"
+            };
+            return res.redirect("/verify-otp");
            
         }
+
+
 
         if(otpRecord.otp !== otp){
             otpRecord.attempts+=1;
             await otpRecord.save();
              console.log("Low attempts");
-            return res.status(400).render("user/verify-otp",{error:`Invalid OTP. ${5 - otpRecord.attempts} attempts remaining` });
+             req.session.flash = {
+                type:"error",
+                message:`OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`
+            };
+            return res.redirect("/verify-otp");
         }
 
         let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
 
         if(!user){
-            return res.render("user/verify-otp",{error:"User Not Found"});
+            req.session.flash = {
+                type:"error",
+                message:"User Not Found"
+            };
+            return res.redirect("/verify-otp");
         }
 
         await OTP.deleteMany({email});
-        req.session.destroy();
         
         console.log("User verified succesfully",user);
+
+        req.session.flash = {
+            type: "success",
+            message: "Email verified successfully. Please log in."
+        };
+
+        delete req.session.email;
 
         res.redirect("/login");
 
@@ -52,9 +76,15 @@ export const verifyOTP = async(req,res)=>{
     }catch(error){
 
         console.error('OTP Verify Error:', error);
-        res.status(500).render("user/verify-otp",{ error: "Failed to verify OTP" });
+
+        req.session.flash = {
+                type:"error",
+                message:"Failed to verify OTP"
+            };
+            return res.redirect("/verify-otp");
+        }
     }
-}
+
 
 export const resendOTP = async (req,res)=>{
     try{
@@ -75,7 +105,7 @@ export const resendOTP = async (req,res)=>{
     }catch(error){
 
         if(error.message === "OTP_RATE_LIMIT"){
-            return res.status(429).json({message:"Please wait 60 seconds before sending next OTP"});
+            return res.status(429).json({message:"Please wait 30 seconds before sending next OTP"});
         }
 
         console.error("Resend OTP error:",error);

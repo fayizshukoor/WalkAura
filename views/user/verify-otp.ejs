@@ -16,29 +16,31 @@
     <h2 class="text-3xl font-bold text-white mb-2">
       Verify Your Email
     </h2>
-    <p class="text-gray-400 mb-8">
+
+    <p class="text-gray-400 mb-6">
       Enter the 6-digit code sent to your email address.
     </p>
 
-    <% if (typeof error !== "undefined" && error) { %>
-  <div class="mb-4 text-sm text-red-400 bg-red-500/10
-              border border-red-500/20 rounded-lg px-4 py-3">
-    <%= error %>
-  </div>
-<% } %>
-
+    <!-- ✅ SHARED ERROR BOX -->
+    <div
+      id="otpError"
+      class="mb-4 text-sm text-red-400 bg-red-500/10
+             border border-red-500/20 rounded-lg px-4 py-3
+             <%= typeof error !== 'undefined' && error ? '' : 'hidden' %>">
+      <%= typeof error !== 'undefined' ? error : '' %>
+    </div>
 
     <!-- OTP INPUTS -->
-    <input type="hidden" name="otp" id="finalOtp"> 
+    <input type="hidden" name="otp" id="finalOtp">
 
-  <div class="flex justify-center gap-3 mb-6">
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-  </div>
+    <div class="flex justify-center gap-3 mb-6">
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+    </div>
 
     <!-- VERIFY BUTTON -->
     <button
@@ -50,11 +52,20 @@
     </button>
 
     <!-- TIMER + RESEND -->
-    <p id="timerText" class="text-sm text-gray-400">
-      Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s
-    </p>
+   <p id="timerText" class="text-sm text-gray-400 mb-1">
+  <span id="timerWrapper">
+    Resend OTP in <span id="timer" class="text-primary font-semibold">30</span>s
+  </span>
+
+  <span id="resendMessage" class="hidden">
+    Didn’t receive the code?
+  </span>
+</p>
+
+
 
     <button
+      type="button"
       id="resendBtn"
       class="mt-2 text-sm font-semibold text-primary opacity-40 cursor-not-allowed"
       disabled
@@ -90,17 +101,27 @@
 
 <!-- OTP LOGIC -->
 <script>
-  /* ---------------- OTP INPUT LOGIC ---------------- */
- const otpInputs = document.querySelectorAll(".otp-input");
+/* ---------------- SHARED ELEMENTS ---------------- */
+const otpInputs = document.querySelectorAll(".otp-input");
 const otpForm = document.getElementById("otpForm");
 const finalOtpInput = document.getElementById("finalOtp");
+const errorBox = document.getElementById("otpError");
 
-// 1. Handle Typing and Backspace (Your existing logic + focus fix)
+const resendBtn = document.getElementById("resendBtn");
+const timerEl = document.getElementById("timer");
+const timerText = document.getElementById("timerText");
+
+/* ---------------- OTP INPUT UX ---------------- */
 otpInputs.forEach((input, index) => {
   input.addEventListener("input", (e) => {
-    if (e.target.value.length > 1) {
-      e.target.value = e.target.value.slice(0, 1); // Prevent extra chars
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 1);
+
+    // clear error when user types again
+    if (!errorBox.classList.contains("hidden")) {
+      errorBox.classList.add("hidden");
+      errorBox.textContent = "";
     }
+
     if (e.target.value && index < otpInputs.length - 1) {
       otpInputs[index + 1].focus();
     }
@@ -112,112 +133,94 @@ otpInputs.forEach((input, index) => {
     }
   });
 
-  // 2. THE PASTE LOGIC
   input.addEventListener("paste", (e) => {
-    e.preventDefault(); // Stop default paste behavior
-    const data = e.clipboardData.getData("text").trim();
-    
-    // Check if pasted data is numeric and roughly the right length
-    if (!/^\d+$/.test(data)) return; 
-
-    const characters = data.split("");
-    
-    characters.forEach((char, i) => {
-      if (index + i < otpInputs.length) {
+    e.preventDefault();
+    const data = e.clipboardData.getData("text").replace(/\D/g, "");
+    data.split("").forEach((char, i) => {
+      if (otpInputs[index + i]) {
         otpInputs[index + i].value = char;
       }
     });
-
-    // Set focus to the last filled box or the next empty one
-    const nextIndex = index + characters.length;
-    if (nextIndex < otpInputs.length) {
-      otpInputs[nextIndex].focus();
-    } else {
-      otpInputs[otpInputs.length - 1].focus();
-    }
   });
 });
 
-// 3. Prepare data for Backend on Submit
+/* ---------------- FORM SUBMIT ---------------- */
 otpForm.addEventListener("submit", (e) => {
   let code = "";
   otpInputs.forEach(input => code += input.value);
-  finalOtpInput.value = code; // Put the 6 digits into the hidden input
+  finalOtpInput.value = code;
 
   if (code.length < 6) {
     e.preventDefault();
-    alert("Please enter the full 6-digit code");
+    errorBox.textContent = "Please enter the full 6-digit code";
+    errorBox.classList.remove("hidden");
   }
 });
 
-  /* ---------------- TIMER LOGIC ---------------- */
-  let timeLeft = 30;
-  const timerEl = document.getElementById("timer");
-  const resendBtn = document.getElementById("resendBtn");
-  const timerText = document.getElementById("timerText");
+/* ---------------- TIMER LOGIC ---------------- */
+let timeLeft = 30;
+let countdownInterval = null;
 
-  const countdown = setInterval(() => {
+function startTimer(seconds) {
+  clearInterval(countdownInterval);
+
+  const timerWrapper = document.getElementById("timerWrapper");
+  const resendMessage = document.getElementById("resendMessage");
+
+  // reset UI
+  timerWrapper.classList.remove("hidden");
+  resendMessage.classList.add("hidden");
+
+  resendBtn.disabled = true;
+  resendBtn.classList.add("opacity-40", "cursor-not-allowed");
+  resendBtn.classList.remove("hover:underline");
+
+  timeLeft = seconds;
+  timerEl.textContent = timeLeft;
+
+  countdownInterval = setInterval(() => {
     timeLeft--;
     timerEl.textContent = timeLeft;
 
     if (timeLeft <= 0) {
-      clearInterval(countdown);
-      timerText.textContent = "Didn’t receive the code?";
+      clearInterval(countdownInterval);
+
+      timerWrapper.classList.add("hidden");
+      resendMessage.classList.remove("hidden");
+
       resendBtn.disabled = false;
       resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
       resendBtn.classList.add("hover:underline");
     }
   }, 1000);
+}
 
-  /* ---------------- RESEND HANDLER ---------------- */
 
-  async function resendOTP() {
+// start timer on page load
+startTimer(30);
+
+/* ---------------- RESEND OTP (AJAX) ---------------- */
+async function resendOTP() {
   try {
     resendBtn.disabled = true;
     resendBtn.classList.add("opacity-40", "cursor-not-allowed");
     resendBtn.classList.remove("hover:underline");
 
-    const res = await fetch("/resend-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
+    const res = await fetch("/resend-otp", { method: "POST" });
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Please wait before resending OTP");
+      errorBox.textContent = data.message || "Please wait before resending OTP";
+      errorBox.classList.remove("hidden");
       return;
     }
 
-    // Reset timer UI
-    timeLeft = 30;
-    timerText.innerHTML =
-      'Resend OTP in <span id="timer" class="text-primary font-semibold">60</span>s';
-    timerEl.textContent = timeLeft;
-
-    const interval = setInterval(() => {
-      timeLeft--;
-      timerEl.textContent = timeLeft;
-
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        timerText.textContent = "Didn’t receive the code?";
-        resendBtn.disabled = false;
-        resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
-        resendBtn.classList.add("hover:underline");
-      }
-    }, 1000);
+    // restart timer on success
+    startTimer(30);
 
   } catch (err) {
-    alert("Something went wrong. Try again.");
+    errorBox.textContent = "Something went wrong. Try again.";
+    errorBox.classList.remove("hidden");
   }
-
-  // 👉 here you will call backend API to resend OTP
-    console.log("OTP resent");
 }
-
-    
-  
 </script>

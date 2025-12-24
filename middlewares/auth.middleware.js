@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-export const authenticateUser =  async(req,res,next)=>{
+export const authenticateUser = (req,res,next)=>{
     const accessToken = req.cookies?.accessToken;
 
     req.user = null;
@@ -20,3 +20,24 @@ export const authenticateUser =  async(req,res,next)=>{
 
 
 }
+
+export const redirectIfAuthenticated = (req,res,next)=>{
+    if(req.user){
+        return res.redirect("/home");
+    }
+    next();
+}
+
+export const noCache =  (req,res,next)=>{
+    res.setHeader("Cache-Control","no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+}
+
+export const requireOtpSession = (req, res, next) => {
+  if (!req.session?.email) {
+    return res.redirect("/signup");
+  }
+  next();
+};

@@ -56,7 +56,15 @@
       <div class="h-px flex-1 bg-[#282c39]"></div>
     </div>
 
-    <% if (typeof error !== "undefined") { %>
+    <% if (typeof success !== "undefined" && success) { %>
+    <div
+      class="mb-4 rounded-lg bg-green-500/10 text-green-400 px-4 py-3 text-sm font-medium text-center"
+    >
+      <%= success %>
+    </div>
+    <% } %>
+
+    <% if (typeof error !== "undefined" && error) { %>
     <div
       id="flashAlert"
       class="mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center"
@@ -79,9 +87,12 @@
             name="email"
             id="email"
             placeholder="Email Address"
-            type="email"
+            type="text"
           />
         </div>
+
+         <p id="emailError" class="hidden text-xs text-red-400 mt-1"></p>
+
       </div>
       <div class="space-y-1">
         <label class="sr-only" for="password">Password</label>
@@ -108,6 +119,9 @@
             </span>
           </div>
         </div>
+
+        <p id="passwordError" class="hidden text-xs text-red-400 mt-1"></p>
+
       </div>
       <div class="flex justify-end">
         <a
@@ -149,4 +163,79 @@
       eyeIcon.textContent = "visibility";
     }
   }
+
+  //Flash Alert hide after 5 seconds
+
+  const alertBox = document.getElementById("flashAlert");
+
+  if (alertBox) {
+    setTimeout(() => {
+      alertBox.classList.add("opacity-0", "transition-opacity", "duration-500");
+      
+      setTimeout(() => {
+        alertBox.remove();
+      }, 500);
+    }, 3000); // 5 seconds
+  }
+
+
+  const form = document.querySelector("form");
+
+  function showError(id, message) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.remove("hidden");
+  }
+
+  function clearErrors() {
+    document.querySelectorAll("p[id$='Error']").forEach(el => {
+      el.textContent = "";
+      el.classList.add("hidden");
+    });
+  }
+
+  // Clear error while typing
+  ["email", "password"].forEach(id => {
+    const input = document.getElementById(id);
+    const errorEl = document.getElementById(id + "Error");
+
+    if (input && errorEl) {
+      input.addEventListener("input", () => {
+        errorEl.textContent = "";
+        errorEl.classList.add("hidden");
+      });
+    }
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    clearErrors();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    let isValid = true;
+
+    // Email validation
+    if (email === "") {
+      showError("emailError", "Email is required");
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("emailError", "Please enter a valid email address");
+      isValid = false;
+    }
+    
+
+    // Password validation
+    if (password.trim() === "") {
+      showError("passwordError", "Password is required");
+      isValid = false;
+    }
+
+    if (isValid) {
+      form.submit();
+    }
+  });
+
+
 </script>

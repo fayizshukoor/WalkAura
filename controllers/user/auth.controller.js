@@ -85,7 +85,12 @@ export const showVerifyOTP = async(req,res)=>{
 
     try{
 
-        return res.render("user/verify-otp");
+        const flash = req.session.flash;
+        delete req.session.flash;
+
+        res.render("user/verify-otp", {
+        error: flash?.type === "error" ? flash.message : null
+        });
 
     }catch(error){
 
@@ -95,7 +100,16 @@ export const showVerifyOTP = async(req,res)=>{
 
 export const showLogin = async (req, res) => {
   try {
-    return res.render("user/login");
+    const flash  =req.session.flash;
+    delete req.session.flash;
+
+    
+    
+    return res.render("user/login",{
+      error:flash?.type === "error" ? flash.message : null,
+      success:flash?.type === "success"?flash.message : null
+    });
+
   } catch (error) {
     console.log("error loading Login Page",error);
     res.status(500).send("Server error");
@@ -103,23 +117,36 @@ export const showLogin = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  
+  try{
+    
+    const { email, password } = req.body;
 
   const user = await User.findOne({email});
 
   if(!user || !user.isVerified){
-    return res.render("user/login",{error:"Invalid Email"})
+    req.session.flash = {
+      type:"error",
+      message:"Email not found"
+    };
+    return res.redirect("/login")
   }
 
   const isMatch = await bcrypt.compare(password,user.password);
 
   if(!isMatch){
-    return res.render("user/login",{error:"Password Incorrect"});
+    req.session.flash = {
+      type:"error",
+      message:"Password Incorrect"
+    };
+    return res.redirect("/login")
   }
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
 
   res.cookie("accessToken",accessToken,{
     httpOnly:true,
@@ -135,6 +162,17 @@ export const login = async (req, res) => {
 
 
   res.redirect("/home");
+
+  }catch(error){
+
+    console.error("Login error:",error);
+    req.session.flash = {
+      type:"error",
+      message:"Something Went Wrong.Please try Again."
+    };
+    return res.redirect("/login")
+
+  }
 };
 
 
