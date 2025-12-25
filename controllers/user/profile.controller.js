@@ -43,29 +43,27 @@ export const updateProfile = async (req,res)=>{
 
       try {
         if (!name || !/^[A-Za-z ]+$/.test(name)) {
-          return res
-            .status(400)
-            .render("user/signup", { error: "Name can only contain letters and spaces" });
+          req.flash("error","Name can only contain letters and spaces");
+          return res.redirect("/profile/edit");
+            
         }
 
         if (name.trim().length > 30 || name.trim().length < 3) {
-      return res.render("user/signup", {
-        error: "Name should be between 3-30 characters",
-      });
+          req.flash("error","Name should be between 3-30 characters");
+          return res.redirect("/profile/edit");
     }
     
         const phoneRegex =  /^[6-9]\d{9}$/;
         if (!phoneRegex.test(phone)) {
-          return res.render("user/signup", {
-          error: "Please enter a valid Phone Number",
-        });
+          req.flash("error","Please enter a valid Phone Number");
+          return res.redirect("/profile/edit");
       }
     
       await User.findByIdAndUpdate(userId,{
         name:name.trim(),
         phone:phone?.trim()
       })
-
+      req.flash("success","Profile updated successfully");
         return res.redirect("/profile");
       
 

@@ -1,0 +1,85 @@
+<aside
+  class="
+    w-full md:w-72
+    bg-black
+    border border-gray-800
+    md:border-r md:border-t-0
+    rounded-2xl md:rounded-none
+    mb-6 md:mb-0
+  "
+>
+  <!-- USER INFO -->
+  <div class="p-6 border-b border-gray-800/50">
+    <div class="flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-full bg-gray-800
+               flex items-center justify-center border border-gray-700 text-gray-400"
+      >
+        <span class="material-symbols-outlined text-2xl">person</span>
+      </div>
+      <div>
+        <h3 class="font-bold text-white text-sm"><%= user.name %></h3>
+        <p class="text-xs text-gray-500"><%= user.email %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <nav class="p-4 grid grid-cols-2 md:grid-cols-1 gap-2">
+    <a href="/profile" class="sidebar-link active">
+      <span class="material-symbols-outlined">account_circle</span>
+      Profile
+    </a>
+
+    <a href="/orders" class="sidebar-link">
+      <span class="material-symbols-outlined">description</span>
+      Orders
+    </a>
+
+    <a href="/wallet" class="sidebar-link">
+      <span class="material-symbols-outlined">account_balance_wallet</span>
+      Wallet
+    </a>
+
+    <a href="/address" class="sidebar-link">
+      <span class="material-symbols-outlined">home</span>
+      Address
+    </a>
+
+    <a href="/refer" class="sidebar-link">
+      <span class="material-symbols-outlined">redeem</span>
+      Refer
+    </a>
+
+    <a href="/logout" class="sidebar-link text-red-500">
+      <span class="material-symbols-outlined">logout</span>
+      Logout
+    </a>
+  </nav>
+</aside>
+
+<style>
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #9ca3af;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .sidebar-link:hover {
+    background: #111;
+    color: #fff;
+    border-color: #1f2937;
+  }
+
+  .sidebar-link.active {
+    background: #111;
+    color: #fff;
+    border-color: #1f2937;
+  }
+</style>

@@ -2,6 +2,18 @@ import OTP from "../../models/OTP.model.js";
 import User from "../../models/User.model.js";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 
+
+export const showVerifyOTP = async(req,res)=>{
+
+    try{
+
+       return res.render("user/verify-otp");
+
+    }catch(error){
+        console.error("Error loading Verify OTP Page");
+    }
+}
+
 export const verifyOTP = async(req,res)=>{
 
     try{
@@ -18,20 +30,15 @@ export const verifyOTP = async(req,res)=>{
         }).sort({createdAt:-1});
 
         if(!otpRecord){
-            req.session.flash = {
-                type:"error",
-                message:"OTP Invalid or expired"
-            };
+            req.flash("error", "OTP invalid or expired");
             return res.redirect("/verify-otp");
+
         }
 
         if(otpRecord.attempts >=5){
             await OTP.deleteOne({_id:otpRecord._id});
              console.log("Too many attempts");
-            req.session.flash = {
-                type:"error",
-                message:"Too many failed attempts. Please request a new OTP"
-            };
+            req.flash("error","Too many failed attempts. Please request a new OTP");
             return res.redirect("/verify-otp");
            
         }
@@ -42,20 +49,14 @@ export const verifyOTP = async(req,res)=>{
             otpRecord.attempts+=1;
             await otpRecord.save();
              console.log("Low attempts");
-             req.session.flash = {
-                type:"error",
-                message:`OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`
-            };
+            req.flash("error",`OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`);
             return res.redirect("/verify-otp");
         }
 
         let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
 
         if(!user){
-            req.session.flash = {
-                type:"error",
-                message:"User Not Found"
-            };
+            req.flash("error","User Not Found");
             return res.redirect("/verify-otp");
         }
 
@@ -63,12 +64,7 @@ export const verifyOTP = async(req,res)=>{
         
         console.log("User verified succesfully",user);
 
-        req.session.flash = {
-            type: "success",
-            message: "Email verified successfully. Please log in."
-        };
-
-        delete req.session.email;
+        req.flash("success","Email verified Successfully.Please Login.");
 
         res.redirect("/login");
 
@@ -77,11 +73,8 @@ export const verifyOTP = async(req,res)=>{
 
         console.error('OTP Verify Error:', error);
 
-        req.session.flash = {
-                type:"error",
-                message:"Failed to verify OTP"
-            };
-            return res.redirect("/verify-otp");
+        req.flash("error","Failed to verify OTP");
+        return res.redirect("/verify-otp");
         }
     }
 

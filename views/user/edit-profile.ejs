@@ -29,76 +29,10 @@
   <body
     class="bg-black text-white font-sans antialiased selection:bg-blue-500 selection:text-white"
   >
-    <div class="flex pt-20 min-h-screen">
-      <aside
-        class="hidden md:flex w-72 flex-col border-r border-gray-800 bg-black sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto"
-      >
-        <div class="p-8 border-b border-gray-800/50">
-          <div class="flex items-center gap-4">
-            <div
-              class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-400"
-            >
-              <span class="material-symbols-outlined text-2xl">person</span>
-            </div>
-            <div>
-              <h3 class="font-bold text-white text-sm"><%= user.name %></h3>
-              <p class="text-xs text-gray-500">Edit Profile</p>
-            </div>
-          </div>
-        </div>
-
-        <nav class="flex-1 py-6 px-4 space-y-1">
-          <a
-            href="/profile"
-            class="flex items-center gap-4 px-4 py-3 bg-[#111] text-white rounded-xl border border-gray-800 transition-all"
-          >
-            <span class="material-symbols-outlined text-xl"
-              >account_circle</span
-            >
-            <span class="text-sm font-medium">Profile</span>
-          </a>
-          <a
-            href="/orders"
-            class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all"
-          >
-            <span class="material-symbols-outlined text-xl">description</span>
-            <span class="text-sm font-medium">My Orders</span>
-          </a>
-          <a
-            href="/wallet"
-            class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all"
-          >
-            <span class="material-symbols-outlined text-xl"
-              >account_balance_wallet</span
-            >
-            <span class="text-sm font-medium">Wallet</span>
-          </a>
-          <a
-            href="/address"
-            class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all"
-          >
-            <span class="material-symbols-outlined text-xl">home</span>
-            <span class="text-sm font-medium">Address</span>
-          </a>
-          <a
-            href="/refer"
-            class="flex items-center gap-4 px-4 py-3 text-gray-400 hover:bg-gray-900 hover:text-white rounded-xl transition-all"
-          >
-            <span class="material-symbols-outlined text-xl">redeem</span>
-            <span class="text-sm font-medium">Refer & Earn</span>
-          </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-800">
-          <a
-            href="/logout"
-            class="flex items-center gap-4 px-4 py-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
-          >
-            <span class="material-symbols-outlined text-xl">logout</span>
-            <span class="text-sm font-medium">Logout</span>
-          </a>
-        </div>
-      </aside>
+   <div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
+     
+       <!-- Sidebar -->
+       <%- include("../partials/sidebar") %>
 
       <main class="flex-1 p-6 md:p-10 lg:px-16 bg-black">
         <div class="max-w-3xl mx-auto">
@@ -113,12 +47,12 @@
           <div
             class="bg-[#111] border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl"
           >
-            <% if (typeof error !== "undefined") { %>
+            <% if (typeof error !== "undefined" && error.length > 0) { %>
             <div
               id="flashAlert"
               class="mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center"
             >
-              <%= error %>
+              <%= error[0] %>
             </div>
             <% } %>
 
@@ -230,10 +164,7 @@
         if (name.length < 3) {
           showError("nameError", "Name must be at least 3 characters");
           isValid = false;
-        } else if (!nameRegex.test(name)) {
-          showError("nameError", "Name should contain only letters and spaces");
-          isValid = false;
-        } else if (name.length > 30) {
+        }else if (name.length > 30) {
           showError("nameError", "Name must not exceed 30 characters");
           isValid = false;
         }

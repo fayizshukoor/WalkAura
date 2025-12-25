@@ -31,15 +31,14 @@ export const refreshAccessToken = async (req,res)=>{
             },
             process.env.JWT_ACCESS_SECRET,
             {
-                expiresIn:"15s"
+                expiresIn:"15m"
             }
         );
 
         res.cookie("accessToken",newAccessToken,{
             httpOnly:true,
             secure:process.env.NODE_ENV === "production",
-            sameSite:"strict",
-            maxAge:15*1000
+            maxAge:15*60*1000
         });
         
         const redirectTo = req.session.returnTo || "Referer";

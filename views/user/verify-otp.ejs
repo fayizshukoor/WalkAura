@@ -22,13 +22,15 @@
     </p>
 
     <!-- ✅ SHARED ERROR BOX -->
-    <div
+    <% if(typeof error !== "undefined" && error.length > 0){%>
+      <div
       id="otpError"
       class="mb-4 text-sm text-red-400 bg-red-500/10
              border border-red-500/20 rounded-lg px-4 py-3
              <%= typeof error !== 'undefined' && error ? '' : 'hidden' %>">
-      <%= typeof error !== 'undefined' ? error : '' %>
+      <%=error[0] %>
     </div>
+    <% } %>
 
     <!-- OTP INPUTS -->
     <input type="hidden" name="otp" id="finalOtp">

@@ -81,34 +81,12 @@ export const signup = async (req, res) => {
 };
 
 
-export const showVerifyOTP = async(req,res)=>{
-
-    try{
-
-        const flash = req.session.flash;
-        delete req.session.flash;
-
-        res.render("user/verify-otp", {
-        error: flash?.type === "error" ? flash.message : null
-        });
-
-    }catch(error){
-
-        console.error("Error loading Verify OTP Page");
-    }
-}
 
 export const showLogin = async (req, res) => {
   try {
-    const flash  =req.session.flash;
-    delete req.session.flash;
+    
 
-    
-    
-    return res.render("user/login",{
-      error:flash?.type === "error" ? flash.message : null,
-      success:flash?.type === "success"?flash.message : null
-    });
+    return res.render("user/login");
 
   } catch (error) {
     console.log("error loading Login Page",error);
@@ -125,33 +103,28 @@ export const login = async (req, res) => {
   const user = await User.findOne({email});
 
   if(!user || !user.isVerified){
-    req.session.flash = {
-      type:"error",
-      message:"Email not found"
-    };
+    req.flash("error","Email not found");
     return res.redirect("/login")
   }
 
   const isMatch = await bcrypt.compare(password,user.password);
 
   if(!isMatch){
-    req.session.flash = {
-      type:"error",
-      message:"Password Incorrect"
-    };
+    req.flash("error","Password Incorrect");
     return res.redirect("/login")
   }
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   
+  // Clearing Old cookies
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
 
   res.cookie("accessToken",accessToken,{
     httpOnly:true,
     secure:process.env.NODE_ENV === "production",
-    maxAge:15*1000
+    maxAge:15*60*1000
   });
 
   res.cookie("refreshToken",refreshToken,{
@@ -166,10 +139,7 @@ export const login = async (req, res) => {
   }catch(error){
 
     console.error("Login error:",error);
-    req.session.flash = {
-      type:"error",
-      message:"Something Went Wrong.Please try Again."
-    };
+    req.flash("error","Something Went Wrong.Please try Again.");
     return res.redirect("/login")
 
   }
