@@ -2,13 +2,11 @@
 
 <main class="flex min-h-screen items-center justify-center px-4">
 
-  <!-- OTP CARD -->
   <div class="relative w-full max-w-md rounded-2xl bg-[#0b0c10]
               border border-primary/40
               shadow-[0_0_40px_rgba(79,70,229,0.18)]
               p-8 text-center">
 
-    <!-- Accent line -->
     <div class="absolute inset-x-0 top-0 h-[2px]
                 bg-gradient-to-r from-transparent via-primary to-transparent">
     </div>
@@ -21,7 +19,6 @@
       Enter the 6-digit code sent to your email address.
     </p>
 
-    <!-- ✅ SHARED ERROR BOX -->
     <% if(typeof error !== "undefined" && error.length > 0){%>
       <div
       id="otpError"
@@ -32,19 +29,17 @@
     </div>
     <% } %>
 
-    <!-- OTP INPUTS -->
     <input type="hidden" name="otp" id="finalOtp">
 
     <div class="flex justify-center gap-3 mb-6">
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
-      <input class="otp-input" maxlength="1" type="text" inputmode="numeric" />
+      <input class="otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" />
+      <input class="otp-input" type="text" inputmode="numeric" />
+      <input class="otp-input" type="text" inputmode="numeric" />
+      <input class="otp-input" type="text" inputmode="numeric" />
+      <input class="otp-input" type="text" inputmode="numeric" />
+      <input class="otp-input" type="text" inputmode="numeric" />
     </div>
 
-    <!-- VERIFY BUTTON -->
     <button
       type="submit"
       class="w-full h-12 rounded-lg bg-primary
@@ -53,8 +48,7 @@
       Verify Email
     </button>
 
-    <!-- TIMER + RESEND -->
-   <p id="timerText" class="text-sm text-gray-400 mb-1">
+    <p id="timerText" class="text-sm text-gray-400 mb-1">
   <span id="timerWrapper">
     Resend OTP in <span id="timer" class="text-primary font-semibold">30</span>s
   </span>
@@ -63,8 +57,6 @@
     Didn’t receive the code?
   </span>
 </p>
-
-
 
     <button
       type="button"
@@ -80,7 +72,6 @@
 
 </form>
 
-<!-- OTP STYLES -->
 <style>
   .otp-input {
     width: 3.5rem;
@@ -93,6 +84,15 @@
     border: 1px solid #3a3a3a;
     color: white;
     outline: none;
+    /* Hide scrollbar for inputs just in case */
+    -moz-appearance: textfield;
+  }
+  
+  /* Remove spinners for number inputs */
+  .otp-input::-webkit-outer-spin-button,
+  .otp-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 
   .otp-input:focus {
@@ -101,46 +101,87 @@
   }
 </style>
 
-<!-- OTP LOGIC -->
 <script>
 /* ---------------- SHARED ELEMENTS ---------------- */
 const otpInputs = document.querySelectorAll(".otp-input");
 const otpForm = document.getElementById("otpForm");
 const finalOtpInput = document.getElementById("finalOtp");
-const errorBox = document.getElementById("otpError");
+// Use optional chaining or getElementById for safety if error box isn't always rendered
+const errorBox = document.getElementById("otpError") || document.createElement('div'); 
 
 const resendBtn = document.getElementById("resendBtn");
 const timerEl = document.getElementById("timer");
 const timerText = document.getElementById("timerText");
 
-/* ---------------- OTP INPUT UX ---------------- */
+/* ---------------- OTP INPUT UX (FIXED) ---------------- */
 otpInputs.forEach((input, index) => {
   input.addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 1);
+    // 1. Get only digits
+    const val = e.target.value.replace(/\D/g, "");
 
-    // clear error when user types again
-    if (!errorBox.classList.contains("hidden")) {
+    // 2. Clear error box if user is typing
+    if (errorBox && !errorBox.classList.contains("hidden")) {
       errorBox.classList.add("hidden");
       errorBox.textContent = "";
     }
 
-    if (e.target.value && index < otpInputs.length - 1) {
-      otpInputs[index + 1].focus();
+    // 3. Handle Empty Input
+    if (!val) {
+      input.value = "";
+      return;
+    }
+
+    // 4. Handle Single Character
+    if (val.length === 1) {
+      input.value = val;
+      if (index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+    }
+    // 5. Handle Overflow / Fast Typing / Paste
+    else if (val.length > 1) {
+      // Put the first char in current box
+      input.value = val[0];
+      
+      // Split the rest into subsequent boxes
+      const remaining = val.slice(1);
+      remaining.split("").forEach((char, i) => {
+        const nextIdx = index + 1 + i;
+        if (otpInputs[nextIdx]) {
+          otpInputs[nextIdx].value = char;
+          otpInputs[nextIdx].focus();
+        }
+      });
     }
   });
 
   input.addEventListener("keydown", (e) => {
+    // Backspace: if empty, go back one
     if (e.key === "Backspace" && !e.target.value && index > 0) {
       otpInputs[index - 1].focus();
     }
+    // Arrow Left
+    if (e.key === "ArrowLeft" && index > 0) {
+      otpInputs[index - 1].focus();
+    }
+    // Arrow Right
+    if (e.key === "ArrowRight" && index < otpInputs.length - 1) {
+      otpInputs[index + 1].focus();
+    }
   });
 
+  // Paste Event (Backup for some browsers)
   input.addEventListener("paste", (e) => {
     e.preventDefault();
     const data = e.clipboardData.getData("text").replace(/\D/g, "");
+    
     data.split("").forEach((char, i) => {
-      if (otpInputs[index + i]) {
-        otpInputs[index + i].value = char;
+      const nextIdx = index + i;
+      if (otpInputs[nextIdx]) {
+        otpInputs[nextIdx].value = char;
+        if (i === data.length - 1 || nextIdx === otpInputs.length - 1) {
+            otpInputs[nextIdx].focus();
+        }
       }
     });
   });
@@ -154,8 +195,10 @@ otpForm.addEventListener("submit", (e) => {
 
   if (code.length < 6) {
     e.preventDefault();
-    errorBox.textContent = "Please enter the full 6-digit code";
-    errorBox.classList.remove("hidden");
+    if(errorBox) {
+        errorBox.textContent = "Please enter the full 6-digit code";
+        errorBox.classList.remove("hidden");
+    }
   }
 });
 
@@ -197,7 +240,6 @@ function startTimer(seconds) {
   }, 1000);
 }
 
-
 // start timer on page load
 startTimer(30);
 
@@ -212,8 +254,10 @@ async function resendOTP() {
     const data = await res.json();
 
     if (!res.ok) {
-      errorBox.textContent = data.message || "Please wait before resending OTP";
-      errorBox.classList.remove("hidden");
+      if(errorBox) {
+        errorBox.textContent = data.message || "Please wait before resending OTP";
+        errorBox.classList.remove("hidden");
+      }
       return;
     }
 
@@ -221,8 +265,10 @@ async function resendOTP() {
     startTimer(30);
 
   } catch (err) {
-    errorBox.textContent = "Something went wrong. Try again.";
-    errorBox.classList.remove("hidden");
+    if(errorBox) {
+      errorBox.textContent = "Something went wrong. Try again.";
+      errorBox.classList.remove("hidden");
+    }
   }
 }
 </script>

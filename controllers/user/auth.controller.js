@@ -50,6 +50,9 @@ export const signup = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
 
+    if(existingUser && existingUser.googleId && !existingUser.password){
+      return res.render("user/signup",{error:"Email Already registered with Google login"});
+    }
     if (existingUser && existingUser.isVerified) {
       return res.render("user/signup", { error: "Email Already Registered" });
     }
@@ -72,7 +75,6 @@ export const signup = async (req, res) => {
     req.session.email = email;
 
     
-    console.log(newUser);
     return res.redirect("/verify-otp");
   } catch (error) {
     console.error("Error Saving User", error);
@@ -105,6 +107,11 @@ export const login = async (req, res) => {
   if(!user || !user.isVerified){
     req.flash("error","Email not found");
     return res.redirect("/login")
+  }
+
+  if(user.googleId && !user.password){
+    req.flash("error","This account uses google login.Please continue with Google");
+    return res.redirect("/login");
   }
 
   const isMatch = await bcrypt.compare(password,user.password);

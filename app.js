@@ -9,6 +9,7 @@
     import session from "express-session";
     import flash from "connect-flash";
     import userRoutes from "./routes/user.routes.js";
+    import googleAuthRoutes from "./routes/googleAuth.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
     import { authenticateUser } from "./middlewares/auth.middleware.js";
     import passport from "passport";
@@ -60,6 +61,8 @@
     app.use(userContext);
 
     app.use("/",userRoutes);
+    app.use("/auth",googleAuthRoutes);
+
 
     app.get("/",(req,res)=>{
         res.redirect("/home");
