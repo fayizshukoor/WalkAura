@@ -30,11 +30,13 @@ const userSchema = new Schema(
     },
 
     password:{
-        type:String
+        type:String,
+        default:null
     },
 
     isVerified:{
-        type:Boolean,default:false
+        type:Boolean,
+        default:false
     },
     
     role:{

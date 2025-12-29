@@ -3,7 +3,31 @@ import nodemailer from "nodemailer";
 import OTP from "../models/OTP.model.js";
 
 
-export const sendOTP = async(email)=>{
+const emailTemplates = {
+  SIGNUP: {
+    subject: "Verify your email",
+    body: (otp) => `
+      <p>Your signup OTP is <strong>${otp}</strong></p>
+      <p>Valid for 5 minutes.</p>
+    `
+  },
+  FORGOT_PASSWORD: {
+    subject: "Reset your password",
+    body: (otp) => `
+      <p>Your password reset OTP is <strong>${otp}</strong></p>
+      <p>Valid for 5 minutes.</p>
+    `
+  },
+  EMAIL_CHANGE: {
+    subject: "Confirm your new email",
+    body: (otp) => `
+      <p>Use this OTP to confirm your email change:</p>
+      <strong>${otp}</strong>
+    `
+  }
+};
+
+export const sendOTP = async(email,purpose)=>{
 
          try{
 
@@ -11,7 +35,8 @@ export const sendOTP = async(email)=>{
 
         const recentOTP = await OTP.findOne({
             email,
-            createdAt:{$gte: new Date(Date.now()-30000)}
+            purpose,
+            createdAt:{$gte: new Date(Date.now()-30*1000)}
         });
 
         if(recentOTP){
@@ -20,8 +45,10 @@ export const sendOTP = async(email)=>{
         // Generating OTP
         const otp = crypto.randomInt(100000,999999).toString();
 
+        const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
         //Delete old OTPs for this email
-        await OTP.deleteMany({email});
+        await OTP.deleteMany({email,purpose});
 
         //Send Email first
         const transporter = nodemailer.createTransport({
@@ -35,14 +62,14 @@ export const sendOTP = async(email)=>{
         await transporter.sendMail({
             from:process.env.NODEMAILER_EMAIL,
             to: email,
-            subject: "OTP Verification",
-            html: `<p>Your OTP is: <strong>${otp}</strong></p>
-                    <p>Valid for 5 minutes.</p>`
+            subject: emailTemplates[purpose].subject,
+            html: emailTemplates[purpose].body(otp)
         });
 
         await OTP.create({
             email,
-            otp
+            otp:hashedOtp,
+            purpose
         });
 
         return true;

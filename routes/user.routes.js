@@ -2,9 +2,9 @@ import express from "express";
 import { showHomePage } from "../controllers/user/home.controller.js";
 import {showSignup,signup,showLogin,login,logout} from "../controllers/user/auth.controller.js";
 import { showVerifyOTP, verifyOTP, resendOTP} from "../controllers/user/otp.controller.js";
-import { refreshAccessToken } from "../controllers/user/refresh.controller.js";
-import { showProfile } from "../controllers/user/profile.controller.js";
-import {showEditProfile,updateProfile} from "../controllers/user/profile.controller.js";
+import { refreshAccessToken } from "../controllers/user/refresh-token.controller.js";
+import {showProfile,showEditProfile,updateProfile} from "../controllers/user/profile.controller.js";
+import { showForgotPassword, showResetPassword } from "../controllers/user/password.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import { redirectIfAuthenticated,noCache,requireOtpSession } from "../middlewares/auth.middleware.js";
 
@@ -19,7 +19,7 @@ router
 
 router
 .route("/verify-otp")
-.get(noCache,requireOtpSession,redirectIfAuthenticated,showVerifyOTP)
+.get(noCache,redirectIfAuthenticated,requireOtpSession,showVerifyOTP)
 .post(requireOtpSession,verifyOTP);
 
 router
@@ -40,5 +40,11 @@ router
 .post(requireAuth, updateProfile);
 
 router.get("/logout",noCache, logout);
+
+
+//Password routes
+
+router.get("/forgot-password",showForgotPassword);
+router.get("/reset-password",showResetPassword);
 
 export default router;

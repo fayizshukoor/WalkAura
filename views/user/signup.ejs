@@ -43,11 +43,8 @@
 <div class="h-px flex-1 bg-[#282c39]"></div>
 </div>
 
-<% if (typeof error !== "undefined" && error.length>0) { %>
-  <div id="flashAlert" class="mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center">
-    <%= error %>
-  </div>
-<% } %>
+
+<%- include('../partials/alerts') %>
 
 <form action="/signup" method="post" class="flex flex-col gap-4">
 <div class="space-y-1">
@@ -262,19 +259,6 @@
   });
 
 
-  //Flash Alert hide after 5 seconds
-
-  const alertBox = document.getElementById("flashAlert");
-
-  if (alertBox) {
-    setTimeout(() => {
-      alertBox.classList.add("opacity-0", "transition-opacity", "duration-500");
-      
-      setTimeout(() => {
-        alertBox.remove();
-      }, 500);
-    }, 3000); // 5 seconds
-  }
 </script>
 
 

@@ -42,6 +42,7 @@ export const updateProfile = async (req,res)=>{
     const { name, phone} = req.body;
 
       try {
+
         if (!name || !/^[A-Za-z ]+$/.test(name)) {
           req.flash("error","Name can only contain letters and spaces");
           return res.redirect("/profile/edit");

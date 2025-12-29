@@ -1,0 +1,56 @@
+<!-- ================= ALERT MESSAGES PARTIAL ================= -->
+
+<% if (typeof success !== "undefined" && success.length > 0 ) { %>
+  <div
+    id="successBox"
+    class="mb-4 text-sm text-green-400 bg-green-500/10
+           border border-green-500/20 rounded-lg px-4 py-3">
+    <%= success %>
+  </div>
+<% } %>
+
+<% if (typeof error !== "undefined" && error.length > 0) { %>
+  <div
+    id="errorBox"
+    class="mb-4 text-sm text-red-400 bg-red-500/10
+           border border-red-500/20 rounded-lg px-4 py-3">
+    <%= Array.isArray(error) ? error[0] : error %>
+  </div>
+<% } %>
+
+<script>
+const errorBox = document.getElementById("errorBox");
+const successBox = document.getElementById("successBox");
+
+let alertTimeout;
+
+function clearAllMessages() {
+  if (errorBox) errorBox.remove();
+  if (successBox) successBox.remove();
+}
+
+function startAlertTimer() {
+  clearTimeout(alertTimeout);
+  alertTimeout = setTimeout(clearAllMessages, 5000);
+}
+
+function showError(message) {
+  if (successBox) successBox.remove();
+  if (errorBox) {
+    errorBox.textContent = message;
+    startAlertTimer();
+  }
+}
+
+function showSuccess(message) {
+  if (errorBox) errorBox.remove();
+  if (successBox) {
+    successBox.textContent = message;
+    startAlertTimer();
+  }
+}
+
+if (errorBox || successBox) {
+  startAlertTimer();
+}
+</script>

@@ -4,7 +4,7 @@ import {sendOTP} from "../../utils/generateAndSendOtp.util.js";
 import { generateAccessToken,generateRefreshToken } from "../../utils/jwt.utils.js";
 
 
-export const showSignup = async (req, res) => {
+export const showSignup = (req, res) => {
   try {
     return res.render("user/signup");
   } catch (error) {
@@ -70,9 +70,10 @@ export const signup = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    await sendOTP(email);
+    await sendOTP(email,"SIGNUP");
 
     req.session.email = email;
+    req.session.otpPurpose = "SIGNUP";
 
     
     return res.redirect("/verify-otp");
@@ -84,7 +85,7 @@ export const signup = async (req, res) => {
 
 
 
-export const showLogin = async (req, res) => {
+export const showLogin = (req, res) => {
   try {
     
 
@@ -107,6 +108,11 @@ export const login = async (req, res) => {
   if(!user || !user.isVerified){
     req.flash("error","Email not found");
     return res.redirect("/login")
+  }
+
+  if(user.isBlocked){
+    req.flash("error","Your account is Blocked");
+    return res.redirect("/login");
   }
 
   if(user.googleId && !user.password){
@@ -153,7 +159,7 @@ export const login = async (req, res) => {
 };
 
 
-export const logout = async(req,res)=>{
+export const logout = (req,res)=>{
 
   try{
 

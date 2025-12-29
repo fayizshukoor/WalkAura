@@ -19,15 +19,21 @@
       Enter the 6-digit code sent to your email address.
     </p>
 
-    <% if(typeof error !== "undefined" && error.length > 0){%>
-      <div
-      id="otpError"
+    <div
+      id="otpSuccess" 
+      class="mb-4 text-sm text-green-400 bg-green-500/10
+             border border-green-500/20 rounded-lg px-4 py-3
+             <%= (typeof successMessage !== 'undefined' && successMessage) ? '' : 'hidden' %>">
+      <%= (typeof success !== 'undefined' && success) ? success : '' %>
+    </div>
+
+    <div
+      id="otpError" 
       class="mb-4 text-sm text-red-400 bg-red-500/10
              border border-red-500/20 rounded-lg px-4 py-3
-             <%= typeof error !== 'undefined' && error ? '' : 'hidden' %>">
-      <%=error[0] %>
+             <%= (typeof error !== 'undefined' && error.length > 0) ? '' : 'hidden' %>">
+      <%= (typeof error !== 'undefined' && error.length > 0) ? error[0] : '' %>
     </div>
-    <% } %>
 
     <input type="hidden" name="otp" id="finalOtp">
 
@@ -49,14 +55,14 @@
     </button>
 
     <p id="timerText" class="text-sm text-gray-400 mb-1">
-  <span id="timerWrapper">
-    Resend OTP in <span id="timer" class="text-primary font-semibold">30</span>s
-  </span>
+      <span id="timerWrapper">
+        Resend OTP in <span id="timer" class="text-primary font-semibold">30</span>s
+      </span>
 
-  <span id="resendMessage" class="hidden">
-    Didn’t receive the code?
-  </span>
-</p>
+      <span id="resendMessage" class="hidden">
+        Didn’t receive the code?
+      </span>
+    </p>
 
     <button
       type="button"
@@ -84,11 +90,9 @@
     border: 1px solid #3a3a3a;
     color: white;
     outline: none;
-    /* Hide scrollbar for inputs just in case */
     -moz-appearance: textfield;
   }
   
-  /* Remove spinners for number inputs */
   .otp-input::-webkit-outer-spin-button,
   .otp-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -106,44 +110,88 @@
 const otpInputs = document.querySelectorAll(".otp-input");
 const otpForm = document.getElementById("otpForm");
 const finalOtpInput = document.getElementById("finalOtp");
-// Use optional chaining or getElementById for safety if error box isn't always rendered
-const errorBox = document.getElementById("otpError") || document.createElement('div'); 
 
 const resendBtn = document.getElementById("resendBtn");
 const timerEl = document.getElementById("timer");
 const timerText = document.getElementById("timerText");
 
-/* ---------------- OTP INPUT UX (FIXED) ---------------- */
+// MESSAGE BOXES
+const errorBox = document.getElementById("otpError");
+const successBox = document.getElementById("otpSuccess");
+
+/* ---------------- AUTO-HIDE LOGIC (NEW) ---------------- */
+let messageHideTimeout; // Variable to track the timer
+
+function startMessageHideTimer() {
+  // 1. Clear any existing timer to prevent conflicts
+  clearTimeout(messageHideTimeout);
+
+  // 2. Set a new timer to hide everything after 5 seconds (5000ms)
+  messageHideTimeout = setTimeout(() => {
+    clearAllMessages();
+  }, 5000); 
+}
+
+/* ---------------- HELPER FUNCTIONS ---------------- */
+function showError(msg) {
+  if (successBox) successBox.classList.add("hidden"); 
+  if (errorBox) {
+    errorBox.textContent = msg;
+    errorBox.classList.remove("hidden");
+    
+    // Start the 5-second countdown
+    startMessageHideTimer();
+  }
+}
+
+function showSuccess(msg) {
+  if (errorBox) errorBox.classList.add("hidden");
+  if (successBox) {
+    successBox.textContent = msg;
+    successBox.classList.remove("hidden");
+    
+    // Start the 5-second countdown
+    startMessageHideTimer();
+  }
+}
+
+function clearAllMessages() {
+  if (errorBox) errorBox.classList.add("hidden");
+  if (successBox) successBox.classList.add("hidden");
+}
+
+/* ---------------- CHECK ON PAGE LOAD ---------------- */
+// This handles Flash messages sent from the Backend (EJS)
+// If the page loads and an error/success is already visible, start the timer.
+if (
+  (errorBox && !errorBox.classList.contains('hidden')) || 
+  (successBox && !successBox.classList.contains('hidden'))
+) {
+  startMessageHideTimer();
+}
+
+/* ---------------- OTP INPUT UX ---------------- */
 otpInputs.forEach((input, index) => {
   input.addEventListener("input", (e) => {
-    // 1. Get only digits
     const val = e.target.value.replace(/\D/g, "");
 
-    // 2. Clear error box if user is typing
-    if (errorBox && !errorBox.classList.contains("hidden")) {
-      errorBox.classList.add("hidden");
-      errorBox.textContent = "";
-    }
+    // Clear messages immediately when user starts typing
+    clearAllMessages();
+    clearTimeout(messageHideTimeout); // Also stop the timer
 
-    // 3. Handle Empty Input
     if (!val) {
       input.value = "";
       return;
     }
 
-    // 4. Handle Single Character
     if (val.length === 1) {
       input.value = val;
       if (index < otpInputs.length - 1) {
         otpInputs[index + 1].focus();
       }
     }
-    // 5. Handle Overflow / Fast Typing / Paste
     else if (val.length > 1) {
-      // Put the first char in current box
       input.value = val[0];
-      
-      // Split the rest into subsequent boxes
       const remaining = val.slice(1);
       remaining.split("").forEach((char, i) => {
         const nextIdx = index + 1 + i;
@@ -156,25 +204,20 @@ otpInputs.forEach((input, index) => {
   });
 
   input.addEventListener("keydown", (e) => {
-    // Backspace: if empty, go back one
     if (e.key === "Backspace" && !e.target.value && index > 0) {
       otpInputs[index - 1].focus();
     }
-    // Arrow Left
     if (e.key === "ArrowLeft" && index > 0) {
       otpInputs[index - 1].focus();
     }
-    // Arrow Right
     if (e.key === "ArrowRight" && index < otpInputs.length - 1) {
       otpInputs[index + 1].focus();
     }
   });
 
-  // Paste Event (Backup for some browsers)
   input.addEventListener("paste", (e) => {
     e.preventDefault();
     const data = e.clipboardData.getData("text").replace(/\D/g, "");
-    
     data.split("").forEach((char, i) => {
       const nextIdx = index + i;
       if (otpInputs[nextIdx]) {
@@ -195,53 +238,66 @@ otpForm.addEventListener("submit", (e) => {
 
   if (code.length < 6) {
     e.preventDefault();
-    if(errorBox) {
-        errorBox.textContent = "Please enter the full 6-digit code";
-        errorBox.classList.remove("hidden");
-    }
+    showError("Please enter the full 6-digit code");
   }
 });
 
+
 /* ---------------- TIMER LOGIC ---------------- */
-let timeLeft = 30;
 let countdownInterval = null;
+const TIMER_DURATION = 30;
+const STORAGE_KEY = "otp_target_time";
 
-function startTimer(seconds) {
+function startTimer(seconds, isNew = true) {
   clearInterval(countdownInterval);
-
   const timerWrapper = document.getElementById("timerWrapper");
   const resendMessage = document.getElementById("resendMessage");
+  const timerEl = document.getElementById("timer");
+  const now = Date.now();
+  let targetTime;
 
-  // reset UI
-  timerWrapper.classList.remove("hidden");
-  resendMessage.classList.add("hidden");
+  if (isNew) {
+    targetTime = now + (seconds * 1000);
+    localStorage.setItem(STORAGE_KEY, targetTime);
+  } else {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    targetTime = stored ? parseInt(stored, 10) : now + (seconds * 1000);
+    if(!stored) localStorage.setItem(STORAGE_KEY, targetTime);
+  }
 
-  resendBtn.disabled = true;
-  resendBtn.classList.add("opacity-40", "cursor-not-allowed");
-  resendBtn.classList.remove("hover:underline");
+  const tick = () => {
+    const currentTime = Date.now();
+    const secondsLeft = Math.ceil((targetTime - currentTime) / 1000);
 
-  timeLeft = seconds;
-  timerEl.textContent = timeLeft;
-
-  countdownInterval = setInterval(() => {
-    timeLeft--;
-    timerEl.textContent = timeLeft;
-
-    if (timeLeft <= 0) {
+    if (secondsLeft <= 0) {
       clearInterval(countdownInterval);
-
+      localStorage.removeItem(STORAGE_KEY);
       timerWrapper.classList.add("hidden");
       resendMessage.classList.remove("hidden");
-
       resendBtn.disabled = false;
       resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
       resendBtn.classList.add("hover:underline");
+      timerEl.textContent = 0;
+    } else {
+      timerWrapper.classList.remove("hidden");
+      resendMessage.classList.add("hidden");
+      resendBtn.disabled = true;
+      resendBtn.classList.add("opacity-40", "cursor-not-allowed");
+      resendBtn.classList.remove("hover:underline");
+      timerEl.textContent = secondsLeft;
     }
-  }, 1000);
+  };
+
+  tick();
+  countdownInterval = setInterval(tick, 1000);
 }
 
-// start timer on page load
-startTimer(30);
+const savedTime = localStorage.getItem(STORAGE_KEY);
+if (savedTime && parseInt(savedTime, 10) > Date.now()) {
+  startTimer(null, false);
+} else {
+  startTimer(TIMER_DURATION, true);
+}
 
 /* ---------------- RESEND OTP (AJAX) ---------------- */
 async function resendOTP() {
@@ -249,26 +305,33 @@ async function resendOTP() {
     resendBtn.disabled = true;
     resendBtn.classList.add("opacity-40", "cursor-not-allowed");
     resendBtn.classList.remove("hover:underline");
+    
+    // Clear messages and any running timer
+    clearAllMessages();
+    clearTimeout(messageHideTimeout);
 
     const res = await fetch("/resend-otp", { method: "POST" });
     const data = await res.json();
 
     if (!res.ok) {
-      if(errorBox) {
-        errorBox.textContent = data.message || "Please wait before resending OTP";
-        errorBox.classList.remove("hidden");
+      showError(data.message || "Please wait before resending OTP");
+      
+      const isTimerRunning = localStorage.getItem(STORAGE_KEY) && parseInt(localStorage.getItem(STORAGE_KEY)) > Date.now();
+      if (!isTimerRunning) {
+          resendBtn.disabled = false;
+          resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
       }
       return;
     }
 
-    // restart timer on success
-    startTimer(30);
+    showSuccess(data.message);
+    startTimer(TIMER_DURATION, true);
 
   } catch (err) {
-    if(errorBox) {
-      errorBox.textContent = "Something went wrong. Try again.";
-      errorBox.classList.remove("hidden");
-    }
+    console.error(err);
+    showError("Something went wrong. Try again.");
+    resendBtn.disabled = false;
+    resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
   }
 }
 </script>

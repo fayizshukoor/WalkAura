@@ -22,18 +22,23 @@ passport.use(
                     });
                 }
 
-                const existingLocalUser = await User.findOne({
-                    email,
-                    googleId:{$exists:false}
-                });
+                let user = await User.findOne({email});
 
-                if(existingLocalUser){
+                if(user && user.isBlocked){
                     return done(null,false,{
-                        message:"This email is registered with Password login"
-                    });
+                        message:"Your account is blocked"
+                    }); 
                 }
 
-                let user = await  User.findOne({googleId:profile.id});
+                if(user && !user.googleId){
+                    user.googleId = profile.id;
+                    user.isVerified = true;
+                    await user.save();
+
+                    return done(null,user);
+
+                }
+
 
                 if(!user){
                     user = await User.create({

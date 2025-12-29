@@ -9,7 +9,7 @@
     import session from "express-session";
     import flash from "connect-flash";
     import userRoutes from "./routes/user.routes.js";
-    import googleAuthRoutes from "./routes/googleAuth.routes.js";
+    import googleAuthRoutes from "./routes/google-auth.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
     import { authenticateUser } from "./middlewares/auth.middleware.js";
     import passport from "passport";
@@ -32,7 +32,7 @@
         resave: false,
         saveUninitialized: false,
         cookie: { 
-            secure: false, // Set to true if using HTTPS
+            secure: false, // Set to true when using HTTPS
             httpOnly: true, 
             maxAge: 24 * 60 * 60 * 1000
         }
@@ -62,6 +62,7 @@
 
     app.use("/",userRoutes);
     app.use("/auth",googleAuthRoutes);
+    
 
 
     app.get("/",(req,res)=>{

@@ -18,24 +18,21 @@ export const verifyOTP = async(req,res)=>{
 
     try{
         const email = req.session.email;
-        console.log(email);
+        const purpose = req.session.otpPurpose;
+        
+        console.log(email,purpose);
 
-        if(!email){
+        if(!email || !purpose){
             return res.redirect("/signup");
         }
         const {otp} = req.body;
 
         const otpRecord = await OTP.findOne({
-            email
+            email,
+            purpose
         }).sort({createdAt:-1});
 
-        if(!otpRecord){
-            req.flash("error", "OTP invalid or expired");
-            return res.redirect("/verify-otp");
-
-        }
-
-        if(otpRecord.attempts >=5){
+        if(otpRecord?.attempts >=5){
             await OTP.deleteOne({_id:otpRecord._id});
              console.log("Too many attempts");
             req.flash("error","Too many failed attempts. Please request a new OTP");
@@ -43,9 +40,16 @@ export const verifyOTP = async(req,res)=>{
            
         }
 
+        if(!otpRecord){
+            req.flash("error", "OTP invalid or expired");
+            return res.redirect("/verify-otp");
+
+        }
+
+        const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
 
-        if(otpRecord.otp !== otp){
+        if(otpRecord.otp !== hashedOtp){
             otpRecord.attempts+=1;
             await otpRecord.save();
              console.log("Low attempts");
@@ -53,21 +57,22 @@ export const verifyOTP = async(req,res)=>{
             return res.redirect("/verify-otp");
         }
 
-        let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
-
-        if(!user){
-            req.flash("error","User Not Found");
-            return res.redirect("/verify-otp");
+        if(purpose === "SIGNUP"){
+            let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
+            console.log("User verified succesfully",user);
+            req.flash("success","Email verified Successfully.Please Login.");
+            res.redirect("/login");
         }
 
-        await OTP.deleteMany({email});
-        
-        console.log("User verified succesfully",user);
+        if(purpose === "FORGOT_PASSWORD"){
+            req.session.allowPasswordReset = true;
+            return res.redirect("/reset-password");
+        }
 
-        req.flash("success","Email verified Successfully.Please Login.");
+        await OTP.deleteMany({email,purpose});
 
-        res.redirect("/login");
-
+        delete req.session.email;
+        delete req.session.otpPurpose;
 
     }catch(error){
 
@@ -82,7 +87,7 @@ export const verifyOTP = async(req,res)=>{
 export const resendOTP = async (req,res)=>{
     try{
 
-        const email = req.session.email;
+        const email = req.session?req.session.email:null;
         console.log(email);
         
 
