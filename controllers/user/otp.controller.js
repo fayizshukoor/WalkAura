@@ -1,5 +1,6 @@
 import OTP from "../../models/OTP.model.js";
 import User from "../../models/User.model.js";
+import crypto from "crypto";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 
 
@@ -61,7 +62,7 @@ export const verifyOTP = async(req,res)=>{
             let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
             console.log("User verified succesfully",user);
             req.flash("success","Email verified Successfully.Please Login.");
-            res.redirect("/login");
+            return res.redirect("/login");
         }
 
         if(purpose === "FORGOT_PASSWORD"){
@@ -88,17 +89,31 @@ export const resendOTP = async (req,res)=>{
     try{
 
         const email = req.session?req.session.email:null;
-        console.log(email);
+        const purpose = req.session.otpPurpose;
+
+        console.log(email,purpose);
         
 
-        if(!email){
+        if(!email || !purpose){
             return res.status(400).json({message:"Session expired.Please signup again."});
         }
 
-        await sendOTP(email);
-       
+        await sendOTP(email,purpose);
 
-        return res.status(200).json({message:"OTP resent successfully"});
+        let message;
+       
+        if(purpose === "SIGNUP"){
+            message = "New OTP Sent to your email. Verify to Continue.";
+        }else if(purpose === "FORGOT_PASSWORD"){
+            message = "If an account exists with this email,You will receive an OTP shortly";
+        }else if(purpose === "EMAIL_CHANGE"){
+            message = "New OTP sent to confirm your Email Change";
+        }else{
+            message = "If an account exists with this email,You will receive an OTP shortly";
+        }
+
+
+        return res.status(200).json({message});
 
     }catch(error){
 

@@ -13,7 +13,7 @@ export const showSignup = (req, res) => {
   }
 };
 
-export const signup = async (req, res) => {
+export const handleSignup = async (req, res) => {
   const { name, email, phone, password } = req.body;
   try {
     if (!name || !/^[A-Za-z ]+$/.test(name)) {
@@ -97,7 +97,7 @@ export const showLogin = (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+export const handleLogin = async (req, res) => {
   
   try{
     
