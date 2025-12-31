@@ -22,9 +22,8 @@
     </a>
     
     <% const user = locals.user || null; %>
-    <% const hasRefreshSession = locals.hasRefreshSession || false; %>
 
-    <% if (user || hasRefreshSession) { %>
+    <% if (user) { %>
       <div class="relative cursor-pointer" onclick="toggleProfile()">
         <span class="material-symbols-outlined text-[26px] text-gray-400 hover:text-white transition">
           account_circle

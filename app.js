@@ -11,9 +11,10 @@
     import userRoutes from "./routes/user.routes.js";
     import googleAuthRoutes from "./routes/google-auth.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
-    import { authenticateUser } from "./middlewares/auth.middleware.js";
+    import { authenticateUser, noCache } from "./middlewares/auth.middleware.js";
     import passport from "passport";
     import "./config/passport.js";
+import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -26,6 +27,10 @@
     app.use(express.urlencoded({extended:true}));
 
     app.use(cookieParser());
+
+    app.use(silentRefresh);
+    app.use(authenticateUser);
+    app.use(userContext);
 
     app.use(session({
         secret: process.env.SESSION_SECRET,
@@ -57,8 +62,7 @@
 
     app.set("layout","layouts/user")
 
-    app.use(authenticateUser);
-    app.use(userContext);
+  
 
     app.use("/",userRoutes);
     app.use("/auth",googleAuthRoutes);

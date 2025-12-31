@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import { googleCallback } from "../controllers/user/google-auth.controller.js";
+import { googleCallback } from "../controllers/user/googleAuth.controller.js";
 import { noCache } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 

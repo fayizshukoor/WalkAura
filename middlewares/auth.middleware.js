@@ -1,9 +1,11 @@
 import jwt from "jsonwebtoken";
 
 export const authenticateUser = (req,res,next)=>{
-    const accessToken = req.cookies?.accessToken;
 
-    req.user = null;
+    if(req.user){
+        return next();
+    }
+    const accessToken = req.cookies?.accessToken;
 
     if(!accessToken){
         return next();
@@ -17,7 +19,6 @@ export const authenticateUser = (req,res,next)=>{
     }catch(error){
         return next(); 
     }
-
 
 }
 

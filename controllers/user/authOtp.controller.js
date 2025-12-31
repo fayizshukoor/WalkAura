@@ -106,8 +106,6 @@ export const resendOTP = async (req,res)=>{
             message = "New OTP Sent to your email. Verify to Continue.";
         }else if(purpose === "FORGOT_PASSWORD"){
             message = "If an account exists with this email,You will receive an OTP shortly";
-        }else if(purpose === "EMAIL_CHANGE"){
-            message = "New OTP sent to confirm your Email Change";
         }else{
             message = "If an account exists with this email,You will receive an OTP shortly";
         }

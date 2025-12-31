@@ -75,3 +75,9 @@ export const updateProfile = async (req,res)=>{
 
     }
 }
+
+// Change Email
+export const showChangeEmail = (req,res)=>{
+    return res.render("user/change-email");
+}
+
