@@ -17,6 +17,11 @@ const userSchema = new Schema(
         lowercase:true,
     },
 
+    pendingEmail:{
+        type:String,
+        trim:true
+    },
+
     phone:{
         type:String,
         trim:true,

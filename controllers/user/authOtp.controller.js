@@ -8,7 +8,10 @@ export const showVerifyOTP = async(req,res)=>{
 
     try{
 
-       return res.render("user/verify-otp");
+       return res.render("user/verify-otp",{
+        actionUrl: "/verify-otp",
+        resendUrl: "/resend-otp",
+    });
 
     }catch(error){
         console.error("Error loading Verify OTP Page");

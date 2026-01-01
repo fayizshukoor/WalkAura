@@ -3,7 +3,7 @@ import { showHomePage } from "../controllers/user/home.controller.js";
 import {showSignup,showLogin, handleSignup, handleLogin, logout, 
         handleForgotPassword, handleResetPassword, showForgotPassword, showResetPassword} from "../controllers/user/auth.controller.js";
 import { showVerifyOTP, verifyOTP, resendOTP} from "../controllers/user/authOtp.controller.js";
-import {showProfile,showEditProfile,updateProfile, showChangeEmail} from "../controllers/user/profile.controller.js";
+import {showProfile,showEditProfile,updateProfile, showChangeEmail, requestEmailChange, showVerifyEmailChangeOTP, verifyEmailChangeOTP, resendEmailChangeOTP} from "../controllers/user/profile.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import { redirectIfAuthenticated,noCache,requireOtpSession } from "../middlewares/auth.middleware.js";
 
@@ -61,5 +61,12 @@ router
 //Email Change
 
 router.get("/profile/change-email",showChangeEmail);
+router.post('/profile/change-email',requestEmailChange);
+
+router.get("/profile/verify-email-change",showVerifyEmailChangeOTP);
+router.post("/profile/verify-email-change",verifyEmailChangeOTP);
+
+// Resend email change otp
+router.post("/profile/resend-email-change-otp",resendEmailChangeOTP);
 
 export default router;
