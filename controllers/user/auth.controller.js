@@ -265,15 +265,25 @@ export const handleResetPassword = async (req,res)=>{
     }
 
     if(password !== confirmPassword){
-        console.log(password);
-        console.log(confirmPassword);
         req.flash("error","Passwords do not match");
         return res.redirect("/reset-password");
     }
 
+    const user = await User.findOne({ email: req.session.email });
+    if (!user) {
+      return res.redirect("/forgot-password");
+    }
+
     const hashedPassword = await bcrypt.hash(password,10);
 
-    await User.findOneAndUpdate({email:req.session.email},{password:hashedPassword});
+    user.password = hashedPassword;
+    user.passwordChangedAt = new Date();
+    await user.save();
+
+    //invalidate 
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
 
     // Cleanup
     delete req.session.allowPasswordReset;

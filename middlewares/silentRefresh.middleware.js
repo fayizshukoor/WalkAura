@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.model.js";
+import { generateAccessToken } from "../utils/jwt.utils.js";
 
 export const silentRefresh = async (req,res,next)=>{
 
@@ -25,14 +26,7 @@ export const silentRefresh = async (req,res,next)=>{
             return next();
         }
 
-        const newAccessToken = jwt.sign(
-            {
-                userId:user._id,
-                role:user.role
-            },
-            process.env.JWT_ACCESS_SECRET,
-            {expiresIn:"15m"}
-        );
+        const newAccessToken = generateAccessToken(user);
 
         res.cookie("accessToken",newAccessToken,{
             httpOnly:true,

@@ -1,11 +1,40 @@
 import express from "express";
 import { showHomePage } from "../controllers/user/home.controller.js";
-import {showSignup,showLogin, handleSignup, handleLogin, logout, 
-        handleForgotPassword, handleResetPassword, showForgotPassword, showResetPassword} from "../controllers/user/auth.controller.js";
-import { showVerifyOTP, verifyOTP, resendOTP} from "../controllers/user/authOtp.controller.js";
-import {showProfile,showEditProfile,updateProfile, showChangeEmail, requestEmailChange, showVerifyEmailChangeOTP, verifyEmailChangeOTP, resendEmailChangeOTP} from "../controllers/user/profile.controller.js";
+import {
+  showSignup,
+  showLogin,
+  handleSignup,
+  handleLogin,
+  logout,
+  handleForgotPassword,
+  handleResetPassword,
+  showForgotPassword,
+  showResetPassword,
+} from "../controllers/user/auth.controller.js";
+import {
+  showVerifyOTP,
+  verifyOTP,
+  resendOTP,
+} from "../controllers/user/authOtp.controller.js";
+import {
+  showProfile,
+  showEditProfile,
+  updateProfile,
+  showChangeEmail,
+  requestEmailChange,
+  showVerifyEmailChangeOTP,
+  verifyEmailChangeOTP,
+  resendEmailChangeOTP,
+  showChangePassword,
+  handleChangePassword,
+  handleAuthForgotPassword,
+} from "../controllers/user/profile.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
-import { redirectIfAuthenticated,noCache,requireOtpSession } from "../middlewares/auth.middleware.js";
+import {
+  redirectIfAuthenticated,
+  noCache,
+  requireOtpSession,
+} from "../middlewares/auth.middleware.js";
 
 
 const router = express.Router();
@@ -19,8 +48,8 @@ router
 
 router
 .route("/verify-otp")
-.get(noCache,redirectIfAuthenticated,requireOtpSession,showVerifyOTP)
-.post(requireOtpSession,verifyOTP);
+.get(noCache,showVerifyOTP)
+.post(verifyOTP);
 
 router
 .route("/login")
@@ -28,12 +57,12 @@ router
 .post(handleLogin);
 
 
-router.post("/resend-otp",requireOtpSession,resendOTP);
+router.post("/resend-otp",resendOTP);
 
 router.get("/logout",noCache, logout);
 
 
-//Password routes
+//Forgot Password 
 
 router
 .route("/forgot-password")
@@ -49,7 +78,7 @@ router
 
 
 
-//Profile 
+// Profile 
 
 router.get("/profile", noCache, requireAuth, showProfile);
 
@@ -58,15 +87,24 @@ router
 .get(requireAuth, noCache, showEditProfile)
 .post(requireAuth, updateProfile);
 
-//Email Change
+// Change Email
 
-router.get("/profile/change-email",showChangeEmail);
-router.post('/profile/change-email',requestEmailChange);
+router.get("/profile/change-email",noCache,requireAuth,showChangeEmail);
+router.post('/profile/change-email',requireAuth,requestEmailChange);
 
-router.get("/profile/verify-email-change",showVerifyEmailChangeOTP);
-router.post("/profile/verify-email-change",verifyEmailChangeOTP);
+router.get("/profile/verify-email-change",noCache,requireAuth,showVerifyEmailChangeOTP);
+router.post("/profile/verify-email-change",requireAuth,verifyEmailChangeOTP);
 
 // Resend email change otp
-router.post("/profile/resend-email-change-otp",resendEmailChangeOTP);
+router.post("/profile/resend-email-change-otp",requireAuth,resendEmailChangeOTP);
+
+
+// Change Password
+
+router.get("/profile/change-password",noCache,requireAuth,showChangePassword);
+router.post("/profile/change-password",noCache,requireAuth,handleChangePassword);
+
+router.get("/forgot-password/auth",handleAuthForgotPassword);
 
 export default router;
+
