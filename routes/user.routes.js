@@ -35,6 +35,7 @@ import {
   noCache,
   requireOtpSession,
 } from "../middlewares/auth.middleware.js";
+import { addAddress, deleteAddress, showAddressManagement, updateAddress } from "../controllers/user/address.controller.js";
 
 
 const router = express.Router();
@@ -48,7 +49,7 @@ router
 
 router
 .route("/verify-otp")
-.get(noCache,showVerifyOTP)
+.get(noCache,requireOtpSession,showVerifyOTP)
 .post(verifyOTP);
 
 router
@@ -105,6 +106,15 @@ router.get("/profile/change-password",noCache,requireAuth,showChangePassword);
 router.post("/profile/change-password",noCache,requireAuth,handleChangePassword);
 
 router.get("/forgot-password/auth",handleAuthForgotPassword);
+
+// Address Management
+
+router.get("/addresses",showAddressManagement);
+router.post("/addresses/add",requireAuth,addAddress);
+
+router.post("/addresses/:addressId/edit",requireAuth,updateAddress);
+
+router.get("/addresses/delete/:addressId",requireAuth,deleteAddress);
 
 export default router;
 

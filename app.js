@@ -10,8 +10,9 @@
     import flash from "connect-flash";
     import userRoutes from "./routes/user.routes.js";
     import googleAuthRoutes from "./routes/google-auth.routes.js";
+    import adminRoutes from "./routes/admin.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
-    import { authenticateUser, noCache } from "./middlewares/auth.middleware.js";
+    import { authenticateUser } from "./middlewares/auth.middleware.js";
     import passport from "passport";
     import "./config/passport.js";
 import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
@@ -60,12 +61,13 @@ import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
     app.set("view engine","ejs");
     app.set("views",path.join(__dirname,"views"))
 
-    app.set("layout","layouts/user")
+    app.set("layout","layouts/user");
 
   
 
     app.use("/",userRoutes);
     app.use("/auth",googleAuthRoutes);
+    app.use("/admin",adminRoutes);
     
 
 
