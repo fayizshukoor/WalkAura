@@ -114,6 +114,11 @@ export const handleLogin = async (req, res) => {
     return res.redirect("/login");
   }
 
+  if(user.role === "admin"){
+    req.flash("error","Admins cannot login from User Login");
+    return redirect("/login");
+  }
+
   if(user.googleId && !user.password){
     req.flash("error","This account uses google login.Please continue with Google");
     return res.redirect("/login");

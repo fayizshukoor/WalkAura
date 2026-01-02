@@ -50,44 +50,37 @@
               class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 border-b border-gray-800 pb-8"
             >
               <div class="flex items-center gap-6">
-                <div
-                  class="w-24 h-24 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center"
-                >
-                  <span class="material-symbols-outlined text-4xl text-gray-500"
-                    >person</span
-                  >
+                
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                    <% if (user.profileImage?.url) { %>
+                <img src="<%= user.profileImage.url %>" alt="Profile Photo" class="w-full h-full object-cover"/>
+                    <% } else { %>
+                <span class="material-symbols-outlined text-4xl text-gray-500">person</span>
+                    <% } %>
                 </div>
+
                 <div>
                   <h2 class="text-xl font-bold text-white"><%= user.name %></h2>
                   <p class="text-gray-400 text-sm"><%= user.email %></p>
                 </div>
               </div>
 
-              <div class="flex gap-3">
-                <button
-                  class="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg transition border border-gray-700"
-                >
-                  Upload New Photo
-                </button>
-                <button
-                  class="px-5 py-2.5 text-red-400 hover:bg-red-500/10 text-xs font-medium rounded-lg transition"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
+            <div class="flex gap-3">
+              <form action="/profile/upload-photo" method="post" enctype="multipart/form-data" >
+                <label class="cursor-pointer px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg transition border border-gray-700">
+                   Upload New Photo
+                <input type="file" name="profileImage" accept="image/*" class="hidden" onchange="this.form.submit()"/>
+                </label>
+              </form>
 
-            <% if (typeof success !== "undefined" && success.length > 0) { %>
-            <div class="flash-message rounded-lg bg-green-500/10 text-green-400 px-4 py-3 text-sm font-medium text-center">
-              <%= success[0] %>
-            </div>
-            <% } %>
+               <form action="/profile/remove-photo" method="post">
+                <button type="submit" class="px-5 py-2.5 text-red-400 hover:bg-red-500/10 text-xs font-medium rounded-lg transition"> Remove </button>
+              </form>
 
-            <% if (typeof error !== "undefined" && error.length > 0) { %>
-            <div id="flashAlert" class="flash-message mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center">
-              <%= error[0] %>
             </div>
-            <% } %>
+        </div>
+
+            <%- include('../partials/alerts') %>
             <div class="space-y-6">
               <div>
                 <label
@@ -162,11 +155,4 @@
   </body>
 </html>
 
-<script>
-  document.querySelectorAll(".flash-message").forEach((el) => {
-    setTimeout(() => {
-      el.classList.add("opacity-0", "transition-opacity", "duration-500");
-      setTimeout(() => el.remove(), 500);
-    }, 3000);
-  });
-</script>
+

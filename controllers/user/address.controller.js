@@ -32,7 +32,7 @@ export const addAddress = async (req, res) => {
       return res.redirect("/addresses");
     }
 
-    // Optional: simple phone & pincode validation
+   
     if (!/^\d{10}$/.test(phone)) {
       req.flash("error", "Enter a valid 10-digit phone number");
       return res.redirect("/addresses");
@@ -53,7 +53,7 @@ export const addAddress = async (req, res) => {
       userId: req.user.userId,
       fullName,
       phone,
-      streetAddress, // 🔥 mapping happens here
+      streetAddress, 
       city,
       state,
       pincode,
@@ -81,7 +81,7 @@ export const addAddress = async (req, res) => {
 
 export const updateAddress = async (req, res) => {
   try {
-    const userId = req.user.userId; // from JWT
+    const userId = req.user.userId; 
     const { addressId } = req.params;
     console.log(addressId);
     console.log(userId);
@@ -111,7 +111,7 @@ export const updateAddress = async (req, res) => {
     address.fullName = fullName;
     address.phone = phone;
     address.pincode = pincode;
-    address.streetAddress = streetAddress; // IMPORTANT mapping
+    address.streetAddress = streetAddress; 
     address.city = city;
     address.state = state;
 

@@ -16,6 +16,7 @@
     import passport from "passport";
     import "./config/passport.js";
 import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
+import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.js";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
 
     app.use(silentRefresh);
     app.use(authenticateUser);
+    app.use(ensureNotBlocked);  
     app.use(userContext);
 
     app.use(session({

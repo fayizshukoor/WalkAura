@@ -4,6 +4,8 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.utils.js";
+import cloudinary from "../../config/cloudinary.js";
+
 export const showProfile = async(req,res)=>{
     try{
 
@@ -375,3 +377,72 @@ export const handleAuthForgotPassword = async (req,res)=>{
         return res.redirect("/profile/change-password");
     }
 }
+
+
+export const uploadProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      req.flash("error", "Please select an image");
+      return res.redirect("/profile");
+    }
+
+    const user = await User.findById(req.user.userId);
+
+    // Remove old image
+    if (user.profileImage?.public_id) {
+      await cloudinary.uploader.destroy(user.profileImage.public_id);
+    }
+
+    // Upload new image
+    const result = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
+      {
+        folder: "walkaura/profile",
+        transformation: [
+          { width: 300, height: 300, crop: "fill", gravity: "face" }
+        ]
+      }
+    );
+
+    user.profileImage = {
+      url: result.secure_url,
+      public_id: result.public_id
+    };
+
+    await user.save();
+
+    req.flash("success", "Profile photo updated");
+    res.redirect("/profile");
+
+  } catch (error) {
+    console.error(error);
+    req.flash("error", "Upload failed");
+    res.redirect("/profile");
+  }
+};
+
+export const removeProfilePhoto = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+
+    // If no image exists
+    if (!user.profileImage?.public_id) {
+      req.flash("error", "No profile photo to remove");
+      return res.redirect("/profile");
+    }
+
+    // Remove from Cloudinary
+    await cloudinary.uploader.destroy(user.profileImage.public_id);
+
+    // Remove from DB
+    user.profileImage = null;
+    await user.save();
+
+    req.flash("success", "Profile photo removed");
+    res.redirect("/profile");
+  } catch (error) {
+    console.error(error);
+    req.flash("error", "Failed to remove profile photo");
+    res.redirect("/profile");
+  }
+};

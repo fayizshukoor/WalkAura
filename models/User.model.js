@@ -55,8 +55,9 @@ const userSchema = new Schema(
         default:false
     },
 
-    profileImage:{
-        type:String
+    profileImage: {
+        url: String,
+        public_id: String
     },
 
     addresses: [

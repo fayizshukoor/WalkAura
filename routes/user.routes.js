@@ -28,6 +28,8 @@ import {
   showChangePassword,
   handleChangePassword,
   handleAuthForgotPassword,
+  uploadProfilePhoto,
+  removeProfilePhoto,
 } from "../controllers/user/profile.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import {
@@ -36,6 +38,7 @@ import {
   requireOtpSession,
 } from "../middlewares/auth.middleware.js";
 import { addAddress, deleteAddress, showAddressManagement, updateAddress } from "../controllers/user/address.controller.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 
 const router = express.Router();
@@ -88,6 +91,13 @@ router
 .get(requireAuth, noCache, showEditProfile)
 .post(requireAuth, updateProfile);
 
+
+//Profile Photo upload and Remove
+
+router.post("/profile/upload-photo", requireAuth,upload.single("profileImage"),uploadProfilePhoto);
+router.post("/profile/remove-photo",requireAuth,removeProfilePhoto);
+
+
 // Change Email
 
 router.get("/profile/change-email",noCache,requireAuth,showChangeEmail);
@@ -109,7 +119,7 @@ router.get("/forgot-password/auth",handleAuthForgotPassword);
 
 // Address Management
 
-router.get("/addresses",showAddressManagement);
+router.get("/addresses",noCache,requireAuth,showAddressManagement);
 router.post("/addresses/add",requireAuth,addAddress);
 
 router.post("/addresses/:addressId/edit",requireAuth,updateAddress);

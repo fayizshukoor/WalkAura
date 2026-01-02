@@ -29,6 +29,15 @@ export const redirectIfAuthenticated = (req,res,next)=>{
     next();
 }
 
+export const redirectIfAdminAuthenticated = (req, res, next) => {
+  const adminToken = req.cookies.adminToken;
+
+  if (adminToken) {
+    return res.redirect("/admin/dashboard");
+  }
+  next();
+};
+
 export const noCache =  (req,res,next)=>{
     res.setHeader("Cache-Control","no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");
