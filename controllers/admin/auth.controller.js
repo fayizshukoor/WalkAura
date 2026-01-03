@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../../models/User.model.js";
 
-// GET /admin/login
+// admin login
 
 export const showAdminLogin = (req, res) => {
   res.render("admin/login", {
@@ -10,7 +10,7 @@ export const showAdminLogin = (req, res) => {
   });
 };
 
-// POST /admin/login
+//  admin Login POST
 
 export const handleAdminLogin = async (req, res) => {
   try {

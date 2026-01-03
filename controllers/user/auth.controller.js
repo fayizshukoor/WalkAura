@@ -105,7 +105,7 @@ export const handleLogin = async (req, res) => {
   const user = await User.findOne({email});
 
   if(!user || !user.isVerified){
-    req.flash("error","Email not found");
+    req.flash("error","Incorrect Email or Password");
     return res.redirect("/login")
   }
 
@@ -127,7 +127,7 @@ export const handleLogin = async (req, res) => {
   const isMatch = await bcrypt.compare(password,user.password);
 
   if(!isMatch){
-    req.flash("error","Password Incorrect");
+    req.flash("error","Incorrect email or Password");
     return res.redirect("/login")
   }
 

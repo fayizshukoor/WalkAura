@@ -3,11 +3,19 @@ import User from "../../models/User.model.js";
 
 export const showAddressManagement = async (req,res)=>{
     try {
-    const addresses = await Address.find({
-      userId: req.user.userId
-    }).sort({ isDefault: -1, createdAt: -1 });
 
-    res.render("user/address-management", { addresses });
+      const userId = req.user.userId;
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = 5;
+      const skip = (page-1)*limit;
+
+    const addresses = await Address.find({userId}).sort({createdAt:-1}).skip(skip).limit(limit);
+
+    const totalAddress = await Address.countDocuments({userId});
+    const totalPages = Math.ceil(totalAddress/limit);
+
+    res.render("user/address-management", { addresses , currentPage:page, totalPages});
   } catch (error) {
     console.error("Error loading addresses:", error);
     res.redirect("/profile");
@@ -102,8 +110,25 @@ export const updateAddress = async (req, res) => {
     });
 
     if (!address) {
-        console.log("hi");
+        
       req.flash("error", "Address not found");
+      return res.redirect("/addresses");
+    }
+
+    // Basic validation 
+    if (!fullName || !phone || !pincode || !streetAddress || !city || !state ) {
+      req.flash("error", "All required fields must be filled");
+      return res.redirect("/addresses");
+    }
+
+   
+    if (!/^\d{10}$/.test(phone)) {
+      req.flash("error", "Enter a valid 10-digit phone number");
+      return res.redirect("/addresses");
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+      req.flash("error", "Enter a valid 6-digit pincode");
       return res.redirect("/addresses");
     }
 

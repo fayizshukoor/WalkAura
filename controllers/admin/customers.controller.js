@@ -1,6 +1,6 @@
 import User from "../../models/User.model.js";
 
-// GET /admin/customers
+// show customers
 export const showCustomers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
