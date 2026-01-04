@@ -30,6 +30,12 @@ passport.use(
                     }); 
                 }
 
+                if(user.role === "admin"){
+                    return done(null,false,{
+                        message:"Access Denied.Use Admin Login"
+                    }); 
+                }
+
                 if(user && !user.googleId){
                     user.googleId = profile.id;
                     user.isVerified = true;

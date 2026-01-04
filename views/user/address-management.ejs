@@ -13,9 +13,10 @@
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
         .modal-content { transform: scale(0.95); transition: transform 0.2s ease-out; }
         .modal-active .modal-content { transform: scale(1); }
-        /* Error style */
         .error-message { color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 500; display: none; }
         .input-error { border-color: #ef4444 !important; }
+        /* Style for readonly fields to look distinct */
+        .input-readonly { background-color: #1a1a1a; color: #9ca3af; cursor: not-allowed; border-color: #374151; }
     </style>
 </head>
 <body class="bg-black text-white font-sans antialiased">
@@ -47,7 +48,7 @@
                                         <div>
                                             <h3 class="text-white font-bold text-base mb-1"><%= address.fullName %></h3>
                                             <p class="text-gray-400 text-sm leading-relaxed">
-                                                <%= address.houseName %>, <%= address.streetAddress%><br>
+                                                <%= address.streetAddress%><br>
                                                 <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
                                                 <%= address.country %>
                                             </p>
@@ -74,9 +75,7 @@
 
                     <% if(totalPages > 1){ %>
                         <div class="flex justify-center gap-2 mt-10">
-                            <% if (currentPage > 1) { %>
-                                <a href="?page=<%= currentPage - 1 %>" class="px-4 py-2 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:bg-gray-800">Prev</a>
-                            <% } %>
+                           
                             <% for (let i = 1; i <= totalPages; i++) { %>
                                 <a href="?page=<%= i %>" class="px-4 py-2 rounded-lg border <%= currentPage === i ? 'bg-[#5c56f6] text-white border-[#5c56f6]' : 'bg-[#1a1a1a] border-gray-800 hover:bg-gray-800' %>"><%= i %></a>
                             <% } %>
@@ -111,7 +110,8 @@
                     </div>
                     <div class="md:col-span-1">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pincode</label>
-                        <input type="text" name="pincode" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <input type="text" name="pincode" id="add_pincode" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <p id="add_pincode_status" class="text-[10px] text-indigo-400 mt-1 hidden animate-pulse">Validating pincode...</p>
                         <p class="error-message" id="err_pincode"></p>
                     </div>
                     <div class="md:col-span-2">
@@ -121,12 +121,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">City</label>
-                        <input type="text" name="city" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <input type="text" name="city" id="add_city" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                         <p class="error-message" id="err_city"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">State</label>
-                        <input type="text" name="state" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <input type="text" name="state" id="add_state" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                         <p class="error-message" id="err_state"></p>
                     </div>
                 </div>
@@ -162,6 +162,7 @@
                     <div class="md:col-span-1">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pincode</label>
                         <input type="text" id="edit_pincode" name="pincode" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <p id="edit_pincode_status" class="text-[10px] text-indigo-400 mt-1 hidden animate-pulse">Validating pincode...</p>
                         <p class="error-message" id="err_edit_pincode"></p>
                     </div>
                     <div class="md:col-span-2">
@@ -171,12 +172,12 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">City</label>
-                        <input type="text" id="edit_city" name="city" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <input type="text" id="edit_city" name="city" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                         <p class="error-message" id="err_edit_city"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">State</label>
-                        <input type="text" id="edit_state" name="state" class="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#5c56f6] transition-colors">
+                        <input type="text" id="edit_state" name="state" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                         <p class="error-message" id="err_edit_state"></p>
                     </div>
                 </div>
@@ -205,13 +206,16 @@
     </div>
 
     <script>
+        // --- Modal Logic ---
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
-            // Clear errors when toggling
             const errorMessages = modal.querySelectorAll('.error-message');
             const errorInputs = modal.querySelectorAll('input');
+            const statusTexts = modal.querySelectorAll('[id$="_status"]');
+
             errorMessages.forEach(m => m.style.display = 'none');
             errorInputs.forEach(i => i.classList.remove('input-error'));
+            statusTexts.forEach(s => s.classList.add('hidden'));
 
             if (modal.classList.contains('hidden')) {
                 modal.classList.remove('hidden');
@@ -252,41 +256,95 @@
             toggleModal("deleteAddressModal");
         }
 
+        // --- PINCODE & AUTOFILL LOGIC ---
+
+        const addPincodeInput = document.getElementById('add_pincode');
+        const editPincodeInput = document.getElementById('edit_pincode');
+
+        // Event listener for Add Modal
+        addPincodeInput.addEventListener('input', function() {
+            handlePincodeInput(this, '', 'add_city', 'add_state', 'add_pincode_status');
+        });
+
+        // Event listener for Edit Modal
+        editPincodeInput.addEventListener('input', function() {
+            handlePincodeInput(this, 'edit_', 'edit_city', 'edit_state', 'edit_pincode_status');
+        });
+
+        function handlePincodeInput(input, prefix, cityId, stateId, statusId) {
+            const val = input.value.trim();
+            const cityInput = document.getElementById(cityId);
+            const stateInput = document.getElementById(stateId);
+            const statusLabel = document.getElementById(statusId);
+            const errorLabel = document.getElementById(`err_${prefix}pincode`);
+
+            // Clear city/state if pincode is changed/incomplete
+            if (val.length !== 6) {
+                cityInput.value = "";
+                stateInput.value = "";
+                statusLabel.classList.add('hidden');
+                return;
+            }
+
+            // If 6 digits, validate and autofill
+            validateAndFetchPincode(val, input, prefix, cityInput, stateInput, statusLabel, errorLabel);
+        }
+
+        async function validateAndFetchPincode(pincode, inputEl, prefix, cityEl, stateEl, statusEl, errorEl) {
+            // Reset state
+            statusEl.classList.remove('hidden');
+            errorEl.style.display = 'none';
+            inputEl.classList.remove('input-error');
+
+            try {
+                const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+                const data = await response.json();
+
+                statusEl.classList.add('hidden');
+
+                if (data[0].Status === "Success") {
+                    const postOffice = data[0].PostOffice[0];
+                    cityEl.value = postOffice.District;
+                    stateEl.value = postOffice.State;
+                } else {
+                    cityEl.value = "";
+                    stateEl.value = "";
+                    showError(inputEl, errorEl, "Invalid pincode or area not found");
+                }
+            } catch (err) {
+                statusEl.classList.add('hidden');
+                showError(inputEl, errorEl, "Network error. Try again.");
+            }
+        }
+
+        // --- FORM VALIDATION ---
+
         function validateAddressForm(form, prefix = '') {
             let isValid = true;
             const fields = ['fullName', 'phone', 'pincode', 'streetAddress', 'city', 'state'];
             
-            // Clear previous errors
             fields.forEach(field => {
                 const input = form[field];
                 const errorDisplay = document.getElementById(`err_${prefix}${field}`);
                 input.classList.remove('input-error');
                 errorDisplay.style.display = 'none';
-            });
 
-            // Check empty fields
-            fields.forEach(field => {
-                const input = form[field];
-                const value = input.value.trim();
-                const errorDisplay = document.getElementById(`err_${prefix}${field}`);
-
-                if (!value) {
+                if (!input.value.trim()) {
                     showError(input, errorDisplay, "This field is required");
                     isValid = false;
                 }
             });
 
-            // Specific validations if still valid
             if (isValid) {
                 const phone = form.phone.value.trim();
                 if (!/^\d{10}$/.test(phone)) {
-                    showError(form.phone, document.getElementById(`err_${prefix}phone`), "Phone must be exactly 10 digits");
+                    showError(form.phone, document.getElementById(`err_${prefix}phone`), "Phone must be 10 digits");
                     isValid = false;
                 }
 
                 const pincode = form.pincode.value.trim();
                 if (!/^\d{6}$/.test(pincode)) {
-                    showError(form.pincode, document.getElementById(`err_${prefix}pincode`), "Pincode must be exactly 6 digits");
+                    showError(form.pincode, document.getElementById(`err_${prefix}pincode`), "Pincode must be 6 digits");
                     isValid = false;
                 }
             }

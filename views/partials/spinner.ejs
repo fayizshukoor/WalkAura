@@ -1,0 +1,18 @@
+<div id="global-loader" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+    <div class="flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-4 border-gray-700 border-t-[#5c56f6] rounded-full animate-spin"></div>
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">WalkAura</p>
+    </div>
+</div>
+
+<script>
+    // Hide loader when the page is fully loaded
+    window.addEventListener('load', () => {
+        const loader = document.getElementById('global-loader');
+        loader.style.transition = 'opacity 0.5s ease';
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 500);
+    });
+</script>

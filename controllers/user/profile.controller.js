@@ -89,7 +89,7 @@ export const showChangeEmail = async (req,res)=>{
     try{
         const user = await User.findById(req.user.userId);
 
-        if(!user.password && user.googleId){
+        if(user.googleId){
             req.flash("error","Google users cannot change Email");
             return res.redirect("/profile");
         }
@@ -340,7 +340,7 @@ export const handleChangePassword  = async (req,res)=>{
         res.cookie("refreshToken",newRefreshToken,{
             httpOnly:true,
             secure:process.env.NODE_ENV === "production",
-            maxAge:7*24*60*60*1000
+            maxAge:7*24*60*61*1000
         });
 
         req.flash("success","Password Changed Successfully");

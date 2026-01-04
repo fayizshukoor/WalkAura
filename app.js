@@ -17,6 +17,8 @@
     import "./config/passport.js";
 import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
 import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.js";
+import notFoundHandler from "./middlewares/notFound.middleware.js";
+import errorHandler from "./middlewares/error.middleware.js";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -70,6 +72,10 @@ import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.js";
     app.use("/",userRoutes);
     app.use("/auth",googleAuthRoutes);
     app.use("/admin",adminRoutes);
+
+    // Error handling middleware
+    app.use(notFoundHandler);
+    app.use(errorHandler);
     
 
 
