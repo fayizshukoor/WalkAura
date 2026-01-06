@@ -28,6 +28,6 @@ router.get("/logout", noCache,adminLogout);
 router.get("/dashboard", noCache, showAdminDashboard);
 
 router.get("/customers", noCache, showCustomers);
-router.post("/customers/:id/toggle-status", toggleCustomerStatus);
+router.patch("/customers/:id/toggle-status", toggleCustomerStatus);
 
 export default router;

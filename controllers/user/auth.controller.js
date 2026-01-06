@@ -1,11 +1,9 @@
 import User from "../../models/User.model.js";
 import bcrypt from "bcryptjs";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "../../utils/userTokens.utils.js";
+import { generateAccessToken, generateRefreshToken} from "../../utils/userTokens.utils.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+import { HTTP_STATUS } from "../../constants/httpStatus.js";
 
 export const showSignup = (req, res) => {
   try {
@@ -75,7 +73,14 @@ export const handleSignup = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
+  try {
   await sendOTP(email, "SIGNUP");
+} catch (error) {
+  return res.render("user/signup", {
+    error: error.message
+  });
+}
+
 
   req.session.email = email;
   req.session.otpPurpose = "SIGNUP";
@@ -161,9 +166,9 @@ export const logout = (req, res) => {
   }
 };
 
-//Password Controller
+/* ------Password Controller--------*/
 
-export const showForgotPassword = async (req, res) => {
+export const showForgotPassword = (req, res) => {
   try {
     //Clear any previous OTP
     delete req.session.email;
@@ -194,7 +199,18 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && user.isVerified && !user.isBlocked && user.password) {
-    await sendOTP(email, "FORGOT_PASSWORD");
+
+
+  try {
+  await sendOTP(email, "FORGOT_PASSWORD");
+} catch (error) {
+  return res.render("user/forgot-password", {
+    error: error.message
+  });
+}
+
+
+
 
     req.session.email = email;
     req.session.otpPurpose = "FORGOT_PASSWORD";

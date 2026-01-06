@@ -241,14 +241,19 @@
             document.getElementById('edit_streetAddress').value = address.streetAddress || '';
             document.getElementById('edit_city').value = address.city || '';
             document.getElementById('edit_state').value = address.state || '';
-            form.action = `/addresses/${address._id}/edit`;
+            form.action = `/addresses/${address._id}?_method=PUT`;
             toggleModal('editAddressModal');
         }
 
         let deleteAddressId = null;
         document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
             if (!deleteAddressId) return;
-            window.location.href = `/addresses/delete/${deleteAddressId}`;
+            
+            const form = document.createElement("form");
+            form.method = "POST",
+            form.action = `/addresses/${deleteAddressId}?_method=DELETE`;
+            document.body.appendChild(form);
+            form.submit();
         });
 
         function openDeleteModal(addressId) {

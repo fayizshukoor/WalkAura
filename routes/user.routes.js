@@ -22,17 +22,13 @@ import {
   showProfile,
   showEditProfile,
   updateProfile,
-  showChangeEmail,
-  requestEmailChange,
-  showVerifyEmailChangeOTP,
-  verifyEmailChangeOTP,
-  resendEmailChangeOTP,
-  showChangePassword,
-  handleChangePassword,
-  handleAuthForgotPassword,
   uploadProfilePhoto,
   removeProfilePhoto,
 } from "../controllers/user/profile.controller.js";
+
+import { requestEmailChange, resendEmailChangeOTP, showChangeEmail, showVerifyEmailChangeOTP, verifyEmailChangeOTP } from "../controllers/user/profileEmail.controller.js";
+
+import { handleAuthForgotPassword, handleChangePassword, showChangePassword } from "../controllers/user/profilePassword.controller.js";
 
 import {
   addAddress,
@@ -46,6 +42,7 @@ import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middle
 import { upload } from "../middlewares/upload.middleware.js";
 import { requireOtpSession } from "../middlewares/otp.middleware.js";
 import { noCache } from "../middlewares/cache.middleware.js";
+
 
 const router = express.Router();
 
@@ -89,62 +86,39 @@ router.get("/profile", noCache, requireAuth, showProfile);
 router
   .route("/profile/edit")
   .get(requireAuth, noCache, showEditProfile)
-  .post(requireAuth, updateProfile);
+  .put(requireAuth, updateProfile);
 
 //Profile Photo upload and Remove
 
-router.post(
-  "/profile/upload-photo",
-  requireAuth,
-  upload.single("profileImage"),
-  uploadProfilePhoto
-);
-router.post("/profile/remove-photo", requireAuth, removeProfilePhoto);
+router.post("/profile/upload-photo", requireAuth, upload.single("profileImage"), uploadProfilePhoto);
+router.delete("/profile/remove-photo", requireAuth, removeProfilePhoto);
 
 // Change Email
 
 router.get("/profile/change-email", noCache, requireAuth, showChangeEmail);
 router.post("/profile/change-email", requireAuth, requestEmailChange);
 
-router.get(
-  "/profile/verify-email-change",
-  noCache,
-  requireAuth,
-  showVerifyEmailChangeOTP
-);
+router.get("/profile/verify-email-change",noCache,requireAuth, showVerifyEmailChangeOTP );
 router.post("/profile/verify-email-change", requireAuth, verifyEmailChangeOTP);
 
 // Resend email change otp
-router.post(
-  "/profile/resend-email-change-otp",
-  requireAuth,
-  resendEmailChangeOTP
-);
 
-// Change Password
+router.post("/profile/resend-email-change-otp",requireAuth,resendEmailChangeOTP );
 
-router.get(
-  "/profile/change-password",
-  noCache,
-  requireAuth,
-  showChangePassword
-);
-router.post(
-  "/profile/change-password",
-  noCache,
-  requireAuth,
-  handleChangePassword
-);
+// Change Password Authenticated
 
-router.get("/forgot-password/auth", handleAuthForgotPassword);
+router.get("/profile/change-password", noCache, requireAuth, showChangePassword);
+router.post("/profile/change-password", noCache, requireAuth, handleChangePassword);
 
-// Address Management
+router.get("/forgot-password/authenticated", handleAuthForgotPassword);
+
+/* Address Management */
 
 router.get("/addresses", noCache, requireAuth, showAddressManagement);
 router.post("/addresses/add", requireAuth, addAddress);
 
-router.post("/addresses/:addressId/edit", requireAuth, updateAddress);
+router.put("/addresses/:addressId", requireAuth, updateAddress);
 
-router.get("/addresses/delete/:addressId", requireAuth, deleteAddress);
+router.delete("/addresses/:addressId", requireAuth, deleteAddress);
 
 export default router;

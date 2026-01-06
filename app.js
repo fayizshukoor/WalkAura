@@ -15,10 +15,11 @@
     import { authenticateUser, silentRefresh } from "./middlewares/auth.middleware.js";
     import passport from "passport";
     import "./config/passport.js";
-import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.js";
-import notFoundHandler from "./middlewares/notFound.middleware.js";
-import errorHandler from "./middlewares/error.middleware.js";
-import { adminSilentRefresh, authenticateAdmin } from "./middlewares/admin.middleware.js";
+    import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.middleware.js";
+    import notFoundHandler from "./middlewares/notFound.middleware.js";
+    import errorHandler from "./middlewares/error.middleware.js";
+    import { adminSilentRefresh, authenticateAdmin } from "./middlewares/admin.middleware.js";
+    import methodOverride from "method-override";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -29,6 +30,8 @@ import { adminSilentRefresh, authenticateAdmin } from "./middlewares/admin.middl
 
     app.use(express.json());
     app.use(express.urlencoded({extended:true}));
+
+    app.use(methodOverride("_method"));
 
     app.use(cookieParser());
 

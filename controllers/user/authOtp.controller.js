@@ -70,7 +70,7 @@ export const verifyOTP = async(req,res)=>{
 
         if(purpose === "FORGOT_PASSWORD"){
             req.session.allowPasswordReset = true;
-            return res.redirect("/reset-password");
+            return res.redirect("/reset-password");  // goes to auth controller
         }
 
         await OTP.deleteMany({email,purpose});
@@ -83,7 +83,7 @@ export const verifyOTP = async(req,res)=>{
         console.error('OTP Verify Error:', error);
 
         req.flash("error","Failed to verify OTP");
-        return res.redirect("/verify-otp");
+        return res.redirect("/verify-otp");     
         }
     }
 

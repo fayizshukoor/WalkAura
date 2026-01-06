@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import OTP from "../models/OTP.model.js";
+import AppError from "./appError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 
 const emailTemplates = {
@@ -27,59 +29,69 @@ const emailTemplates = {
   }
 };
 
-export const sendOTP = async(email,purpose)=>{
+export const sendOTP = async (email, purpose) => {
+  try {
+    // Rate limiting
+    const recentOTP = await OTP.findOne({
+      email,
+      purpose,
+      createdAt: { $gte: new Date(Date.now() - 30 * 1000) }
+    });
 
-         try{
+    if (recentOTP) {
+      throw new AppError(
+        "Please wait before requesting another OTP",
+        HTTP_STATUS.TOO_MANY_REQUESTS
+      );
+    }
 
-            // Rate limiting: Check if OTP was sent recently
+    // Generate OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const hashedOtp = crypto
+      .createHash("sha256")
+      .update(otp)
+      .digest("hex");
 
-        const recentOTP = await OTP.findOne({
-            email,
-            purpose,
-            createdAt:{$gte: new Date(Date.now()-30*1000)}
-        });
+    await OTP.deleteMany({ email, purpose });
 
-        if(recentOTP){
-            throw new Error("OTP_RATE_LIMIT");
-        }
-        // Generating OTP
-        const otp = crypto.randomInt(100000,999999).toString();
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_EMAIL,
+        pass: process.env.NODEMAILER_PASSWORD
+      }
+    });
 
-        const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+    await transporter.sendMail({
+      from: process.env.NODEMAILER_EMAIL,
+      to: email,
+      subject: emailTemplates[purpose].subject,
+      html: emailTemplates[purpose].body(otp)
+    });
 
-        //Delete old OTPs for this email
-        await OTP.deleteMany({email,purpose});
+    await OTP.create({
+      email,
+      otp: hashedOtp,
+      purpose
+    });
 
-        //Send Email first
-        const transporter = nodemailer.createTransport({
-            service:"gmail",
-            auth:{
-                user:process.env.NODEMAILER_EMAIL,
-                pass:process.env.NODEMAILER_PASSWORD
-            }
-        });
+    return true;
 
-        await transporter.sendMail({
-            from:process.env.NODEMAILER_EMAIL,
-            to: email,
-            subject: emailTemplates[purpose].subject,
-            html: emailTemplates[purpose].body(otp)
-        });
+  } catch (error) {
+    //  IMPORTANT PART
+    console.error("OTP sending failed:", error);
 
-        await OTP.create({
-            email,
-            otp:hashedOtp,
-            purpose
-        });
+    // If it's already a known AppError (rate limit), rethrow it
+    if (error instanceof AppError) {
+      throw error;
+    }
 
-        return true;
-
-         }catch(error){
-            console.error("Error sending OTP",error);
-            throw error;
-
-         }
-       
+    // Otherwise, hide internal details and throw a generic OTP failure
+    throw new AppError(
+      "Failed to send OTP. Please try again.",
+      HTTP_STATUS.BAD_REQUEST
+    );
+  }
 };
 
 
