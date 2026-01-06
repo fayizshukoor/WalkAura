@@ -1,7 +1,7 @@
 import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 class AppError extends Error{
-    constructor(message,statusCode = HTTP_STATUS.iNTERNAL_SERVER_ERROR){
+    constructor(message,statusCode = HTTP_STATUS.INTERNAL_SERVER_ERROR){
         super(message);
         this.statusCode = statusCode;
         this.isOperational = true;

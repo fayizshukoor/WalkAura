@@ -80,8 +80,6 @@ export const sendOTP = async(email,purpose)=>{
 
          }
        
-
-   
 };
 
 

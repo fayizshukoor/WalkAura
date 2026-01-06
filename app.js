@@ -12,13 +12,13 @@
     import googleAuthRoutes from "./routes/google-auth.routes.js";
     import adminRoutes from "./routes/admin.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
-    import { authenticateUser } from "./middlewares/auth.middleware.js";
+    import { authenticateUser, silentRefresh } from "./middlewares/auth.middleware.js";
     import passport from "passport";
     import "./config/passport.js";
-import { silentRefresh } from "./middlewares/silentRefresh.middleware.js";
 import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.js";
 import notFoundHandler from "./middlewares/notFound.middleware.js";
 import errorHandler from "./middlewares/error.middleware.js";
+import { adminSilentRefresh, authenticateAdmin } from "./middlewares/admin.middleware.js";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -32,8 +32,8 @@ import errorHandler from "./middlewares/error.middleware.js";
 
     app.use(cookieParser());
 
-    app.use(silentRefresh);
     app.use(authenticateUser);
+    app.use(silentRefresh);
     app.use(ensureNotBlocked);  
     app.use(userContext);
 
@@ -51,6 +51,9 @@ import errorHandler from "./middlewares/error.middleware.js";
     app.use(flash());
 
     app.use(passport.initialize());
+
+    app.use("/admin",authenticateAdmin);
+    app.use('/admin',adminSilentRefresh);
 
     app.use((req,res,next)=>{
         res.locals.success = req.flash("success");
@@ -73,19 +76,14 @@ import errorHandler from "./middlewares/error.middleware.js";
     app.use("/auth",googleAuthRoutes);
     app.use("/admin",adminRoutes);
 
-    // Error handling middleware
-    app.use(notFoundHandler);
-    app.use(errorHandler);
-    
-
 
     app.get("/",(req,res)=>{
         res.redirect("/home");
     })
 
-
-   
-
+    // Error handling middleware
+    app.use(notFoundHandler);
+    app.use(errorHandler);
 
 
     export default app;

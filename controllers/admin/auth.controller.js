@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../../models/User.model.js";
+import { generateAdminAccessToken, generateAdminRefreshToken } from "../../utils/adminTokens.util.js";
 
 // admin login
 
@@ -35,33 +35,41 @@ export const handleAdminLogin = async (req, res) => {
       return res.redirect("/admin");
     }
 
-    const token = jwt.sign(
-      {
-        userId: admin._id,
-        role: admin.role
-      },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "1d" }
-    );
+    // generate admin tokens
+    const adminAccessToken = generateAdminAccessToken(admin);
+    const adminRefreshToken = generateAdminRefreshToken(admin);
 
-    res.cookie("adminToken", token, {
+    // access token 
+    res.cookie("adminAccessToken", adminAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict"
+      sameSite: "strict",
+      maxAge: 10 * 60 * 1000 
     });
 
-    res.redirect("/admin/dashboard");
+    //  refresh token
+    res.cookie("adminRefreshToken", adminRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000 
+    });
+
+    return res.redirect("/admin/dashboard");
 
   } catch (error) {
     console.error("Admin login error:", error);
     req.flash("error", "Something went wrong");
-    res.redirect("/admin");
+    return res.redirect("/admin");
   }
 };
+
 
 // Logout
 
 export const adminLogout = (req, res) => {
-  res.clearCookie("adminToken");
+  res.clearCookie("adminAccessToken");
+  res.clearCookie("adminRefreshToken");
+
   res.redirect("/admin");
 };

@@ -7,5 +7,5 @@ export const HTTP_STATUS = Object.freeze({
     FORBIDDEN:403,
     NOT_FOUND:404,
 
-    iNTERNAL_SERVER_ERROR:500
+    INTERNAL_SERVER_ERROR:500
 });

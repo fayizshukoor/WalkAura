@@ -1,4 +1,6 @@
 import express from "express";
+
+//Controller imports
 import { showHomePage } from "../controllers/user/home.controller.js";
 import {
   showSignup,
@@ -31,100 +33,118 @@ import {
   uploadProfilePhoto,
   removeProfilePhoto,
 } from "../controllers/user/profile.controller.js";
-import { requireAuth } from "../middlewares/requireAuth.js";
-import {
-  redirectIfAuthenticated,
-  noCache,
-  requireOtpSession,
-} from "../middlewares/auth.middleware.js";
-import { addAddress, deleteAddress, showAddressManagement, updateAddress } from "../controllers/user/address.controller.js";
-import { upload } from "../middlewares/upload.middleware.js";
 
+import {
+  addAddress,
+  deleteAddress,
+  showAddressManagement,
+  updateAddress,
+} from "../controllers/user/address.controller.js";
+
+// Middleware imports
+import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/upload.middleware.js";
+import { requireOtpSession } from "../middlewares/otp.middleware.js";
+import { noCache } from "../middlewares/cache.middleware.js";
 
 const router = express.Router();
 
-router.get("/home",noCache,showHomePage);
+router.get("/home", noCache, showHomePage);
 
 router
-.route("/signup")
-.get(noCache,redirectIfAuthenticated,showSignup)
-.post(handleSignup);
+  .route("/signup")
+  .get(noCache, redirectIfAuthenticated, showSignup)
+  .post(handleSignup);
 
 router
-.route("/verify-otp")
-.get(noCache,requireOtpSession,showVerifyOTP)
-.post(verifyOTP);
+  .route("/verify-otp")
+  .get(noCache, requireOtpSession, showVerifyOTP)
+  .post(verifyOTP);
 
 router
-.route("/login")
-.get(noCache,redirectIfAuthenticated,showLogin)
-.post(handleLogin);
+  .route("/login")
+  .get(noCache, redirectIfAuthenticated, showLogin)
+  .post(handleLogin);
 
+router.post("/resend-otp", resendOTP);
 
-router.post("/resend-otp",resendOTP);
+router.get("/logout", noCache, logout);
 
-router.get("/logout",noCache, logout);
-
-
-//Forgot Password 
+//Forgot Password
 
 router
-.route("/forgot-password")
-.get(noCache,showForgotPassword)
-.post(handleForgotPassword);
+  .route("/forgot-password")
+  .get(noCache, showForgotPassword)
+  .post(handleForgotPassword);
 
 router
-.route("/reset-password")
-.get(noCache,showResetPassword)
-.post(handleResetPassword);
+  .route("/reset-password")
+  .get(noCache, showResetPassword)
+  .post(handleResetPassword);
 
-
-
-
-
-// Profile 
+// Profile
 
 router.get("/profile", noCache, requireAuth, showProfile);
 
 router
-.route("/profile/edit")
-.get(requireAuth, noCache, showEditProfile)
-.post(requireAuth, updateProfile);
-
+  .route("/profile/edit")
+  .get(requireAuth, noCache, showEditProfile)
+  .post(requireAuth, updateProfile);
 
 //Profile Photo upload and Remove
 
-router.post("/profile/upload-photo", requireAuth,upload.single("profileImage"),uploadProfilePhoto);
-router.post("/profile/remove-photo",requireAuth,removeProfilePhoto);
-
+router.post(
+  "/profile/upload-photo",
+  requireAuth,
+  upload.single("profileImage"),
+  uploadProfilePhoto
+);
+router.post("/profile/remove-photo", requireAuth, removeProfilePhoto);
 
 // Change Email
 
-router.get("/profile/change-email",noCache,requireAuth,showChangeEmail);
-router.post('/profile/change-email',requireAuth,requestEmailChange);
+router.get("/profile/change-email", noCache, requireAuth, showChangeEmail);
+router.post("/profile/change-email", requireAuth, requestEmailChange);
 
-router.get("/profile/verify-email-change",noCache,requireAuth,showVerifyEmailChangeOTP);
-router.post("/profile/verify-email-change",requireAuth,verifyEmailChangeOTP);
+router.get(
+  "/profile/verify-email-change",
+  noCache,
+  requireAuth,
+  showVerifyEmailChangeOTP
+);
+router.post("/profile/verify-email-change", requireAuth, verifyEmailChangeOTP);
 
 // Resend email change otp
-router.post("/profile/resend-email-change-otp",requireAuth,resendEmailChangeOTP);
-
+router.post(
+  "/profile/resend-email-change-otp",
+  requireAuth,
+  resendEmailChangeOTP
+);
 
 // Change Password
 
-router.get("/profile/change-password",noCache,requireAuth,showChangePassword);
-router.post("/profile/change-password",noCache,requireAuth,handleChangePassword);
+router.get(
+  "/profile/change-password",
+  noCache,
+  requireAuth,
+  showChangePassword
+);
+router.post(
+  "/profile/change-password",
+  noCache,
+  requireAuth,
+  handleChangePassword
+);
 
-router.get("/forgot-password/auth",handleAuthForgotPassword);
+router.get("/forgot-password/auth", handleAuthForgotPassword);
 
 // Address Management
 
-router.get("/addresses",noCache,requireAuth,showAddressManagement);
-router.post("/addresses/add",requireAuth,addAddress);
+router.get("/addresses", noCache, requireAuth, showAddressManagement);
+router.post("/addresses/add", requireAuth, addAddress);
 
-router.post("/addresses/:addressId/edit",requireAuth,updateAddress);
+router.post("/addresses/:addressId/edit", requireAuth, updateAddress);
 
-router.get("/addresses/delete/:addressId",requireAuth,deleteAddress);
+router.get("/addresses/delete/:addressId", requireAuth, deleteAddress);
 
 export default router;
-
