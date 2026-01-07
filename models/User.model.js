@@ -15,12 +15,17 @@ const userSchema = new Schema(
         required:true,
         unique:true,
         lowercase:true,
-        index:true
+    },
+
+    pendingEmail:{
+        type:String,
+        trim:true
     },
 
     phone:{
         type:String,
-        trim:true
+        trim:true,
+        default:null
     },
 
     googleId:{
@@ -30,24 +35,19 @@ const userSchema = new Schema(
     },
 
     password:{
-        type:String
-    },
-
-    otp:{
         type:String,
-    },
-    
-    otpExpiry:{
-        type:Date
+        default:null
     },
 
     isVerified:{
-        type:Boolean,default:false
-    },
-    
-    isAdmin:{
         type:Boolean,
         default:false
+    },
+    
+    role:{
+        type:String,
+        enum:["user","admin"],
+        default:"user"
     },
 
     isBlocked:{
@@ -55,9 +55,17 @@ const userSchema = new Schema(
         default:false
     },
 
-    profileImage:{
-        type:String
+    profileImage: {
+        url: String,
+        public_id: String
     },
+
+    addresses: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Address"
+        }
+    ],
 
     passwordChangedAt:{
         type:Date

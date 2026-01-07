@@ -1,93 +1,99 @@
-<nav class="w-full h-20 bg-black backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 md:px-12 fixed top-0 left-0 z-50">
+<nav class="w-full h-20 bg-black/80 backdrop-blur-md border-b border-gray-800 flex items-center justify-between px-6 md:px-12 fixed top-0 left-0 z-50">
 
-  <!-- Logo -->
   <a class="flex items-center gap-3" href="/">
-    <img src="/img/walkAura new.png" alt="logo" class="w-[140px]" />
+    <img src="/img/walkAura new.png" alt="WalkAura" class="w-[140px]" /> 
   </a>
 
-  <!-- Desktop Menu -->
-  <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-20">
-    <a class="nav-link" href="/">Home</a>
-    <a class="nav-link" href="/shop">Shop</a>
-    <a class="nav-link" href="/about">About</a>
+  <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-20 text-sm font-medium tracking-wide">
+    <a class="hover:text-gray-300 transition" href="/">Home</a>
+    <a class="hover:text-gray-300 transition" href="/shop">Shop</a>
+    <a class="hover:text-gray-300 transition" href="/about">About</a>
   </div>
 
-  <!-- Right Icons -->
   <div class="flex items-center gap-6">
 
-    <!-- Wishlist (desktop only) -->
-    <a href="/wishlist" class="hidden md:block text-gray-300 hover:text-white">
-      <span class="material-symbols-outlined text-[24px]">favorite</span>
+    <a href="/wishlist" class="hidden md:block text-gray-400 hover:text-white transition">
+      <span class="material-symbols-outlined">favorite</span>
     </a>
 
-    <!-- Cart (desktop only) -->
-    <a href="/cart" class="hidden md:block relative text-gray-300 hover:text-white">
-      <span class="material-symbols-outlined text-[24px]">shopping_cart</span>
-      <span id="cartCount"
-        class="absolute -top-2 -right-2 hidden min-w-[18px] h-[18px]
-               bg-red-500 text-white text-[10px] font-bold rounded-full
-               flex items-center justify-center">0</span>
+    <a href="/cart" class="hidden md:block relative text-gray-400 hover:text-white transition">
+      <span class="material-symbols-outlined">shopping_cart</span>
+      <span id="cartCount" class="absolute -top-1 -right-1 hidden w-4 h-4 bg-red-600 text-[10px] font-bold rounded-full flex items-center justify-center text-white">0</span>
     </a>
+    
+    <% const user = locals.user || null; %>
 
-    <!-- Profile -->
-    <div class="relative">
-      <button onclick="toggleProfile()" class="text-gray-300 hover:text-white">
-        <span class="material-symbols-outlined text-[26px]">account_circle</span>
-      </button>
+    <% if (user) { %>
+      <div class="relative cursor-pointer" onclick="toggleProfile()">
+        <span class="material-symbols-outlined text-[26px] text-gray-400 hover:text-white transition">
+          account_circle
+        </span>
 
-      <!-- PROFILE POPUP -->
-      <div
-        id="profileMenu"
-        class="absolute right-0 mt-3 w-40 bg-[#181a25]
-               border border-[#282c39] rounded-xl shadow-xl
-               hidden z-50"
-      >
-         <% if (user) { %>
-    <a href="/profile" class="mobile-link flex gap-2 py-2">
-      <span class="material-symbols-outlined">person</span> Profile
-    </a>
-    <a href="/logout" class="mobile-link text-red-400 flex gap-2 py-2">
-      <span class="material-symbols-outlined">logout</span> Logout
-    </a>
-  <% } else { %>
-    <a href="/login" class="mobile-link flex gap-2 py-2">
-      <span class="material-symbols-outlined">login</span> Login
-    </a>
-    <a href="/signup" class="mobile-link flex gap-2 py-2">
-      <span class="material-symbols-outlined">person_add</span> Sign Up
-    </a>
-  <% } %>
+        <div id="profileMenu" class="absolute right-0 top-12 w-40 bg-[#181a25] border border-[#282c39] rounded-xl shadow-xl hidden z-50">
+          <a href="/profile" class="flex items-center gap-2 px-4 py-3 text-sm hover:bg-white/5 transition rounded-t-xl text-gray-300 hover:text-white">
+            <span class="material-symbols-outlined text-[20px]">person</span>
+            Profile
+          </a>
+          <a href="/logout" data-logout-btn class="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition rounded-b-xl">
+            <span class="material-symbols-outlined text-[20px]">logout</span>
+            Logout
+          </a>
+        </div>
       </div>
-    </div>
 
-    <!-- Hamburger -->
-    <button class="md:hidden text-gray-300 hover:text-white" onclick="toggleMenu()">
+    <% } else { %>
+      <div class="flex items-center gap-4">
+        <a href="/login" class="text-sm font-medium text-gray-400 hover:text-white transition">Login</a>
+        <a href="/signup" class="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-indigo-600 transition">Sign Up</a>
+      </div>
+    <% } %>
+
+
+    <button class="md:hidden text-gray-400 hover:text-white transition" onclick="toggleMenu()">
       <span class="material-symbols-outlined text-2xl">menu</span>
     </button>
-
   </div>
 </nav>
 
-<div
-  id="mobileMenu"
-  class="fixed top-20 left-0 w-full bg-black border-t border-white/5
-         hidden md:hidden flex flex-col gap-6 px-6 py-6 z-40"
->
-  <a href="/" class="mobile-link">Home</a>
-  <a href="/shop" class="mobile-link">Shop</a>
-  <a href="/about" class="mobile-link">About</a>
+<div id="mobileMenu" class="fixed top-20 left-0 w-full bg-black border-t border-white/5 hidden md:hidden flex flex-col gap-6 px-6 py-6 z-40">
+  <a href="/" class="text-gray-300 hover:text-white">Home</a>
+  <a href="/shop" class="text-gray-300 hover:text-white">Shop</a>
+  <a href="/about" class="text-gray-300 hover:text-white">About</a>
 
   <hr class="border-white/10">
 
- <div class="flex">
-   <a href="/wishlist" class="mobile-link flex gap-2 px-2">
-    <span class="material-symbols-outlined">favorite</span> 
-  </a>
-
-  <a href="/cart" class="mobile-link flex gap-2 px-2">
-    <span class="material-symbols-outlined">shopping_cart</span> 
-  </a>
- </div>
-
-
+  <div class="flex gap-6">
+    <a href="/wishlist" class="flex gap-2 text-gray-300 hover:text-white">
+      <span class="material-symbols-outlined">favorite</span> 
+      <span class="text-sm">Wishlist</span>
+    </a>
+    <a href="/cart" class="flex gap-2 text-gray-300 hover:text-white">
+      <span class="material-symbols-outlined">shopping_cart</span> 
+      <span class="text-sm">Cart</span>
+    </a>
+  </div>
 </div>
+
+ <!-- Navbar Functionalities -->
+
+    <script>
+    function toggleMenu() {
+      const menu = document.getElementById("mobileMenu");
+      if (menu) menu.classList.toggle("hidden");
+    }
+
+    function toggleProfile() {
+      const profile = document.getElementById("profileMenu");
+      if (profile) profile.classList.toggle("hidden");
+    }
+
+    // close profile popup when clicking outside
+    document.addEventListener("click", (e) => {
+      const profile = document.getElementById("profileMenu");
+      if (!profile) return;
+      if (!e.target.closest("[onclick='toggleProfile()']") &&
+          !e.target.closest("#profileMenu")) {
+        profile.classList.add("hidden");
+      }
+    });
+  </script>

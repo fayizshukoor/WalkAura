@@ -1,0 +1,108 @@
+<aside class="w-64 border-r border-gray-900 hidden md:flex flex-col sticky top-0 h-screen bg-black flex-shrink-0">
+           
+
+            <nav id="admin-sidebar-nav" class="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+                <a href="/admin/dashboard" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a href="/admin/orders" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="text-sm font-medium">Orders</span>
+                </a>
+                <a href="/admin/products" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <span class="text-sm font-medium">Products</span>
+                </a>
+                <a href="/admin/customers" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">group</span>
+                    <span class="text-sm font-medium">Customers</span>
+                </a>
+                <a href="/admin/sales-report" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">monitoring</span>
+                    <span class="text-sm font-medium">Sales Report</span>
+                </a>
+                <a href="/admin/coupons" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">confirmation_number</span>
+                    <span class="text-sm font-medium">Coupon</span>
+                </a>
+                <a href="/admin/categories" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">folder</span>
+                    <span class="text-sm font-medium">Category</span>
+                </a>
+                <a href="/admin/banners" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">grid_view</span>
+                    <span class="text-sm font-medium">Banners</span>
+                </a>
+                <a href="/admin/referrals" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">share</span>
+                    <span class="text-sm font-medium">Referrals</span>
+                </a>
+                <a href="/admin/settings" class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all group text-gray-400 hover:text-white hover:bg-gray-900">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="text-sm font-medium">Settings</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-gray-900">
+    <a href="/admin/logout" data-admin-logout-btn class="flex items-center gap-3 p-3 text-gray-400 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all group w-full">
+        <span class="material-symbols-outlined group-hover:text-red-500 transition-colors">logout</span>
+        <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Logout</span>
+    </a>
+</div>
+        
+</aside>
+
+<!-- Admin Logout Confirmation Modal -->
+<div
+  id="adminLogoutModal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70"
+>
+  <div
+    class="w-full max-w-sm rounded-xl bg-[#0b0c10] border border-red-500/30 shadow-xl p-6 text-center"
+  >
+    <h2 class="text-xl font-semibold text-white mb-2">
+      Admin Logout
+    </h2>
+
+    <p class="text-gray-400 mb-6">
+      Are you sure you want to log out of the admin panel?
+    </p>
+
+    <div class="flex justify-center gap-4">
+      <button
+        id="cancelAdminLogout"
+        class="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition"
+      >
+        Cancel
+      </button>
+
+      <a
+        href="/admin/logout"
+        class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition"
+      >
+        Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const adminModal = document.getElementById("adminLogoutModal");
+  const cancelAdminBtn = document.getElementById("cancelAdminLogout");
+
+  document.addEventListener("click", (e) => {
+    const adminLogoutBtn = e.target.closest("[data-admin-logout-btn]");
+
+    if (adminLogoutBtn) {
+      e.preventDefault();
+      adminModal.classList.remove("hidden");
+      adminModal.classList.add("flex");
+    }
+
+    if (e.target === adminModal || e.target === cancelAdminBtn) {
+      adminModal.classList.add("hidden");
+      adminModal.classList.remove("flex");
+    }
+  });
+</script>

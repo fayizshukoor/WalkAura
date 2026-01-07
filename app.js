@@ -1,34 +1,68 @@
     import dotenv from "dotenv";
     dotenv.config();
     import express from "express";
+    import morgan from "morgan";
     import path from "path";
     import expressLayouts from "express-ejs-layouts";
     import { fileURLToPath } from "url";
     import cookieParser from "cookie-parser";
     import session from "express-session";
+    import flash from "connect-flash";
     import userRoutes from "./routes/user.routes.js";
+    import googleAuthRoutes from "./routes/google-auth.routes.js";
+    import adminRoutes from "./routes/admin.routes.js";
     import { userContext } from "./middlewares/userContext.middleware.js";
+    import { authenticateUser, silentRefresh } from "./middlewares/auth.middleware.js";
+    import passport from "passport";
+    import "./config/passport.js";
+    import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.middleware.js";
+    import notFoundHandler from "./middlewares/notFound.middleware.js";
+    import errorHandler from "./middlewares/error.middleware.js";
+    import { adminSilentRefresh, authenticateAdmin } from "./middlewares/admin.middleware.js";
+    import methodOverride from "method-override";
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
     const app = express();
 
+    app.use(morgan("dev"));
+
     app.use(express.json());
     app.use(express.urlencoded({extended:true}));
 
+    app.use(methodOverride("_method"));
+
     app.use(cookieParser());
+
+    app.use(authenticateUser);
+    app.use(silentRefresh);
+    app.use(ensureNotBlocked);  
+    app.use(userContext);
 
     app.use(session({
         secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false,
         cookie: { 
-            secure: false, // Set to true if using HTTPS
+            secure: false, // Set to true when using HTTPS
             httpOnly: true, 
             maxAge: 24 * 60 * 60 * 1000
         }
     }))
+
+    app.use(flash());
+
+    app.use(passport.initialize());
+
+    app.use("/admin",authenticateAdmin);
+    app.use('/admin',adminSilentRefresh);
+
+    app.use((req,res,next)=>{
+        res.locals.success = req.flash("success");
+        res.locals.error = req.flash("error");
+        next();
+    })
 
     app.use(express.static(path.join(__dirname,"public")))
 
@@ -37,19 +71,22 @@
     app.set("view engine","ejs");
     app.set("views",path.join(__dirname,"views"))
 
-    app.set("layout","layouts/user")
+    app.set("layout","layouts/user");
 
-    app.use(userContext);
+  
 
     app.use("/",userRoutes);
+    app.use("/auth",googleAuthRoutes);
+    app.use("/admin",adminRoutes);
+
 
     app.get("/",(req,res)=>{
         res.redirect("/home");
     })
 
-
-   
-
+    // Error handling middleware
+    app.use(notFoundHandler);
+    app.use(errorHandler);
 
 
     export default app;

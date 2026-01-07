@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile | WalkAura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        
+        /* Cropper Customization */
+        .cropper-view-box, .cropper-face { border-radius: 50%; } /* Shows circle guide for profile */
+        .modal-active { display: flex !important; }
+    </style>
+</head>
+<body class="bg-black text-white font-sans antialiased selection:bg-blue-500 selection:text-white">
+
+    <div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
+        <%- include("../partials/sidebar") %>
+
+        <main class="flex-1 p-6 md:p-10 lg:px-16 bg-black">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl font-bold mb-8 text-white">My Profile</h1>
+
+                <div class="bg-[#111] border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-blue-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 border-b border-gray-800 pb-8">
+                        <div class="flex items-center gap-6">
+                            <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                                <% if (user.profileImage?.url) { %>
+                                    <img src="<%= user.profileImage.url %>" alt="Profile Photo" class="w-full h-full object-cover"/>
+                                <% } else { %>
+                                    <span class="material-symbols-outlined text-4xl text-gray-500">person</span>
+                                <% } %>
+                            </div>
+
+                            <div>
+                                <h2 class="text-xl font-bold text-white"><%= user.name %></h2>
+                                <p class="text-gray-400 text-sm"><%= user.email %></p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <form id="uploadPhotoForm" action="/profile/upload-photo" method="post" enctype="multipart/form-data" class="hidden">
+                                <input type="file" id="finalImageInput" name="profileImage">
+                            </form>
+
+                            <label class="cursor-pointer px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-xs font-medium rounded-lg transition border border-gray-700 block">
+                                Upload New Photo
+                                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="prepareCropper(this)"/>
+                            </label>
+
+                            <% if (user.profileImage?.url) { %>
+                            <button type="button" onclick="openRemoveModal()" class="px-5 py-2.5 text-red-400 hover:bg-red-500/10 text-xs font-medium rounded-lg transition"> 
+                                Remove 
+                            </button>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <%- include('../partials/alerts') %>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Full Name</label>
+                            <div class="w-full bg-[#1a1a1a] border border-gray-700 rounded-xl px-4 py-3 text-gray-300">
+                                <%= user.name %>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Phone Number</label>
+                                <div class="w-full bg-[#1a1a1a] border border-gray-700 rounded-xl px-4 py-3 text-gray-300">
+                                    <%= user.phone || "Not Added" %>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Email Address</label>
+                                <div class="w-full bg-[#1a1a1a] border border-gray-700 rounded-xl px-4 py-3 text-gray-300">
+                                    <%= user.email %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6">
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Security</label>
+                            <div class="flex flex-wrap gap-4">
+                                <a href="/profile/change-password" class="px-6 py-3 bg-[#1a1a1a] hover:bg-gray-800 border border-gray-700 rounded-xl text-sm font-medium transition inline-block">Change Password</a>
+                                <a href="/profile/change-email" class="px-6 py-3 bg-[#1a1a1a] hover:bg-gray-800 border border-gray-700 rounded-xl text-sm font-medium transition inline-block">Change Email</a>
+                            </div>
+                        </div>
+
+                        <div class="pt-8">
+                            <a href="/profile/edit" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl transition shadow-lg shadow-indigo-900/20">Edit Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="cropModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/90 backdrop-blur-md" onclick="closeCropModal()"></div>
+        <div class="relative bg-[#111] border border-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden z-20">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white">Crop Profile Photo</h3>
+                <button onclick="closeCropModal()" class="text-gray-400 hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="max-h-[400px] overflow-hidden rounded-lg bg-black flex justify-center">
+                    <img id="imageToCrop" src="" class="block max-w-full">
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-800 flex gap-3">
+                <button onclick="closeCropModal()" class="flex-1 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition text-sm">Cancel</button>
+                <button onclick="saveCroppedImage()" class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-bold">Apply & Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="removePhotoModal" class="fixed inset-0 z-[110] hidden items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" onclick="closeRemoveModal()"></div>
+        <div class="relative bg-[#111] border border-gray-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden z-20 p-6 text-center">
+            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Remove Photo?</h3>
+            <p class="text-gray-400 text-sm mb-6">This will revert your profile to the default icon.</p>
+            <div class="flex gap-3">
+                <button onclick="closeRemoveModal()" class="flex-1 px-4 py-3 bg-[#1a1a1a] border border-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-800 transition">Cancel</button>
+                <form action="/profile/remove-photo?_method=DELETE" method="post" class="flex-1">
+                    <button type="submit" onclick="if(typeof showSpinner==='function') showSpinner()" class="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition shadow-lg shadow-red-900/20">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script>
+        let cropper;
+        const cropModal = document.getElementById('cropModal');
+        const imageToCrop = document.getElementById('imageToCrop');
+
+        function prepareCropper(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageToCrop.src = e.target.result;
+                    openCropModal();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function openCropModal() {
+            cropModal.classList.add('modal-active');
+            if (cropper) cropper.destroy();
+            
+            // Wait for image to load in DOM
+            setTimeout(() => {
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    guides: true,
+                    background: false,
+                    autoCropArea: 1,
+                    responsive: true
+                });
+            }, 100);
+        }
+
+        function closeCropModal() {
+            cropModal.classList.remove('modal-active');
+            if (cropper) cropper.destroy();
+            document.getElementById('imageInput').value = ""; // Reset input
+        }
+
+        function saveCroppedImage() {
+            if (!cropper) return;
+
+            // Get high-quality cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 500,
+                height: 500
+            });
+
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "profile-picture.jpg", { type: "image/jpeg" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                // Assign to hidden form input
+                const finalInput = document.getElementById('finalImageInput');
+                finalInput.files = dataTransfer.files;
+
+                closeCropModal();
+                
+                // Show Global Spinner
+                if (typeof showSpinner === 'function') {
+                    showSpinner();
+                }
+
+                // Submit Form
+                document.getElementById('uploadPhotoForm').submit();
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Remove Modal Logic
+        const removeModal = document.getElementById('removePhotoModal');
+        function openRemoveModal() { removeModal.classList.add('modal-active'); }
+        function closeRemoveModal() { removeModal.classList.remove('modal-active'); }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCropModal();
+                closeRemoveModal();
+            }
+        });
+    </script>
+</body>
+</html>

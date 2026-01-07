@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile | WalkAura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <style>
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #444;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-black text-white font-sans antialiased selection:bg-blue-500 selection:text-white"
+  >
+   <div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
+     
+       <!-- Sidebar -->
+       <%- include("../partials/sidebar") %>
+
+      <main class="flex-1 p-6 md:p-10 lg:px-16 bg-black">
+        <div class="max-w-3xl mx-auto">
+          <div class="mb-8 flex items-center gap-2 text-sm text-gray-500">
+            <a href="/profile" class="hover:text-white transition">Profile</a>
+            <span>/</span>
+            <span class="text-white">Edit Details</span>
+          </div>
+
+          <h1 class="text-3xl font-bold mb-8 text-white">Edit Profile</h1>
+
+          <div
+            class="bg-[#111] border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl"
+          >
+            <% if (typeof error !== "undefined" && error.length > 0) { %>
+            <div
+              id="flashAlert"
+              class="mb-4 rounded-lg bg-red-500/10 text-red-400 px-4 py-3 text-sm font-medium text-center"
+            >
+              <%= error[0] %>
+            </div>
+            <% } %>
+
+            <form
+              id="editProfileForm"
+              action="/profile/edit?_method=PUT"
+              method="POST"
+              class="space-y-8"
+            >
+              <div class="space-y-2">
+                <label
+                  class="block text-xs uppercase tracking-wider text-gray-500 font-semibold ml-1"
+                  >Full Name</label
+                >
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value="<%= user.name %>"
+                  class="w-full bg-[#1a1a1a] border border-gray-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition placeholder-gray-600"
+                  placeholder="Enter your full name"
+                />
+                <p id="nameError" class="text-sm text-red-500 mt-1 hidden"></p>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  class="block text-xs uppercase tracking-wider text-gray-500 font-semibold ml-1"
+                  >Phone Number</label
+                >
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value="<%= user.phone || '' %>"
+                  class="w-full bg-[#1a1a1a] border border-gray-700 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition placeholder-gray-600"
+                  placeholder="Enter your phone number"
+                />
+                <p id="phoneError" class="text-sm text-red-500 mt-1 hidden"></p>
+              </div>
+
+
+              <div class="pt-6 flex flex-col md:flex-row gap-4">
+                <a
+                  href="/profile"
+                  class="flex-1 px-6 py-4 rounded-xl border border-gray-700 text-center font-bold text-gray-300 hover:bg-gray-800 hover:text-white transition"
+                >
+                  Cancel
+                </a>
+
+                <button
+                  type="submit"
+                  class="flex-1 px-6 py-4 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-900/20"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const form = document.getElementById("editProfileForm");
+
+      // Helper: Show Error
+      function showError(id, message) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = message;
+          el.classList.remove("hidden");
+        }
+      }
+
+      // Helper: Clear All Errors
+      function clearErrors() {
+        document.querySelectorAll("p[id$='Error']").forEach((el) => {
+          el.textContent = "";
+          el.classList.add("hidden");
+        });
+      }
+
+      // Live validation: Clear error when user types
+      ["name", "email", "phone"].forEach((id) => {
+        const input = document.getElementById(id);
+        const errorEl = document.getElementById(id + "Error");
+
+        if (input && errorEl) {
+          input.addEventListener("input", () => {
+            errorEl.textContent = "";
+            errorEl.classList.add("hidden");
+          });
+        }
+      });
+
+      // Submit Validation
+      form.addEventListener("submit", function (e) {
+        e.preventDefault(); // Stop submission initially
+        clearErrors();
+
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        let isValid = true;
+
+        // 1. Name validation
+        const nameRegex = /^[A-Za-z\s]+$/;
+        if (name.length < 3) {
+          showError("nameError", "Name must be at least 3 characters");
+          isValid = false;
+        }else if (name.length > 30) {
+          showError("nameError", "Name must not exceed 30 characters");
+          isValid = false;
+        }
+
+
+        // 3. Phone validation (India standard)
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone)) {
+          showError("phoneError", "Enter a valid 10-digit phone number");
+          isValid = false;
+        }
+
+        // If everything is valid, submit the form
+        if (isValid) {
+          form.submit();
+        }
+      });
+
+       //Flash Alert hide after 5 seconds
+
+  const alertBox = document.getElementById("flashAlert");
+
+  if (alertBox) {
+    setTimeout(() => {
+      alertBox.classList.add("opacity-0", "transition-opacity", "duration-500");
+      
+      setTimeout(() => {
+        alertBox.remove();
+      }, 500);
+    }, 3000); //  5 seconds
+  }
+
+    </script>
+  </body>
+</html>
