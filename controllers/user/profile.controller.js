@@ -1,40 +1,31 @@
 import User from "../../models/User.model.js";
 import cloudinary from "../../config/cloudinary.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
-export const showProfile = async (req, res) => {
-  try {
+export const showProfile =  (req, res) => {
     const user = res.locals.user;
     if (!user) {
       return res.redirect("/login");
     }
     return res.render("user/profile", { user });
-  } catch (error) {
-    console.error("Error loading Profile", error);
-    res.status(500).send("Server Error");
-  }
 };
 
-export const showEditProfile = async (req, res) => {
-  try {
-    const user = res.locals.user;
+export const showEditProfile =  (req, res) => {
+  const user = res.locals.user;
 
     if (!user) {
       return res.redirect("/login");
     }
 
     return res.render("user/edit-profile");
-  } catch (error) {
-    console.error("Error loading Edit profile:", error);
-    res.status(500).send("server error");
-  }
+
 };
 
 // Edit Profile
-export const updateProfile = async (req, res) => {
+export const updateProfile = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
   const { name, phone } = req.body;
 
-  try {
     if (!name || !/^[A-Za-z ]+$/.test(name)) {
       req.flash("error", "Name can only contain letters and spaces");
       return res.redirect("/profile/edit");
@@ -57,19 +48,13 @@ export const updateProfile = async (req, res) => {
     });
     req.flash("success", "Profile updated successfully");
     return res.redirect("/profile");
-  } catch (error) {
-    console.error("Error updating Profile:", error);
-    return res.redirect("/profile");
-  }
-};
+
+});
 
 
+export const uploadProfilePhoto = asyncHandler(async (req, res) => {
 
-
-
-export const uploadProfilePhoto = async (req, res) => {
-  try {
-    if (!req.file) {
+  if (!req.file) {
       req.flash("error", "Please select an image");
       return res.redirect("/profile");
     }
@@ -101,16 +86,13 @@ export const uploadProfilePhoto = async (req, res) => {
 
     req.flash("success", "Profile photo updated");
     res.redirect("/profile");
-  } catch (error) {
-    console.error(error);
-    req.flash("error", "Upload failed");
-    res.redirect("/profile");
-  }
-};
 
-export const removeProfilePhoto = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
+});
+
+// Remove profile photo
+export const removeProfilePhoto = asyncHandler(async (req, res) => {
+   
+  const user = await User.findById(req.user.userId);
 
     // If no image exists
     if (!user.profileImage?.public_id) {
@@ -127,9 +109,5 @@ export const removeProfilePhoto = async (req, res) => {
 
     req.flash("success", "Profile photo removed");
     res.redirect("/profile");
-  } catch (error) {
-    console.error(error);
-    req.flash("error", "Failed to remove profile photo");
-    res.redirect("/profile");
-  }
-};
+
+});

@@ -2,25 +2,20 @@ import OTP from "../../models/OTP.model.js";
 import User from "../../models/User.model.js";
 import crypto from "crypto";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
+import { HTTP_STATUS } from "../../constants/httpStatus.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
 
-export const showVerifyOTP = async(req,res)=>{
+export const showVerifyOTP = (req,res)=>{
 
-    try{
-
-       return res.render("user/verify-otp",{
+     return res.render("user/verify-otp",{
         actionUrl: "/verify-otp",
         resendUrl: "/resend-otp",
     });
-
-    }catch(error){
-        console.error("Error loading Verify OTP Page");
-    }
 }
 
-export const verifyOTP = async(req,res)=>{
+export const verifyOTP = asyncHandler(async(req,res)=>{
 
-    try{
         const email = req.session.email;
         const purpose = req.session.otpPurpose;
         
@@ -77,15 +72,7 @@ export const verifyOTP = async(req,res)=>{
 
         delete req.session.email;
         delete req.session.otpPurpose;
-
-    }catch(error){
-
-        console.error('OTP Verify Error:', error);
-
-        req.flash("error","Failed to verify OTP");
-        return res.redirect("/verify-otp");     
-        }
-    }
+    });
 
 
 export const resendOTP = async (req,res)=>{
@@ -117,12 +104,6 @@ export const resendOTP = async (req,res)=>{
         return res.status(200).json({message});
 
     }catch(error){
-
-        if(error.message === "OTP_RATE_LIMIT"){
-            return res.status(429).json({message:"Please wait 30 seconds before sending next OTP"});
-        }
-
-        console.error("Resend OTP error:",error);
 
         return res.status(500).json({message:"Failed to resend OTP"});
 

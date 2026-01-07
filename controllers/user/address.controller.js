@@ -1,9 +1,9 @@
 import Address from "../../models/Address.model.js";
 import User from "../../models/User.model.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
-export const showAddressManagement = async (req,res)=>{
-    try {
-
+// Show address Page
+export const showAddressManagement = asyncHandler(async (req,res)=>{
       const userId = req.user.userId;
 
       const page = parseInt(req.query.page) || 1;
@@ -16,14 +16,11 @@ export const showAddressManagement = async (req,res)=>{
     const totalPages = Math.ceil(totalAddress/limit);
 
     res.render("user/address-management", { addresses , currentPage:page, totalPages});
-  } catch (error) {
-    console.error("Error loading addresses:", error);
-    res.redirect("/profile");
-  }
-};
+});
 
-export const addAddress = async (req, res) => {
-  try {
+
+// Address Adding
+export const addAddress = asyncHandler(async (req, res) => {
     const {
       fullName,
       phone,
@@ -76,19 +73,14 @@ export const addAddress = async (req, res) => {
 
     req.flash("success", "Address added successfully");
     res.redirect("/addresses");
+});
 
-  } catch (error) {
-    console.error("Error adding address:", error);
-    req.flash("error", "Something went wrong");
-    res.redirect("/addresses");
-  }
-};
 
 // controllers/user/address.controller.js
 
 
-export const updateAddress = async (req, res) => {
-  try {
+export const updateAddress = asyncHandler(async (req, res) => {
+
     const userId = req.user.userId; 
     const { addressId } = req.params;
     console.log(addressId);
@@ -146,16 +138,11 @@ export const updateAddress = async (req, res) => {
     req.flash("success", "Address updated successfully");
     res.redirect("/addresses");
 
-  } catch (error) {
-    console.error("Update address error:", error);
-    req.flash("error", "Failed to update address");
-    res.redirect("/addresses");
-  }
-};
+});
 
-export const deleteAddress = async (req, res) => {
-  try {
-    const { addressId } = req.params;
+export const deleteAddress = asyncHandler(async (req, res) => {
+
+  const { addressId } = req.params;
     const userId = req.user.userId; // from JWT
 
     // delete only if address belongs to user
@@ -172,10 +159,6 @@ export const deleteAddress = async (req, res) => {
     req.flash("success", "Address deleted successfully");
     return res.redirect("/addresses");
 
-  } catch (error) {
-    console.error("Delete address error:", error);
-    req.flash("error", "Something went wrong while deleting address");
-    return res.redirect("/addresses");
-  }
-};
+
+});
 

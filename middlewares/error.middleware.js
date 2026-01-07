@@ -7,7 +7,7 @@ const errorHandler = (err,req,res,next)=>{
     return next(err);
   }
 
-    const statusCode = err.statusCode || HTTP_STATUS.iNTERNAL_SERVER_ERROR;
+    const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
     // AJAX REQUESTS
 
@@ -22,7 +22,7 @@ const errorHandler = (err,req,res,next)=>{
         return res.status(statusCode).render("user/404",{layout:false});
     }
 
-    return res.status(HTTP_STATUS.iNTERNAL_SERVER_ERROR).render("user/500",{layout:false});
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/500",{layout:false});
 };
 
 export default errorHandler;

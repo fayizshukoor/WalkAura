@@ -1,25 +1,25 @@
 import User from "../../models/User.model.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 import {generateAccessToken, generateRefreshToken} from "../../utils/userTokens.utils.js";
 import bcrypt from "bcryptjs";
 // Change Password
 
-export const showChangePassword = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
+export const showChangePassword = asyncHandler(async (req, res) => {
+  
+  const user = await User.findById(req.user.userId);
 
-    if (!user.password && user.googleId) {
-      req.flash("error", "Google users cannot change password");
-      return res.redirect("/profile");
-    }
-    return res.render("user/change-password");
-  } catch (error) {}
-};
+  if (!user.password && user.googleId) {
+    req.flash("error", "Google users cannot change password");
+    return res.redirect("/profile");
+  }
+  return res.render("user/change-password");
 
-export const handleChangePassword = async (req, res) => {
+});
+
+export const handleChangePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
-  try {
     if (!currentPassword || !newPassword || !confirmPassword) {
       req.flash("error", "All fields are required");
       return res.redirect("/profile/change-password");
@@ -72,16 +72,14 @@ export const handleChangePassword = async (req, res) => {
 
     req.flash("success", "Password Changed Successfully");
     return res.redirect("/profile");
-  } catch (error) {
-    console.error("Change password error:", error);
-    req.flash("error", "Something went Wrong");
-    return res.redirect("/profile/change-password");
-  }
-};
 
-export const handleAuthForgotPassword = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
+});
+
+
+
+export const handleAuthForgotPassword = asyncHandler(async (req, res) => {
+
+  const user = await User.findById(req.user.userId);
     console.log(user);
 
     if (!user || !user.isVerified || user.isBlocked || !user.password) {
@@ -96,9 +94,5 @@ export const handleAuthForgotPassword = async (req, res) => {
 
     req.flash("success", "An OTP has been sent to your registered email");
     return res.redirect("/verify-otp");
-  } catch (error) {
-    console.error("Auth forgot password error:", error);
-    req.flash("error", "Failed to send OTP");
-    return res.redirect("/profile/change-password");
-  }
-};
+
+});

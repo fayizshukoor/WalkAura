@@ -3,15 +3,9 @@ import bcrypt from "bcryptjs";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 import { generateAccessToken, generateRefreshToken} from "../../utils/userTokens.utils.js";
 import asyncHandler from "../../utils/asyncHandler.js";
-import { HTTP_STATUS } from "../../constants/httpStatus.js";
 
 export const showSignup = (req, res) => {
-  try {
     return res.render("user/signup");
-  } catch (error) {
-    console.log("error loading Signup");
-    return res.status(500).send("Server error");
-  }
 };
 
 export const handleSignup = asyncHandler(async (req, res) => {
@@ -88,13 +82,12 @@ export const handleSignup = asyncHandler(async (req, res) => {
   return res.redirect("/verify-otp");
 });
 
+// Login Page
+
 export const showLogin = (req, res) => {
-  try {
+
     return res.render("user/login");
-  } catch (error) {
-    console.log("error loading Login Page", error);
-    res.status(500).send("Server error");
-  }
+
 };
 
 export const handleLogin = asyncHandler(async (req, res) => {
@@ -154,6 +147,10 @@ export const handleLogin = asyncHandler(async (req, res) => {
   res.redirect("/home");
 });
 
+
+
+// Logout
+
 export const logout = (req, res) => {
   try {
     res.clearCookie("accessToken");
@@ -166,20 +163,21 @@ export const logout = (req, res) => {
   }
 };
 
+
+
 /* ------Password Controller--------*/
 
 export const showForgotPassword = (req, res) => {
-  try {
-    //Clear any previous OTP
+
+  //Clear any previous OTP
     delete req.session.email;
     delete req.session.otpPurpose;
     delete req.session.allowPasswordReset;
 
     res.render("user/forgot-password");
-  } catch (error) {
-    console.error("Error loading forgot password", error);
-  }
 };
+
+
 
 export const handleForgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -202,11 +200,12 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
 
 
   try {
+
   await sendOTP(email, "FORGOT_PASSWORD");
+
 } catch (error) {
-  return res.render("user/forgot-password", {
-    error: error.message
-  });
+
+  return res.render("user/forgot-password", { error: error.message });
 }
 
 
@@ -225,12 +224,18 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
   return res.redirect("/forgot-password");
 });
 
+
+
+
 export const showResetPassword = (req, res) => {
   if (!req.session.allowPasswordReset || !req.session.email) {
     return res.redirect("/forgot-password");
   }
   res.render("user/reset-password");
 };
+
+
+
 
 export const handleResetPassword = asyncHandler(async (req, res) => {
   const { password, confirmPassword } = req.body;
