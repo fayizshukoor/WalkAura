@@ -1,3 +1,3 @@
 export const showAdminDashboard = (req,res)=>{
-    return res.render("admin/dashboard",{layout:false});
+    return res.render("admin/dashboard",{layout:"layouts/admin"});
 }

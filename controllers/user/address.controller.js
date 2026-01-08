@@ -10,9 +10,11 @@ export const showAddressManagement = asyncHandler(async (req,res)=>{
       const limit = 5;
       const skip = (page-1)*limit;
 
-    const addresses = await Address.find({userId}).sort({createdAt:-1}).skip(skip).limit(limit);
+    const [addresses,totalAddress] = await Promise.all([
+      Address.find({userId}).sort({createdAt:-1}).skip(skip).limit(limit),
+      Address.countDocuments({userId})
+    ]) ;
 
-    const totalAddress = await Address.countDocuments({userId});
     const totalPages = Math.ceil(totalAddress/limit);
 
     res.render("user/address-management", { addresses , currentPage:page, totalPages});
@@ -64,11 +66,6 @@ export const addAddress = asyncHandler(async (req, res) => {
       pincode,
       country,
       isDefault: !hasAddress
-    });
-
-    //  Store reference in user document
-    await User.findByIdAndUpdate(req.user.userId, {
-      $push: { addresses: address._id }
     });
 
     req.flash("success", "Address added successfully");

@@ -80,9 +80,7 @@
     app.use("/admin",adminRoutes);
 
 
-    app.get("/",(req,res)=>{
-        res.redirect("/home");
-    })
+   
 
     // Error handling middleware
     app.use(notFoundHandler);

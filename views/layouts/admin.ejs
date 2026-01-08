@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WalkAura Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24; }
+        
+        /* Nav Active Styles */
+        .nav-item.active { background-color: #111; color: #fff; border-right: 3px solid #5c56f6; }
+        .nav-item.active .material-symbols-outlined { color: #5c56f6; font-variation-settings: "FILL" 1; }
+
+        /* Custom Scrollbar for Sidebar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+
+        /* Global WalkAura Swal Styling */
+        .walkaura-swal-popup { border-radius: 24px !important; background: #111 !important; border: 1px solid #222 !important; padding: 1.5rem !important; }
+        .walkaura-swal-confirm { border-radius: 12px !important; padding: 10px 24px !important; font-size: 0.875rem !important; font-weight: 600 !important; }
+        .walkaura-swal-cancel { border-radius: 12px !important; padding: 10px 24px !important; font-size: 0.875rem !important; font-weight: 600 !important; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="flex min-h-screen w-full">
+        <%- include('../partials/adminsidebar') %>
+
+        <main class="flex-1 p-6 md:p-10 w-full relative h-screen overflow-y-auto custom-scrollbar">
+            <div class="max-w-7xl mx-auto">
+                <%- body %> </div>
+        </main>
+    </div>
+
+    <script>
+        // Automatic Active Sidebar Link Highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-item').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Standardized SweetAlert Mixin for use in all pages
+        window.WalkAuraSwal = Swal.mixin({
+            customClass: {
+                popup: 'walkaura-swal-popup',
+                confirmButton: 'walkaura-swal-confirm',
+                cancelButton: 'walkaura-swal-cancel'
+            },
+            background: '#111',
+            color: '#fff',
+            buttonsStyling: true,
+            confirmButtonColor: '#5c56f6',
+            cancelButtonColor: '#1f2937'
+        });
+    </script>
+</body>
+</html>

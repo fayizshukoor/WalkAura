@@ -342,7 +342,7 @@
 
             if (isValid) {
                 const phone = form.phone.value.trim();
-                if (!/^\d{10}$/.test(phone)) {
+                if (!/^\d{10}$/.test(phone)  && phone.length !==10) {
                     showError(form.phone, document.getElementById(`err_${prefix}phone`), "Phone must be 10 digits");
                     isValid = false;
                 }

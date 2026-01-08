@@ -144,7 +144,7 @@ export const handleLogin = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.redirect("/home");
+  res.redirect("/");
 });
 
 
@@ -156,10 +156,10 @@ export const logout = (req, res) => {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
-    return res.redirect("/home");
+    return res.redirect("/");
   } catch (error) {
     console.error("Logout Error:", error);
-    return res.redirect("/home");
+    return res.redirect("/");
   }
 };
 

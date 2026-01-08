@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WalkAura | Category Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        .walkaura-swal-popup { border-radius: 24px !important; background: #111 !important; border: 1px solid #222 !important; }
+        .modal-backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="flex min-h-screen w-full">
+        <main class="flex-1 p-6 md:p-10 w-full relative">
+            <div class="max-w-7xl mx-auto">
+                
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold">Category Management</h1>
+                        <p class="text-gray-500 text-sm mt-1">Manage store categories and offers.</p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 md:w-64">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl">search</span>
+                            <input type="text" id="searchInput" placeholder="Search categories..." 
+                                class="w-full bg-[#111] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-[#5c56f6] transition-colors" />
+                        </div>
+                        <button onclick="toggleModal('addModal', true)" class="bg-[#5c56f6] hover:bg-[#4a44e0] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-lg">add</span> Add Category
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-[#111] rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-gray-500 border-b border-gray-800">
+                                <tr>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Category Information</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Offer (%)</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Status</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTableBody" class="divide-y divide-gray-900">
+                                <% categories.forEach(category => { %>
+                                    <tr class="hover:bg-white/[0.02] transition-colors">
+                                        <td class="p-5">
+                                            <div class="font-medium text-white"><%= category.name %></div>
+                                            <div class="text-xs text-gray-500 truncate max-w-[250px]"><%= category.description || 'No description provided' %></div>
+                                        </td>
+                                        <td class="p-5 text-center text-gray-400 font-mono"><%= category.offer %>%</td>
+                                        <td class="p-5 text-center">
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs <%= category.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20' %> border">
+                                                <%= category.isListed ? 'Listed' : 'Unlisted' %>
+                                            </span>
+                                        </td>
+                                        <td class="p-5">
+                                            <div class="flex items-center justify-center gap-4">
+                                                <button 
+                                                    class="edit-btn text-gray-400 hover:text-[#5c56f6] transition-colors"
+                                                    data-id="<%= category._id %>"
+                                                    data-name="<%= category.name %>"
+                                                    data-description="<%= category.description %>"
+                                                    data-offer="<%= category.offer %>"
+                                                    data-offer-expiry="<%= category.offerExpiry ? new Date(category.offerExpiry).toISOString().split('T')[0] : '' %>"
+                                                >
+                                                    <span class="material-symbols-outlined text-[22px]">edit_square</span>
+                                                </button>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer status-toggle" 
+                                                        data-id="<%= category._id %>" 
+                                                        data-name="<%= category.name %>"
+                                                        data-status="<%= category.isListed %>"
+                                                        <%= category.isListed ? 'checked' : '' %>>
+                                                    <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paginationContainer" class="p-5 border-t border-gray-800 flex justify-center items-center gap-2">
+                        <% if (totalPages > 1) { %>
+                            <button onclick="handlePageChange(<%= currentPage - 1 %>)" <%= currentPage === 1 ? 'disabled' : '' %> class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Prev</button>
+                            <% for(let i=1; i<=totalPages; i++) { %>
+                                <button onclick="handlePageChange(<%= i %>)" class="w-8 h-8 rounded-lg text-xs font-bold <%= i === currentPage ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5' %>"><%= i %></button>
+                            <% } %>
+                            <button onclick="handlePageChange(<%= currentPage + 1 %>)" <%= currentPage === totalPages ? 'disabled' : '' %> class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Next</button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="addModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+                <form id="addCategoryForm">
+                    <div class="p-6 border-b border-gray-800 flex justify-between">
+                        <h3 class="text-xl font-bold">Add New Category</h3>
+                        <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <input type="text" name="name" placeholder="Category Name" required class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6]">
+                        <textarea name="description" placeholder="Description (Optional)" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] resize-none"></textarea>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" name="offer" placeholder="Offer % (0-90)" min="0" max="90" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="date" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                        </div>
+                    </div>
+                    <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
+                        <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-400 font-bold">Cancel</button>
+                        <button type="submit" class="bg-[#5c56f6] px-6 py-2.5 rounded-xl font-bold submit-btn">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId">
+                    <div class="p-6 border-b border-gray-800 flex justify-between">
+                        <h3 class="text-xl font-bold">Edit Category</h3>
+                        <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <input type="text" id="editName" name="name" required class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                        <textarea id="editDescription" name="description" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none resize-none"></textarea>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" id="editOffer" name="offer" min="0" max="90" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="date" id="editExpiry" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                        </div>
+                    </div>
+                    <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
+                        <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-400 font-bold">Cancel</button>
+                        <button type="submit" class="bg-[#5c56f6] px-6 py-2.5 rounded-xl font-bold submit-btn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let searchVal = '';
+        let pageNum = 1;
+
+        // --- CORE FETCH DATA ---
+        async function refreshData() {
+            try {
+                const res = await fetch(`/admin/categories/data?search=${encodeURIComponent(searchVal)}&page=${pageNum}`);
+                if (!res.ok) throw new Error('Failed to fetch data');
+                const data = await res.json();
+                renderTable(data.categories);
+                renderPagination(data.currentPage, data.totalPages);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- RENDERERS ---
+        function renderTable(categories) {
+            const tbody = document.getElementById('categoryTableBody');
+            if (categories.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-500">No categories found</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = categories.map(cat => `
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                    <td class="p-5">
+                        <div class="font-medium text-white">${cat.name}</div>
+                        <div class="text-xs text-gray-500 truncate max-w-[250px]">${cat.description || 'No description'}</div>
+                    </td>
+                    <td class="p-5 text-center text-gray-400 font-mono">${cat.offer}%</td>
+                    <td class="p-5 text-center">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs ${cat.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'} border">
+                            ${cat.isListed ? 'Listed' : 'Unlisted'}
+                        </span>
+                    </td>
+                    <td class="p-5 text-center">
+                        <div class="flex items-center justify-center gap-4">
+                            <button class="edit-btn text-gray-400 hover:text-[#5c56f6]" data-id="${cat._id}" data-name="${cat.name}" data-description="${cat.description || ''}" data-offer="${cat.offer}" data-offer-expiry="${cat.offerExpiry ? cat.offerExpiry.split('T')[0] : ''}">
+                                <span class="material-symbols-outlined text-[22px]">edit_square</span>
+                            </button>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer status-toggle" data-id="${cat._id}" data-name="${cat.name}" data-status="${cat.isListed}" ${cat.isListed ? 'checked' : ''}>
+                                <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                            </label>
+                        </div>
+                    </td>
+                </tr>`).join('');
+        }
+
+        function renderPagination(current, total) {
+            const container = document.getElementById('paginationContainer');
+            if (total <= 1) { container.innerHTML = ''; return; }
+            let html = `<button onclick="handlePageChange(${current - 1})" ${current === 1 ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Prev</button>`;
+            for (let i = 1; i <= total; i++) {
+                html += `<button onclick="handlePageChange(${i})" class="w-8 h-8 rounded-lg text-xs font-bold ${i === current ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5'}">${i}</button>`;
+            }
+            html += `<button onclick="handlePageChange(${current + 1})" ${current === total ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Next</button>`;
+            container.innerHTML = html;
+        }
+
+        // --- INTERACTIONS ---
+        function handlePageChange(p) { pageNum = p; refreshData(); }
+
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchVal = e.target.value;
+                pageNum = 1;
+                refreshData();
+            }, 300);
+        });
+
+        // Event Delegation for Table Buttons
+        document.getElementById('categoryTableBody').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const toggleInput = e.target.closest('.status-toggle');
+
+            if (editBtn) {
+                const d = editBtn.dataset;
+                document.getElementById('editCategoryId').value = d.id;
+                document.getElementById('editName').value = d.name;
+                document.getElementById('editDescription').value = d.description;
+                document.getElementById('editOffer').value = d.offer;
+                document.getElementById('editExpiry').value = d.offerExpiry;
+                toggleModal('editModal', true);
+            }
+
+            if (toggleInput) {
+                e.preventDefault();
+                const { id, name, status } = toggleInput.dataset;
+                const action = status === 'true' ? 'Unlist' : 'List';
+                
+                const result = await Swal.fire({
+                    title: `${action} Category?`,
+                    text: `Do you want to ${action.toLowerCase()} "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c56f6',
+                    background: '#111', color: '#fff'
+                });
+
+                if (result.isConfirmed) {
+                    const res = await fetch(`/admin/categories/toggle/${id}`, { method: 'PATCH' });
+                    if (res.ok) refreshData();
+                }
+            }
+        });
+
+        // Form Submission Logic
+        async function handleFormSubmit(e, url, method, modalId) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.submit-btn');
+            const formData = Object.fromEntries(new FormData(e.target));
+
+            // Frontend Validation
+            if (formData.offer > 0 && !formData.offerExpiry) {
+                return Swal.fire({ icon: 'error', title: 'offerExpiry Required', text: 'Please set an expiry date for the offer.', background: '#111', color: '#fff' });
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Processing...';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await res.json();
+
+                if (!res.ok) throw new Error(result.message || 'Action failed');
+
+                toggleModal(modalId, false);
+                e.target.reset();
+                refreshData();
+                Swal.fire({ icon: 'success', title: 'Success', text: result.message, timer: 1500, background: '#111', color: '#fff' });
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#111', color: '#fff' });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = method === 'POST' ? 'Create' : 'Update';
+            }
+        }
+
+        document.getElementById('addCategoryForm').addEventListener('submit', (e) => handleFormSubmit(e, '/admin/categories/add', 'POST', 'addModal'));
+        document.getElementById('editCategoryForm').addEventListener('submit', (e) => {
+            const id = document.getElementById('editCategoryId').value;
+            handleFormSubmit(e, `/admin/categories/edit/${id}`, 'PATCH', 'editModal');
+        });
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
+        }
+    </script>
+</body>
+</html>

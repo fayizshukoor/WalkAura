@@ -1,9 +1,10 @@
 import User from "../../models/User.model.js";
+import asyncHandler from "../../utils/asyncHandler.js";
 
 // show customers
-export const showCustomers = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
+export const showCustomers = asyncHandler(async (req, res) => {
+
+  const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
     const search = req.query.search || "";
@@ -28,18 +29,13 @@ export const showCustomers = async (req, res) => {
     const totalPages = Math.ceil(totalCustomers / limit);
 
     res.render("admin/customers", {
-      layout: false,
+      layout: "layouts/admin",
       customers,
       currentPage: page,
       totalPages,
       search
-    });
-
-  } catch (error) {
-    console.error("Show customers error:", error);
-    res.status(500).send("Server Error");
-  }
-};
+    })
+  });
 
 // Block and Unblock
 export const toggleCustomerStatus = async (req, res) => {

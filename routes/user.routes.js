@@ -46,7 +46,7 @@ import { noCache } from "../middlewares/cache.middleware.js";
 
 const router = express.Router();
 
-router.get("/home", noCache, showHomePage);
+router.get("/", noCache, showHomePage);
 
 router
   .route("/signup")

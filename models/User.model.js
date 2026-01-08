@@ -60,13 +60,6 @@ const userSchema = new Schema(
         public_id: String
     },
 
-    addresses: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Address"
-        }
-    ],
-
     passwordChangedAt:{
         type:Date
     }
