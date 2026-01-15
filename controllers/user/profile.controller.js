@@ -1,6 +1,7 @@
 import User from "../../models/User.model.js";
 import cloudinary from "../../config/cloudinary.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../../utils/cloudinaryUpload.util.js";
 
 export const showProfile =  (req, res) => {
     const user = res.locals.user;
@@ -63,19 +64,17 @@ export const uploadProfilePhoto = asyncHandler(async (req, res) => {
 
     // Remove old image
     if (user.profileImage?.public_id) {
-      await cloudinary.uploader.destroy(user.profileImage.public_id);
+      await deleteFromCloudinary(user.profileImage.public_id);
     }
 
     // Upload new image
-    const result = await cloudinary.uploader.upload(
-      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
-      {
-        folder: "walkaura/profile",
-        transformation: [
-          { width: 300, height: 300, crop: "fill", gravity: "face" },
-        ],
-      }
-    );
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: "walkaura/profile",
+      width: 300,
+      height: 300,
+      crop: "fill"
+    });
+    
 
     user.profileImage = {
       url: result.secure_url,

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WalkAura | Product Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24; }
+        .product-card { background: #111; border: 1px solid #222; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="flex min-h-screen w-full">
+        <main class="flex-1 p-6 md:p-10 w-full relative">
+            <div class="max-w-7xl mx-auto">
+                
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold">Product Management</h1>
+                        <p class="text-gray-500 text-sm mt-1">Manage your catalog inventory and pricing.</p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
+                        <div class="relative flex-1 md:w-72">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl">search</span>
+                            <input type="text" id="productSearchInput" placeholder="Search product name..." 
+                                class="w-full bg-[#111] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-[#5c56f6] transition-colors" />
+                        </div>
+                        <a href="/admin/products/add" class="bg-[#5c56f6] hover:bg-[#4a44e0] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-lg">add</span> Add Product
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-[#111] rounded-2xl border border-gray-800 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-gray-500 border-b border-gray-800 bg-white/[0.01]">
+                                <tr>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Product Details</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Category / Gender</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-right">Regular Price</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-right">Offer Price</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Offer Status</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Listed Status</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody" class="divide-y divide-gray-900">
+                                <% products.forEach(product => { %>
+                                    <tr class="hover:bg-white/[0.02] transition-colors">
+                                        <td class="p-5">
+                                            <div class="flex items-center gap-4">
+                                                <img src="<%= product.thumbnail %>" alt="" class="w-12 h-12 rounded-lg object-cover bg-gray-900 border border-gray-800">
+                                                <span class="font-medium text-white"><%= product.name %></span>
+                                            </div>
+                                        </td>
+                                        <td class="p-5 text-center">
+                                            <div class="text-white"><%= product.category.name %></div>
+                                            <div class="text-xs text-gray-500"><%= product.gender %></div>
+                                        </td>
+                                        <td class="p-5 text-right font-mono">
+                                            <% if (product.offerPrice && product.offerPrice < product.price) { %>
+                                                <span class="text-gray-500 line-through">₹<%= product.price %></span>
+                                            <% } else { %>
+                                                <span class="text-white">₹<%= product.price %></span>
+                                            <% } %>
+                                        </td>
+                                        <td class="p-5 text-right font-mono text-[#5c56f6] font-bold">
+                                            <%= (product.offerPrice && product.offerPrice < product.price) ? '₹' + product.offerPrice : '—' %>
+                                        </td>
+                                        <td class="p-5 text-center">
+                                            <% 
+                                                const status = product.offerStatus; 
+                                                const badgeColors = {
+                                                    'Active': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+                                                    'Expired': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+                                                    'No Offer': 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                                                };
+                                            %>
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border <%= badgeColors[status] || badgeColors['No Offer'] %>">
+                                                <%= status %>
+                                            </span>
+                                        </td>
+                                        <td class="p-5 text-center">
+                                            <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs <%= product.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20' %> border">
+                                                <%= product.isListed ? 'Listed' : 'Unlisted' %>
+                                            </span>
+                                        </td>
+                                        <td class="p-5">
+                                            <div class="flex items-center justify-center gap-4">
+                                                <a href="/admin/products/edit/<%= product._id %>" class="text-gray-400 hover:text-[#5c56f6] transition-colors" title="Edit Product">
+                                                    <span class="material-symbols-outlined text-[22px]">edit_square</span>
+                                                </a>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="sr-only peer status-toggle" 
+                                                        data-id="<%= product._id %>" 
+                                                        data-name="<%= product.name %>"
+                                                        <%= product.isListed ? 'checked' : '' %>>
+                                                    <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="paginationContainer" class="p-5 border-t border-gray-800 flex justify-center items-center gap-2">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let searchVal = '';
+        let pageNum = 1;
+
+        async function refreshProductData() {
+            try {
+                const res = await fetch(`/admin/products/data?search=${encodeURIComponent(searchVal)}&page=${pageNum}`);
+                if (!res.ok) throw new Error('Failed to fetch product data');
+                const data = await res.json();
+                renderTable(data.products);
+                renderPagination(data.currentPage, data.totalPages);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderTable(products) {
+            const tbody = document.getElementById('productTableBody');
+            if (products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-gray-500">No products found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = products.map(prod => {
+                const badgeColors = {
+                    'Active': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+                    'Expired': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+                    'No Offer': 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                };
+
+                const hasOffer = prod.offerPrice && prod.offerPrice < prod.price;
+                const regPriceHTML = hasOffer 
+                    ? `<span class="text-gray-500 line-through">₹${prod.price}</span>` 
+                    : `<span class="text-white">₹${prod.price}</span>`;
+                
+                const offerPriceHTML = hasOffer ? `₹${prod.offerPrice}` : '—';
+
+                return `
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                    <td class="p-5">
+                        <div class="flex items-center gap-4">
+                            <img src="${prod.thumbnail}" class="w-12 h-12 rounded-lg object-cover bg-gray-900 border border-gray-800">
+                            <span class="font-medium text-white">${prod.name}</span>
+                        </div>
+                    </td>
+                    <td class="p-5 text-center">
+                        <div class="text-white">${prod.category.name}</div>
+                        <div class="text-xs text-gray-500">${prod.gender}</div>
+                    </td>
+                    <td class="p-5 text-right font-mono">${regPriceHTML}</td>
+                    <td class="p-5 text-right font-mono text-[#5c56f6] font-bold">${offerPriceHTML}</td>
+                    <td class="p-5 text-center">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${badgeColors[prod.offerStatus] || badgeColors['No Offer']}">
+                            ${prod.offerStatus}
+                        </span>
+                    </td>
+                    <td class="p-5 text-center">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs ${prod.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'} border">
+                            ${prod.isListed ? 'Listed' : 'Unlisted'}
+                        </span>
+                    </td>
+                    <td class="p-5">
+                        <div class="flex items-center justify-center gap-4">
+                            <a href="/admin/products/edit/${prod._id}" class="text-gray-400 hover:text-[#5c56f6] transition-colors">
+                                <span class="material-symbols-outlined text-[22px]">edit_square</span>
+                            </a>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer status-toggle" 
+                                    data-id="${prod._id}" data-name="${prod.name}" ${prod.isListed ? 'checked' : ''}>
+                                <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                            </label>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderPagination(current, total) {
+            const container = document.getElementById('paginationContainer');
+            if (total <= 1) { container.innerHTML = ''; return; }
+            let html = `<button onclick="handlePageChange(${current - 1})" ${current === 1 ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Prev</button>`;
+            for (let i = 1; i <= total; i++) {
+                html += `<button onclick="handlePageChange(${i})" class="w-8 h-8 rounded-lg text-xs font-bold ${i === current ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5'}">${i}</button>`;
+            }
+            html += `<button onclick="handlePageChange(${current + 1})" ${current === total ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Next</button>`;
+            container.innerHTML = html;
+        }
+
+        function handlePageChange(p) { pageNum = p; refreshProductData(); }
+
+        let searchTimeout;
+        document.getElementById('productSearchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchVal = e.target.value;
+                pageNum = 1;
+                refreshProductData();
+            }, 400);
+        });
+
+        document.getElementById('productTableBody').addEventListener('click', async (e) => {
+            const toggle = e.target.closest('.status-toggle');
+            if (toggle) {
+                e.preventDefault();
+                const { id, name } = toggle.dataset;
+                const isCurrentlyListed = toggle.checked;
+                const actionText = !isCurrentlyListed ? 'unlist' : 'list';
+
+                const result = await Swal.fire({
+                    title: 'Update Status?',
+                    text: `Do you want to ${actionText} "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c56f6',
+                    background: '#111', color: '#fff'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`/admin/products/toggle/${id}`, { method: 'PATCH' });
+                        if (res.ok) {
+                            refreshProductData();
+                        } else {
+                            throw new Error('Failed to update status');
+                        }
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#111', color: '#fff' });
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

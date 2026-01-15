@@ -30,7 +30,6 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
   }
 
   if (newEmail === user.email) {
-    console.log("hi");
     req.flash("error", "New Email cannot be same as current email");
     return res.redirect("/profile/change-email");
   }
@@ -42,6 +41,11 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
     return res.redirect("/profile/change-email");
   }
 
+  // deleting unverified user
+  if(emailExists && !emailExists.isVerified){
+    await User.deleteOne({email:emailExists.email});
+    console.log("deleted unverified user");
+  }
   user.pendingEmail = newEmail;
   await user.save();
 

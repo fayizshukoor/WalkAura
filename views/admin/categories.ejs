@@ -113,11 +113,11 @@
                         <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
                     </div>
                     <div class="p-6 space-y-4">
-                        <input type="text" name="name" placeholder="Category Name" required class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6]">
+                        <input type="text" name="name" placeholder="Category Name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6]">
                         <textarea name="description" placeholder="Description (Optional)" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] resize-none"></textarea>
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="number" name="offer" placeholder="Offer % (0-90)" min="0" max="90" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
-                            <input type="date" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="number" id="addOffer" name="offer" placeholder="Offer % (0-90)" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="date" id="addExpiry" name="offerExpiry" disabled class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none opacity-50 cursor-not-allowed">
                         </div>
                     </div>
                     <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
@@ -140,10 +140,10 @@
                         <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
                     </div>
                     <div class="p-6 space-y-4">
-                        <input type="text" id="editName" name="name" required class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                        <input type="text" id="editName" name="name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                         <textarea id="editDescription" name="description" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none resize-none"></textarea>
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="editOffer" name="offer" min="0" max="90" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="number" id="editOffer" name="offer" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                             <input type="date" id="editExpiry" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                         </div>
                     </div>
@@ -159,6 +159,11 @@
     <script>
         let searchVal = '';
         let pageNum = 1;
+
+        // Set min date for date pickers to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('addExpiry').min = today;
+        document.getElementById('editExpiry').min = today;
 
         // --- CORE FETCH DATA ---
         async function refreshData() {
@@ -240,8 +245,22 @@
                 document.getElementById('editCategoryId').value = d.id;
                 document.getElementById('editName').value = d.name;
                 document.getElementById('editDescription').value = d.description;
-                document.getElementById('editOffer').value = d.offer;
-                document.getElementById('editExpiry').value = d.offerExpiry;
+        
+                const editOffer = document.getElementById('editOffer');
+                const editExpiry = document.getElementById('editExpiry');
+        
+                editOffer.value = d.offer;
+                editExpiry.value = d.offerExpiry;
+
+                // Sync the disabled state for Edit Modal
+                if (parseFloat(d.offer) > 0) {
+                    editExpiry.disabled = false;
+                    editExpiry.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    editExpiry.disabled = true;
+                    editExpiry.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
                 toggleModal('editModal', true);
             }
 
@@ -274,7 +293,7 @@
 
             // Frontend Validation
             if (formData.offer > 0 && !formData.offerExpiry) {
-                return Swal.fire({ icon: 'error', title: 'offerExpiry Required', text: 'Please set an expiry date for the offer.', background: '#111', color: '#fff' });
+                return Swal.fire({ icon: 'error', title: 'Offer Expiry Required', text: 'Please set an expiry date for the offer.', background: '#111', color: '#fff' });
             }
 
             btn.disabled = true;
@@ -308,9 +327,44 @@
             handleFormSubmit(e, `/admin/categories/edit/${id}`, 'PATCH', 'editModal');
         });
 
+        // Updated toggleModal to reset states correctly
         function toggleModal(id, show) {
-            document.getElementById(id).classList.toggle('hidden', !show);
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden', !show);
+            
+            // If opening Add Modal, ensure date is disabled initially
+            if (show && id === 'addModal') {
+                const expiry = document.getElementById('addExpiry');
+                const offer = document.getElementById('addOffer');
+                if(!offer.value || offer.value <= 0) {
+                    expiry.disabled = true;
+                    expiry.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
         }
+
+        // Logic to toggle expiry date based on offer value
+        function setupOfferValidation(offerId, expiryId) {
+            const offerInput = document.getElementById(offerId);
+            const expiryInput = document.getElementById(expiryId);
+
+            offerInput.addEventListener('input', () => {
+                const offerValue = parseFloat(offerInput.value) || 0;
+        
+                if (offerValue > 0) {
+                    expiryInput.disabled = false;
+                    expiryInput.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    expiryInput.disabled = true;
+                    expiryInput.value = ''; // Clear date if offer is 0 or less
+                    expiryInput.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        // Initialize for both modals
+        setupOfferValidation('addOffer', 'addExpiry');
+        setupOfferValidation('editOffer', 'editExpiry');
     </script>
 </body>
 </html>

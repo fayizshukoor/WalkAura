@@ -30,7 +30,7 @@ passport.use(
                     }); 
                 }
 
-                if(user.role === "admin"){
+                if(user && user.role === "admin"){
                     return done(null,false,{
                         message:"Access Denied.Use Admin Login"
                     }); 

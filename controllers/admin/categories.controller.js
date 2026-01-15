@@ -1,10 +1,13 @@
 import Category from "../../models/Category.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+import { expireCategoryOffers } from "../../utils/expireCategoryOffers.js";
 
 
 // Render categories First time
 export const showCategories = asyncHandler( async (req,res)=>{
     
+    await expireCategoryOffers();
+
     const page =  1;
     const limit = 5;
     const skip = 0;
@@ -27,7 +30,10 @@ export const showCategories = asyncHandler( async (req,res)=>{
 
 
 // Data for AJAX
-export const getCategoriesData = asyncHandler( async (req,res)=>{
+export const getCategoriesAjax = asyncHandler( async (req,res)=>{
+
+    await expireCategoryOffers();
+    
     const search = req.query.search?.trim() || "";
     const page = parseInt(req.query.page) || 1;
 
@@ -73,9 +79,17 @@ export const addCategory = asyncHandler(async(req,res)=>{
         return res.status(429).json({message:"Category already exists"});
     }
 
+    if(offer < 0 || offer > 90){
+        return res.status(400).json({message:"Offer should be between 0 and 90"});
+    }
+
     if(offer > 0 && !offerExpiry){
         return res.status(400).json({message:"Offer expiry date needed when offer is applied"});
     } 
+
+    if(new Date(offerExpiry) < new Date()){
+        return res.status(400).json({message:"Please set a future expiry date"});
+    }
 
     await Category.create({
         name:name.trim(),
@@ -107,6 +121,18 @@ export const editCategory = asyncHandler(async(req,res)=>{
 
     if(exists){
         return res.status(429).json({message:"Category already exists"});
+    }
+
+    if(offer < 0 || offer > 90){
+        return res.status(400).json({message:"Offer should be between 0 and 90"});
+    }
+
+    if(offer > 0 && !offerExpiry){
+        return res.status(400).json({message:"Offer expiry date needed when offer is applied"});
+    } 
+
+    if(new Date(offerExpiry) < new Date()){
+        return res.status(400).json({message:"Please set a future expiry date"});
     }
 
 
