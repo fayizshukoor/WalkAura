@@ -41,8 +41,9 @@
                         <table class="w-full text-left text-sm">
                             <thead class="text-gray-500 border-b border-gray-800 bg-white/[0.01]">
                                 <tr>
-                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Product Details</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Product Name</th>
                                     <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Category / Gender</th>
+                                    <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Stock</th>
                                     <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-right">Regular Price</th>
                                     <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-right">Offer Price</th>
                                     <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Offer Status</th>
@@ -62,6 +63,13 @@
                                         <td class="p-5 text-center">
                                             <div class="text-white"><%= product.category.name %></div>
                                             <div class="text-xs text-gray-500"><%= product.gender %></div>
+                                        </td>
+                                        <td class="p-5 text-center">
+                                            <% if (product.totalStock > 0) { %>
+                                                <span class="text-white font-mono"><%= product.totalStock %> units</span>
+                                            <% } else { %>
+                                                <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/10 text-red-500 border border-red-500/20">Out of Stock</span>
+                                            <% } %>
                                         </td>
                                         <td class="p-5 text-right font-mono">
                                             <% if (product.offerPrice && product.offerPrice < product.price) { %>
@@ -122,6 +130,11 @@
         let searchVal = '';
         let pageNum = 1;
 
+        // --- NEW: INITIALIZE ON LOAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshProductData();
+        });
+
         async function refreshProductData() {
             try {
                 const res = await fetch(`/admin/products/data?search=${encodeURIComponent(searchVal)}&page=${pageNum}`);
@@ -137,7 +150,8 @@
         function renderTable(products) {
             const tbody = document.getElementById('productTableBody');
             if (products.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-gray-500">No products found</td></tr>`;
+                // Changed colspan to 8 to match your columns
+                tbody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-gray-500">No products found</td></tr>`;
                 return;
             }
 
@@ -154,6 +168,11 @@
                     : `<span class="text-white">₹${prod.price}</span>`;
                 
                 const offerPriceHTML = hasOffer ? `₹${prod.offerPrice}` : '—';
+                
+                // Stock Badge Logic
+                const stockHTML = prod.totalStock > 0 
+                    ? `<span class="text-white font-mono">${prod.totalStock} units</span>`
+                    : `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/10 text-red-500 border border-red-500/20">Out of Stock</span>`;
 
                 return `
                 <tr class="hover:bg-white/[0.02] transition-colors">
@@ -167,6 +186,7 @@
                         <div class="text-white">${prod.category.name}</div>
                         <div class="text-xs text-gray-500">${prod.gender}</div>
                     </td>
+                    <td class="p-5 text-center">${stockHTML}</td>
                     <td class="p-5 text-right font-mono">${regPriceHTML}</td>
                     <td class="p-5 text-right font-mono text-[#5c56f6] font-bold">${offerPriceHTML}</td>
                     <td class="p-5 text-center">
@@ -197,16 +217,23 @@
 
         function renderPagination(current, total) {
             const container = document.getElementById('paginationContainer');
-            if (total <= 1) { container.innerHTML = ''; return; }
-            let html = `<button onclick="handlePageChange(${current - 1})" ${current === 1 ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Prev</button>`;
+            if (!total || total <= 1) { container.innerHTML = ''; return; }
+            
+            let html = `<button onclick="handlePageChange(${current - 1})" ${current === 1 ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20 transition-opacity">Prev</button>`;
+            
             for (let i = 1; i <= total; i++) {
-                html += `<button onclick="handlePageChange(${i})" class="w-8 h-8 rounded-lg text-xs font-bold ${i === current ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5'}">${i}</button>`;
+                html += `<button onclick="handlePageChange(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-colors ${i === current ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5'}">${i}</button>`;
             }
-            html += `<button onclick="handlePageChange(${current + 1})" ${current === total ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20">Next</button>`;
+            
+            html += `<button onclick="handlePageChange(${current + 1})" ${current === total ? 'disabled' : ''} class="text-gray-500 hover:text-white px-3 disabled:opacity-20 transition-opacity">Next</button>`;
+            
             container.innerHTML = html;
         }
 
-        function handlePageChange(p) { pageNum = p; refreshProductData(); }
+        function handlePageChange(p) { 
+            pageNum = p; 
+            refreshProductData(); 
+        }
 
         let searchTimeout;
         document.getElementById('productSearchInput').addEventListener('input', (e) => {

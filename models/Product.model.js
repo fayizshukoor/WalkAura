@@ -103,8 +103,8 @@
           ],
           required:true,
           validate:{
-              validator: imgs => imgs.length >= 2 && imgs.length <=4,
-              message: "Product must have 2 to 4 images" 
+              validator: imgs => imgs.length === 4,
+              message: "Product must have 4 images" 
             }
         },
 

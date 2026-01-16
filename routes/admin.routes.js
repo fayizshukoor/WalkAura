@@ -16,7 +16,7 @@ import {
 
 import { addCategory, editCategory, getCategoriesAjax, showCategories, toggleCategoryStatus } from "../controllers/admin/categories.controller.js";
 
-import { addProduct, getProductsAjax, showAddProduct, showProducts, toggleProductStatus } from "../controllers/admin/product.controller.js";
+import { addProduct, editProduct, getProductsAjax, showAddProduct, showEditProduct, showProducts, toggleProductStatus } from "../controllers/admin/product.controller.js";
 
 
 // middleware imports
@@ -51,5 +51,7 @@ router.get("/products",showProducts);
 router.get("/products/data",getProductsAjax);
 router.get("/products/add",showAddProduct);
 router.post("/products/add",upload.array("productImages",4),addProduct);
+router.get("/products/edit/:id",showEditProduct);
+router.put("/products/edit/:id",upload.array("productImages",4),editProduct);
 router.patch("/products/toggle/:id",toggleProductStatus);
 export default router;

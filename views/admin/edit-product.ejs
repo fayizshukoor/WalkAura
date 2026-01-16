@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WalkAura | Add Product</title>
+    <title>WalkAura | Edit Product</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -16,8 +16,6 @@
         .form-input { background-color: var(--bg-input); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; padding: 0.8rem 1rem; width: 100%; color: white; transition: all 0.2s; }
         .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(92, 86, 246, 0.2); }
         .label-style { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block; }
-        
-        /* Image Slot Logic */
         .image-placeholder { 
             aspect-ratio: 1/1; border: 2px dashed rgba(255,255,255,0.1); border-radius: 1rem; 
             display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); 
@@ -26,16 +24,10 @@
         .image-placeholder.active { cursor: pointer; border-color: var(--accent); background: rgba(92, 86, 246, 0.05); }
         .image-placeholder.locked { opacity: 0.2; cursor: not-allowed; border-style: solid; }
         .image-placeholder img { width: 100%; height: 100%; object-fit: cover; }
-        
         .replace-badge { position: absolute; bottom: 8px; right: 8px; background: var(--accent); color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
         .crop-container { max-height: 450px; overflow: hidden; background: #000; border-radius: 1rem; }
         input[type="number"]::-webkit-inner-spin-button { display: none; }
-        
-        /* Date picker dark theme adjustment */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     </style>
 </head>
 <body class="antialiased pb-20">
@@ -45,11 +37,12 @@
                 <span class="material-symbols-outlined text-gray-400">arrow_back</span>
             </a>
             <div>
-                <h1 class="text-3xl font-black tracking-tight text-white">Add Product</h1>
-                <p class="text-slate-500 text-sm font-medium">Standard single-color configuration</p>
+                <h1 class="text-3xl font-black tracking-tight text-white">Edit Product</h1>
+                <p class="text-slate-500 text-sm font-medium">Updating: <%= product.name %></p>
             </div>
         </div>
-        <form id="mainProductForm" enctype="multipart/form-data">
+
+        <form id="editProductForm" data-id="<%= product._id %>" enctype="multipart/form-data">
             <div class="grid grid-cols-12 gap-8">
                 
                 <div class="col-span-12 lg:col-span-8 space-y-8">
@@ -61,32 +54,31 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
                                 <label class="label-style">Product Name</label>
-                                <input type="text" name="name" class="form-input" placeholder="Enter product name">
+                                <input type="text" name="name" class="form-input" value="<%= product.name %>" required>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="label-style">Description</label>
-                                <textarea name="description" rows="3" class="form-input"></textarea>
+                                <textarea name="description" rows="3" class="form-input" required><%= product.description %></textarea>
                             </div>
                             <div>
                                 <label class="label-style">Category</label>
-                                <select name="category" class="form-input">
-                                    <option value="" disabled selected>Select Category</option>
+                                <select name="category" class="form-input" required>
                                     <% categories.forEach(cat => { %>
-                                        <option value="<%= cat._id %>"><%= cat.name %></option>
+                                        <option value="<%= cat._id %>" <%= String(product.category._id) === String(cat._id) ? 'selected' : '' %>><%= cat.name %></option>
                                     <% }) %>
                                 </select>
                             </div>
                             <div>
                                 <label class="label-style">Gender</label>
                                 <select name="gender" class="form-input">
-                                    <option value="Men">Men</option>
-                                    <option value="Women">Women</option>
-                                    <option value="Unisex">Unisex</option>
+                                    <option value="Men" <%= product.gender === 'Men' ? 'selected' : '' %>>Men</option>
+                                    <option value="Women" <%= product.gender === 'Women' ? 'selected' : '' %>>Women</option>
+                                    <option value="Unisex" <%= product.gender === 'Unisex' ? 'selected' : '' %>>Unisex</option>
                                 </select>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="label-style">Primary Color</label>
-                                <input type="text" name="color" class="form-input" placeholder="e.g. Midnight Black">
+                                <input type="text" name="color" class="form-input" value="<%= product.color %>" placeholder="e.g. Midnight Black">
                             </div>
                         </div>
                     </section>
@@ -97,10 +89,13 @@
                             <h2 class="text-lg font-bold">Inventory by Size (UK)</h2>
                         </div>
                         <div class="grid grid-cols-5 gap-4">
-                            <% [6, 7, 8, 9, 10].forEach(sz => { %>
+                            <% [6, 7, 8, 9, 10].forEach(sz => { 
+                                const existingSize = product.sizes.find(s => parseInt(s.size) === sz);
+                                const stockVal = existingSize ? existingSize.stock : 0;
+                            %>
                                 <div class="bg-black/40 p-4 rounded-2xl border border-white/5 text-center">
                                     <label class="block text-[10px] font-black text-slate-500 mb-2">SIZE <%= sz %></label>
-                                    <input type="number" data-size="<%= sz %>" class="size-stock-input form-input text-center font-bold" value="0" min="0">
+                                    <input type="number" data-size="<%= sz %>" class="size-stock-input form-input text-center font-bold" value="<%= stockVal %>" min="0">
                                 </div>
                             <% }) %>
                         </div>
@@ -111,35 +106,41 @@
                             <span class="material-symbols-outlined">photo_library</span>
                             <h2 class="text-lg font-bold text-white">Product Gallery</h2>
                         </div>
-                        <p class="text-xs text-slate-500 mb-8 font-medium">Slot 1 is your thumbnail. Slots unlock sequentially.</p>
+                        <p class="text-xs text-slate-500 mb-8 font-medium">Modify existing images or add new ones.</p>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <% for(let i=0; i<4; i++) { %>
+                            <% for(let i=0; i<4; i++) { 
+                                const existingImg = product.images && product.images[i]?.url ? product.images[i]?.url : null;
+                                const isLocked = i > 0 && !existingImg && (!product.images[i-1]?.url);
+                            %>
                                 <div id="placeholder-<%= i %>" 
-                                     class="image-placeholder <%= i === 0 ? 'active' : 'locked' %>" 
+                                     class="image-placeholder <%= isLocked ? 'locked' : 'active' %>" 
                                      onclick="handleSlotClick(<%= i %>)">
-                                    <div class="text-center text-slate-600">
-                                        <span class="material-symbols-outlined text-2xl">add_a_photo</span>
-                                        <p class="text-[9px] mt-1 font-black">SLOT <%= i+1 %></p>
-                                    </div>
+                                    <% if (existingImg) { %>
+                                        <img src="<%= existingImg %>">
+                                        <div class="replace-badge">REPLACE</div>
+                                    <% } else { %>
+                                        <div class="text-center text-slate-600">
+                                            <span class="material-symbols-outlined text-2xl">add_a_photo</span>
+                                            <p class="text-[9px] mt-1 font-black">SLOT <%= i+1 %></p>
+                                        </div>
+                                    <% } %>
                                 </div>
                             <% } %>
                         </div>
                         <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="processFile(event)">
                         <div id="cropperWrapper" class="hidden mt-8 space-y-4 bg-black/60 p-6 rounded-2xl border border-[#5c56f6]/30">
-                            <div class="crop-container">
-                                <img id="cropperImage" src="">
-                            </div>
+                            <div class="crop-container"><img id="cropperImage" src=""></div>
                             <div class="flex justify-end gap-3">
                                 <button type="button" onclick="cancelCrop()" class="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
-                                <button type="button" onclick="saveCrop()" style="background-color: #5c56f6;" class="px-8 py-2 rounded-lg font-bold text-sm text-white">Save Image</button>
+                                <button type="button" onclick="saveCrop()" style="background-color: #5c56f6;" class="px-8 py-2 rounded-lg font-bold text-sm text-white">Update Slot</button>
                             </div>
                         </div>
                     </section>
 
                     <div class="flex justify-end items-center gap-4 pt-4">
-                        <button type="button" onclick="window.history.back()" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-white transition-all">Discard</button>
+                        <button type="button" onclick="window.history.back()" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-white transition-all">Cancel Changes</button>
                         <button type="submit" style="background-color: #5c56f6;" class="text-white px-12 py-4 rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition-all text-lg">
-                            Publish Product
+                            Update Product
                         </button>
                     </div>
                 </div>
@@ -153,18 +154,18 @@
                         <div class="space-y-6">
                             <div>
                                 <label class="label-style">Base Price (₹)</label>
-                                <input type="number" id="price" name="price" class="form-input text-xl font-bold" placeholder="0">
+                                <input type="number" id="price" name="price" class="form-input text-xl font-bold" value="<%= product.price %>" required>
                             </div>
                             <div>
                                 <label class="label-style">Offer (%)</label>
-                                <input type="number" id="offerPercent" name="offerPercent" class="form-input" min="0" max="99" value="0">
+                                <input type="number" id="offerPercent" name="offerPercent" class="form-input" min="0" max="99" value="<%= product.offerPercentage || 0 %>">
                             </div>
                             
-                            <div id="expiryContainer" class="hidden">
+                            <div id="expiryContainer" class="<%= (product.offerPercentage > 0) ? '' : 'hidden' %>">
                                 <label class="label-style">Offer Expiry Date</label>
-                                <input type="date" id="offerExpiry" name="offerExpiry" class="form-input">
+                                <input type="date" id="offerExpiry" name="offerExpiry" class="form-input" value="<%= product.offerExpiry ? new Date(product.offerExpiry).toISOString().split('T')[0] : '' %>">
                             </div>
-                            <div id="pricePreview" class="p-6 rounded-2xl bg-[#5c56f6]/5 border border-[#5c56f6]/10 text-center hidden">
+                            <div id="pricePreview" class="p-6 rounded-2xl bg-[#5c56f6]/5 border border-[#5c56f6]/10 text-center">
                                 <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Final Selling Price</p>
                                 <p id="finalPriceText" class="text-4xl font-black text-[#5c56f6]">₹0</p>
                             </div>
@@ -180,12 +181,9 @@
         let currentSlot = null;
         let cropper = null;
 
-        // Initialize Date Constraint
         const expiryInput = document.getElementById('offerExpiry');
-        const today = new Date().toISOString().split('T')[0];
-        expiryInput.setAttribute('min', today);
+        expiryInput.setAttribute('min', new Date().toISOString().split('T')[0]);
 
-        // Slot Management
         function handleSlotClick(index) {
             const slot = document.getElementById(`placeholder-${index}`);
             if (slot.classList.contains('locked')) return;
@@ -219,12 +217,14 @@
             cropper.getCroppedCanvas({ width: 1000, height: 1000 }).toBlob((blob) => {
                 croppedBlobs[currentSlot] = blob;
                 const slot = document.getElementById(`placeholder-${currentSlot}`);
-                slot.innerHTML = `<img src="${URL.createObjectURL(blob)}"><div class="replace-badge">REPLACE</div>`;
+                slot.innerHTML = `<img src="${URL.createObjectURL(blob)}"><div class="replace-badge">UPDATED</div>`;
                 
                 if (currentSlot < 3) {
                     const nextSlot = document.getElementById(`placeholder-${currentSlot + 1}`);
-                    nextSlot.classList.remove('locked');
-                    nextSlot.classList.add('active');
+                    if(nextSlot.classList.contains('locked')){
+                        nextSlot.classList.remove('locked');
+                        nextSlot.classList.add('active');
+                    }
                 }
                 cancelCrop();
             }, 'image/jpeg');
@@ -241,64 +241,47 @@
             
             if (o > 0) {
                 expiryContainer.classList.remove('hidden');
-                expiryInput.required = true;
             } else {
                 expiryContainer.classList.add('hidden');
-                expiryInput.required = false;
                 expiryInput.value = "";
             }
 
-            if (p > 0) {
-                document.getElementById('pricePreview').classList.remove('hidden');
-                document.getElementById('finalPriceText').innerText = `₹${Math.round(p - (p * o / 100)).toLocaleString()}`;
-            } else {
-                document.getElementById('pricePreview').classList.add('hidden');
-            }
+            const final = Math.round(p - (p * o / 100));
+            document.getElementById('finalPriceText').innerText = `₹${final.toLocaleString()}`;
         }
         pInp.addEventListener('input', updatePrice);
         oInp.addEventListener('input', updatePrice);
+        window.onload = updatePrice;
 
         // Form Submit
-        document.getElementById('mainProductForm').onsubmit = async (e) => {
+        document.getElementById('editProductForm').onsubmit = async (e) => {
             e.preventDefault();
-            
-            const imgCount = Object.keys(croppedBlobs).length;
-            if (imgCount !== 4) {
-                return Swal.fire({ icon: 'error', title: '4 Images Required', text: 'Please upload 4 angles.', background: '#141414', color: '#fff' });
-            }
+            const productId = e.target.dataset.id;
+            const formData = new FormData(e.target);
+
+            // Add cropped images with their slot index
+            Object.keys(croppedBlobs).forEach(key => {
+                formData.append('productImages', croppedBlobs[key], `slot-${key}.jpg`);
+                formData.append('imageMapping', key); // Tells backend which slot this image belongs to
+            });
 
             const stocks = Array.from(document.querySelectorAll('.size-stock-input'));
-            const totalStock = stocks.reduce((acc, el) => acc + (parseInt(el.value) || 0), 0);
-
-            const formData = new FormData(e.target);
-            
-            Object.keys(croppedBlobs)
-                .sort((a, b) => a - b)
-                .forEach(key => {
-                    formData.append('productImages', croppedBlobs[key], `img-${key}.jpg`);
-                });
-
-            const sizesJson = stocks.map(s => ({ size: s.dataset.size, stock: s.value }));
+            const sizesJson = stocks.map(s => ({ size: s.dataset.size, stock: parseInt(s.value) || 0 }));
             formData.append('sizes', JSON.stringify(sizesJson));
 
             try {
-                Swal.fire({ title: 'Publishing Product...', didOpen: () => Swal.showLoading(), background: '#141414', color: '#fff' });
-                const res = await fetch('/admin/products/add', { method: 'POST', body: formData });
-                const data = await res.json();
-
-                if (!res.ok){
-                    throw new Error(data.message || 'Failed to save product');
-                }
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: data.message || 'Product added successfully',
-                    background: '#141414',
-                    color: '#fff'
+                Swal.fire({ title: 'Updating Product...', didOpen: () => Swal.showLoading(), background: '#141414', color: '#fff' });
+                
+                const res = await fetch(`/admin/products/edit/${productId}`, { 
+                    method: 'PUT', // Use PUT or POST based on your route
+                    body: formData 
                 });
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Update failed');
 
-                window.location.href = '/admin/products'; 
-
+                await Swal.fire({ icon: 'success', title: 'Updated!', text: 'Product details saved.', background: '#141414', color: '#fff' });
+                window.location.href = '/admin/products';
             } catch (err) {
                 Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#141414', color: '#fff' });
             }
