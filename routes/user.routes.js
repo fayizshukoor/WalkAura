@@ -32,7 +32,7 @@ import { handleAuthForgotPassword, handleChangePassword, showChangePassword } fr
 
 import { addAddress, deleteAddress, showAddressManagement, updateAddress} from "../controllers/user/address.controller.js";
 
-import { getProducts } from "../controllers/user/shop.controller.js";
+import { getProductDetails, getProducts } from "../controllers/user/shop.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -121,5 +121,6 @@ router.delete("/addresses/:addressId", requireAuth, deleteAddress);
 // Product Listing page
 
 router.get("/shop",getProducts);
+router.get("/product/:slug", getProductDetails);
 
 export default router;

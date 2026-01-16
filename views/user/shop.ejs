@@ -118,6 +118,7 @@
                     <div>
                         <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Sort By</label>
                         <select name="sort" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
+                            <option value="">>All</option>
                             <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
                             <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
                             <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Name: A - Z</option>
@@ -138,31 +139,35 @@
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <% if (products.length > 0) { %>
                     <% products.forEach(function(product) { %>
-                    <div class="group block">
-                        <div class="bg-surface-dark border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1">
-                            <div class="relative aspect-square rounded-xl bg-[#202020] overflow-hidden mb-4">
-                                <img src="<%= product.images[0]?.url %>" alt="<%= product.name %>" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                            </div>
-                            
-                            <div class="px-2 pb-2">
-                                <h3 class="text-base font-bold text-white tracking-tight mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                                    <%= product.name %>
-                                </h3>
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-white font-semibold">₹<%= product.finalPrice %></span>
-                                        <% if (product.finalPrice < product.price) { %>
-                                            <span class="text-xs text-gray-500 line-through">₹<%= product.price %></span>
-                                        <% } %>
+                        <a href="/product/<%= product.slug %>" class="group block">
+                            <div class="bg-surface-dark border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1">
+                                
+                                <div class="relative aspect-square rounded-xl bg-[#202020] overflow-hidden mb-4">
+                                    <img src="<%= product.images[0]?.url %>" 
+                                         alt="<%= product.name %>" 
+                                         class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                                </div>
+                                
+                                <div class="px-2 pb-2">
+                                    <h3 class="text-base font-bold text-white tracking-tight mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                                        <%= product.name %>
+                                    </h3>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-white font-semibold">₹<%= product.finalPrice %></span>
+                                            <% if (product.finalPrice < product.price) { %>
+                                                <span class="text-xs text-gray-500 line-through">₹<%= product.price %></span>
+                                            <% } %>
+                                        </div>
+                                        
+                                        <button type="button" class="wishlist-btn w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative z-10">
+                                            <span class="material-icons-outlined text-sm">favorite_border</span>
+                                        </button>
                                     </div>
-                                    <button class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-                                        <span class="material-icons-outlined text-sm">favorite_border</span>
-                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </a>
                     <% }); %>
                 <% } else { %>
                     <div class="col-span-full text-center py-20 text-gray-500 italic">

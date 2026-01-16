@@ -108,7 +108,7 @@ export const getProducts = asyncHandler(async (req, res) => {
         category: category || "all",
         priceRange: priceRange || "all",
         gender: gender || "all",
-        sort: sort || ""
+        sort: sort || "all"
       }
     });
 
@@ -117,6 +117,67 @@ export const getProducts = asyncHandler(async (req, res) => {
 
 
 
+
+
+export const getProductDetails = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  //  Fetch listed product only
+  const product = await Product.findOne({
+    slug,
+    isListed: true
+  })
+    .populate("category", "name offerPercent offerExpiry")
+    .lean();
+
+  // If product not found redirect to shop
+  if (!product) {
+    return res.redirect("/shop");
+  }
+
+  // Calculate total stock from sizes
+  const totalStock = product.sizes.reduce(
+    (sum, size) => sum + size.stock,
+    0
+  );
+
+  // Calculate final price
+  const finalPrice = calculateFinalPrice({
+    price: product.price,
+    productOffer: product.offerPercent,
+    productOfferExpiry: product.offerExpiry,
+    categoryOffer: product.category?.offerPercent,
+    categoryOfferExpiry: product.category?.offerExpiry
+  });
+
+  // Review stats (read-only)
+  const reviewCount = product.reviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? (
+          product.reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+        ).toFixed(1)
+      : 0;
+
+  // Related products (same category)
+  const relatedProducts = await Product.find({
+    category: product.category._id,
+    _id: { $ne: product._id },
+    isListed: true
+  })
+    .limit(4)
+    .lean();
+
+  // Render Product Detail page
+  res.render("user/product-details", {
+    product,
+    finalPrice,
+    totalStock,
+    averageRating,
+    reviewCount,
+    relatedProducts
+  });
+});
 
 
 
