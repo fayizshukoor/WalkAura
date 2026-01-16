@@ -1,14 +1,28 @@
-export const calculateFinalPrice = (product,category)=>{
+export const calculateFinalPrice = ({
+    price,
+    productOffer = 0,
+    productOfferExpiry,
+    categoryOffer = 0,
+    categoryOfferExpiry
+  }) => {
     const now = new Date();
-
-    const productOffer = product.offerPercent && product.offerExpiry && product.offerExpiry > now ? product.offerPercent : 0;
-
-    const categoryOffer = category.offerPercent && category.offerExpiry && category.offerExpiry > now ? category.offerPercent : 0;
-
-    const appliedOffer = Math.max(productOffer,categoryOffer);
-
-    if(appliedOffer > 0){
-        return Math.round(product.price - (product.price * appliedOffer)/100 );
+  
+    const validProductOffer =
+      productOfferExpiry && productOfferExpiry > now
+        ? productOffer
+        : 0;
+  
+    const validCategoryOffer =
+      categoryOfferExpiry && categoryOfferExpiry > now
+        ? categoryOffer
+        : 0;
+  
+    const appliedOffer = Math.max(validProductOffer, validCategoryOffer);
+  
+    if (appliedOffer > 0) {
+      return Math.round(price - (price * appliedOffer) / 100);
     }
-        return product.price;
-}
+  
+    return price;
+  };
+  

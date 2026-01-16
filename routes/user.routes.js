@@ -30,12 +30,9 @@ import { requestEmailChange, resendEmailChangeOTP, showChangeEmail, showVerifyEm
 
 import { handleAuthForgotPassword, handleChangePassword, showChangePassword } from "../controllers/user/profilePassword.controller.js";
 
-import {
-  addAddress,
-  deleteAddress,
-  showAddressManagement,
-  updateAddress,
-} from "../controllers/user/address.controller.js";
+import { addAddress, deleteAddress, showAddressManagement, updateAddress} from "../controllers/user/address.controller.js";
+
+import { getProducts } from "../controllers/user/shop.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -120,5 +117,9 @@ router.post("/addresses/add", requireAuth, addAddress);
 router.put("/addresses/:addressId", requireAuth, updateAddress);
 
 router.delete("/addresses/:addressId", requireAuth, deleteAddress);
+
+// Product Listing page
+
+router.get("/shop",getProducts);
 
 export default router;
