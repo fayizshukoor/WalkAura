@@ -14,9 +14,13 @@ export const getProducts = asyncHandler(async (req, res) => {
       page = 1
     } = req.query;
 
-    // Listed products only
+    const activeCategories = await Category.find({isDeleted : false,isListed : true}).select("_id");
+    
+
+    // Listed products with active categories only
     let query = {
-      isListed: true
+      isListed: true,
+      category : {$in : activeCategories }
     };
 
     // Search
@@ -26,7 +30,9 @@ export const getProducts = asyncHandler(async (req, res) => {
 
     // Category filter
     if (category && category !== "all") {
-        query.category = category;
+        query.category = {
+          $in : activeCategories.map(c => c._id).filter(id => id.toString() === category)
+        };
       }
 
     // Gender filter
@@ -88,7 +94,7 @@ export const getProducts = asyncHandler(async (req, res) => {
       };
     });
 
-    const categories = await Category.find({isListed : true});
+    const categories = await Category.find({isListed : true, isDeleted : false});
 
 
     const pagination = {
@@ -127,11 +133,11 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     slug,
     isListed: true
   })
-    .populate("category", "name offerPercent offerExpiry")
+    .populate("category", "name offerPercent offerExpiry isListed isDeleted")
     .lean();
 
-  // If product not found redirect to shop
-  if (!product) {
+  // If product not found or category is inactive redirect to shop
+  if (!product || !product.category.isListed || product.category.isDeleted) {
     return res.redirect("/shop");
   }
 

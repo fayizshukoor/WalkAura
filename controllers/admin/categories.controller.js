@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from "../../constants/httpStatus.js";
 import Category from "../../models/Category.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import { expireCategoryOffers } from "../../utils/expireCategoryOffers.js";
@@ -13,11 +14,11 @@ export const showCategories = asyncHandler( async (req,res)=>{
     const skip = 0;
 
     const [categories,totalCategories] = await Promise.all([
-        Category.find()
+        Category.find({isDeleted:false})
         .sort({createdAt:-1})
         .skip(skip)
         .limit(limit),
-        Category.countDocuments()
+        Category.countDocuments({isDeleted:false})
     ]);
 
     res.render("admin/categories",{
@@ -41,6 +42,7 @@ export const getCategoriesAjax = asyncHandler( async (req,res)=>{
     const skip = (page-1) * limit;
 
     const query = {
+        isDeleted : false,
         name:{$regex:search,$options:"i"}
     };
 
@@ -52,7 +54,7 @@ export const getCategoriesAjax = asyncHandler( async (req,res)=>{
         Category.countDocuments(query)
     ]);
 
-    res.status(200).json({
+    return res.status(200).json({
         categories,
         currentPage:page,
         totalPages:Math.ceil( totalCategories/ limit)
@@ -66,12 +68,13 @@ export const addCategory = asyncHandler(async(req,res)=>{
     const {name,description,offer,offerExpiry} = req.body;
 
     if(!name || name.trim()===""){
-        res.status(400).json({message:"Category name is required"});    
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category name is required"});    
     }
 
 
     const exists = await Category.findOne({
-        name:{$regex:`^${name.trim()}$`,$options:"i"}
+        name:{$regex:`^${name.trim()}$`,$options:"i"},
+        isDeleted : false
     });
 
     
@@ -80,15 +83,15 @@ export const addCategory = asyncHandler(async(req,res)=>{
     }
 
     if(offer < 0 || offer > 90){
-        return res.status(400).json({message:"Offer should be between 0 and 90"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer should be between 0 and 90"});
     }
 
     if(offer > 0 && !offerExpiry){
-        return res.status(400).json({message:"Offer expiry date needed when offer is applied"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer expiry date needed when offer is applied"});
     } 
 
     if(new Date(offerExpiry) < new Date()){
-        return res.status(400).json({message:"Please set a future expiry date"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Please set a future expiry date"});
     }
 
     await Category.create({
@@ -110,35 +113,31 @@ export const editCategory = asyncHandler(async(req,res)=>{
     const {name,description,offer,offerExpiry} = req.body;
 
     if(!name || name.trim()===""){
-        res.status(400).json({message:"Category name is required"});    
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category name is required"});    
     }
 
 
     const exists = await Category.findOne({
         _id:{$ne:id},
-        name:{$regex:`^${name.trim()}$`,$options:"i"}
+        name:{$regex:`^${name.trim()}$`,$options:"i"},
+        isDeleted : false
     });
 
     if(exists){
-        return res.status(429).json({message:"Category already exists"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category already exists"});
     }
 
     if(offer < 0 || offer > 90){
-        return res.status(400).json({message:"Offer should be between 0 and 90"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer should be between 0 and 90"});
     }
 
     if(offer > 0 && !offerExpiry){
-        return res.status(400).json({message:"Offer expiry date needed when offer is applied"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer expiry date needed when offer is applied"});
     } 
 
     if(new Date(offerExpiry) < new Date()){
-        return res.status(400).json({message:"Please set a future expiry date"});
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Please set a future expiry date"});
     }
-
-
-    if(offer > 0 && !offerExpiry){
-        return res.status(400).json({message:"Offer expiry date required when offer is applied"});
-    } 
 
     await Category.findByIdAndUpdate(id,{
         name:name.trim(),
@@ -147,7 +146,7 @@ export const editCategory = asyncHandler(async(req,res)=>{
         offerExpiry:offerExpiry || null
     });
 
-    res.status(201).json({message:"Category updated successfully"});
+    res.status(HTTP_STATUS.CREATED).json({message:"Category updated successfully"});
     
 });
 
@@ -160,11 +159,34 @@ export const toggleCategoryStatus = asyncHandler( async(req,res)=>{
     const category = await Category.findById(id);
 
     if(!category){
-        res.status(404).json({message:"Category not found"});
+        return res.status(404).json({message:"Category not found"});
     }
 
     category.isListed = !category.isListed;
     await category.save();
 
-    res.status(200).json({message:category.isListed ? "Category Listed":"Category Unlisted"});
+    res.status(HTTP_STATUS.OK).json({message:category.isListed ? "Category Listed":"Category Unlisted"});
+})
+
+
+// Soft delete Category 
+
+export const softDeleteCategory = asyncHandler(async (req,res)=>{
+    const {id} = req.params;
+
+    const category = await Category.findById(id);
+
+    if(!category){
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category not found"});
+    }
+
+    if(category.isDeleted){
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category already Deleted"});
+    }
+
+    category.isDeleted = true;
+    category.isListed = false;
+    await category.save();
+
+    return res.status(HTTP_STATUS.OK).json({message:"Category Deleted Successfully"});
 })

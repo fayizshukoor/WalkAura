@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalkAura | Manage Variants</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root { --bg-main: #000000; --bg-card: #141414; --bg-input: #0a0a0a; --accent: #5c56f6; --text-muted: #94a3b8; --form-bg: #1c1d22; }
+        body { background-color: var(--bg-main); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        
+        .form-container-highlight { 
+            background-color: var(--form-bg); 
+            border: 2px solid #373b4d; 
+            border-top: 4px solid var(--accent);
+            border-radius: 1.25rem; 
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .form-input { background-color: var(--bg-input); border: 1px solid #3f3f46; border-radius: 0.75rem; padding: 0.8rem 1rem; width: 100%; color: white; transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); outline: none; background-color: #000; box-shadow: 0 0 0 4px rgba(92, 86, 246, 0.15); }
+        
+        .label-style { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; display: block; }
+        .section-card { background-color: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.25rem; padding: 1.5rem; }
+        .variant-card { border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+        
+        #cropperModal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; padding: 20px; }
+        .cropper-container-box { background: #141414; width: 100%; max-width: 500px; border-radius: 1rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .image-status-tag { position: absolute; top: 8px; left: 8px; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+        .remove-image-btn { position: absolute; top: 8px; right: 8px; z-index: 20; background: rgba(244, 63, 94, 0.9); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; items-center; justify-content: center; cursor: pointer; transition: transform 0.2s; }
+        .remove-image-btn:hover { transform: scale(1.1); background: #f43f5e; }
+    </style>
+</head>
+<body class="antialiased pb-20">
+
+    <div id="cropperModal">
+        <div class="cropper-container-box">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-white">Crop Image</h3>
+                    <p class="text-[10px] text-gray-400 uppercase">1:1 Aspect Ratio • Square Crop</p>
+                </div>
+                <button type="button" onclick="closeCropper()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div class="p-4">
+                <div class="max-h-[60vh] overflow-hidden bg-black rounded-lg">
+                    <img id="cropperImg" src="" class="max-w-full">
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/10 flex gap-3">
+                <button type="button" onclick="closeCropper()" class="flex-1 py-3 rounded-xl bg-white/5 font-bold hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="button" onclick="confirmCrop()" class="flex-1 py-3 rounded-xl bg-[#5c56f6] font-bold hover:bg-[#4a44d8] transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 pt-10">
+        <div class="flex items-center justify-between mb-10 border-b border-white/5 pb-8">
+            <div class="flex items-center gap-5">
+                <a href="/admin/products" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#141414] border border-white/10 hover:bg-white/5 transition-all">
+                    <span class="material-symbols-outlined text-gray-400">arrow_back</span>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight text-white">Manage Variants</h1>
+                    <p class="text-slate-500 text-sm font-medium">Product: <span class="text-indigo-400"><%= product.name %></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6 mb-16">
+            <div class="flex items-center gap-3 px-2">
+                <span class="material-symbols-outlined text-indigo-400">layers</span>
+                <h2 class="text-xl font-bold">Existing Variants</h2>
+            </div>
+            <div class="grid grid-cols-1 gap-4" id="variantsList">
+                <% if (product.variants && product.variants.length > 0) { %>
+                    <% product.variants.forEach(variant => { %>
+                        <div class="variant-card section-card flex flex-col md:flex-row items-center gap-6" id="v-display-<%= variant._id %>">
+                            <img src="<%= variant.images[0] %>" class="w-24 h-24 rounded-xl object-cover bg-black">
+                            <div class="flex-1 w-full">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h3 class="text-lg font-bold"><%= variant.color %></h3>
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider <%= variant.isActive ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20' %>">
+                                        <%= variant.isActive ? 'Active' : 'Disabled' %>
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <% variant.inventory.filter(inv => inv.isActive).forEach(inv => { %>
+                                        <span class="text-[11px] bg-white/5 px-2 py-1 rounded border border-white/5">UK <%= inv.size %>: <b class="text-indigo-400"><%= inv.stock %></b></span>
+                                    <% }) %>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="toggleVariantStatus('<%= variant._id %>')" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 transition-all">
+                                    <span class="material-symbols-outlined text-xl">
+                                        <%= variant.isActive ? 'visibility_off' : 'visibility' %>
+                                    </span>
+                                </button>
+                                <button class="edit-variant-btn px-6 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all font-bold text-sm" data-variant='<%= JSON.stringify(variant).replace(/'/g, "&#39;") %>'>Edit Variant</button>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="py-12 text-center section-card border-dashed"><p class="text-slate-500 italic">No variants created yet.</p></div>
+                <% } %>
+            </div>
+        </div>
+
+        <div id="formAnchor" class="scroll-mt-10">
+            <section class="form-container-highlight">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-[#5c56f6] text-3xl" id="formIcon">add_circle</span>
+                        <h2 class="text-2xl font-black text-white" id="formTitle">Add New Variant</h2>
+                    </div>
+                    <button id="cancelEditBtn" onclick="window.location.reload()" class="px-4 py-2 rounded-lg bg-rose-500/10 text-xs font-black uppercase text-rose-500 hover:bg-rose-500 transition-all hidden">Cancel Editing</button>
+                </div>
+
+                <form id="variantForm" class="space-y-8" novalidate>
+                    <input type="hidden" id="editingVariantId" value="">
+                    <div>
+                        <label class="label-style">Color Name</label>
+                        <input type="text" id="colorInput" class="form-input" placeholder="e.g. Midnight Black">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="label-style">Gallery (4 Required)</label>
+                            <span id="imgCountBadge" class="text-[10px] font-black uppercase text-indigo-400 bg-indigo-400/10 px-2 py-1 rounded">0 / 4 IMAGES</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="imageGrid">
+                            <div id="addSlot" class="aspect-square rounded-2xl border-2 border-dashed border-white/20 bg-black flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-all" onclick="imgInput.click()">
+                                <span class="material-symbols-outlined text-slate-500 text-3xl">add_a_photo</span>
+                                <span class="text-[10px] font-black text-slate-500 mt-1 uppercase">Add Photo</span>
+                            </div>
+                        </div>
+                        <input type="file" id="imageInput" accept="image/*" class="hidden">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="label-style">Size & Stock</label>
+                            <button type="button" onclick="addSizeRow()" class="bg-indigo-500/10 text-indigo-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-indigo-500 transition-all">+ Add Row</button>
+                        </div>
+                        <div id="sizeContainer" class="space-y-3"></div>
+                    </div>
+
+                    <div class="pt-6 border-t border-white/10 flex justify-end">
+                        <button type="submit" id="submitBtn" class="bg-[#5c56f6] text-white px-12 py-4 rounded-2xl font-black shadow-xl shadow-indigo-500/40 transition-all hover:bg-[#4a44d8] hover:scale-[1.02]">SAVE VARIANT</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('variantForm');
+        const editingIdInput = document.getElementById('editingVariantId');
+        const colorInput = document.getElementById('colorInput');
+        const sizeContainer = document.getElementById('sizeContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const imgInput = document.getElementById('imageInput');
+        const imageGrid = document.getElementById('imageGrid');
+        const addSlot = document.getElementById('addSlot');
+        const cropperModal = document.getElementById('cropperModal');
+        const cropperImg = document.getElementById('cropperImg');
+        const imgCountBadge = document.getElementById('imgCountBadge');
+        
+        let isEditMode = false;
+        let cropper = null;
+        let imageBlobs = []; // Array of Blobs or URLs for Edit Mode
+        let originalImages = []; // To track images from DB in edit mode
+
+        // Initialize size row
+        window.onload = () => { if (!isEditMode) addSizeRow(); };
+
+        imgInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({ icon: 'error', title: 'Invalid File', text: 'Select an image file.', background: '#141414', color: '#fff' });
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                cropperImg.src = event.target.result;
+                cropperModal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(cropperImg, { aspectRatio: 1, viewMode: 1 });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function closeCropper() { cropperModal.style.display = 'none'; imgInput.value = ''; }
+
+        function confirmCrop() {
+            if(!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 1000, height: 1000 });
+            canvas.toBlob((blob) => {
+                imageBlobs.push(blob);
+                renderImagePreviews();
+                closeCropper();
+            }, 'image/jpeg');
+        }
+
+        function renderImagePreviews() {
+            // Clear existing previews except the add slot
+            const previews = imageGrid.querySelectorAll('.preview-card');
+            previews.forEach(p => p.remove());
+
+            imageBlobs.forEach((item, index) => {
+                const isUrl = typeof item === 'string';
+                const src = isUrl ? item : URL.createObjectURL(item);
+                
+                const div = document.createElement('div');
+                div.className = 'preview-card aspect-square rounded-2xl bg-black relative overflow-hidden group border border-white/10';
+                div.innerHTML = `
+                    <img src="${src}" class="w-full h-full object-cover">
+                    <div class="remove-image-btn" onclick="removeImage(${index})">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </div>
+                    <span class="image-status-tag ${isUrl ? 'bg-slate-800 text-white' : 'bg-indigo-500 text-white'} uppercase">
+                        ${isUrl ? 'Original' : 'New'}
+                    </span>
+                `;
+                imageGrid.insertBefore(div, addSlot);
+            });
+
+            imgCountBadge.innerText = `${imageBlobs.length} / 4 IMAGES`;
+            addSlot.style.display = imageBlobs.length >= 4 ? 'none' : 'flex';
+        }
+
+        function removeImage(index) {
+            imageBlobs.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        function addSizeRow(size = '', stock = '0') {
+            const id = Date.now() + Math.random();
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-12 gap-3 items-start bg-black/40 p-4 rounded-xl border border-white/10';
+            div.id = `row-${id}`;
+            div.innerHTML = `
+                <div class="col-span-5"><label class="label-style">Size (UK)</label><input type="number" class="size-val form-input" value="${size}"></div>
+                <div class="col-span-5"><label class="label-style">Stock</label><input type="number" class="stock-val form-input" value="${stock}"></div>
+                <div class="col-span-2 pt-8"><button type="button" onclick="document.getElementById('row-${id}').remove();" class="w-full py-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><span class="material-symbols-outlined">delete</span></button></div>
+            `;
+            sizeContainer.appendChild(div);
+        }
+
+        // Edit Mode Logic
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.edit-variant-btn');
+            if (btn) {
+                const variant = JSON.parse(btn.dataset.variant);
+                enterEditMode(variant);
+            }
+        });
+
+        function enterEditMode(variant) {
+            isEditMode = true;
+            document.getElementById('formAnchor').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('formTitle').innerText = `Editing: ${variant.color}`;
+            document.getElementById('submitBtn').innerText = "SAVE CHANGES";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            editingIdInput.value = variant._id;
+            colorInput.value = variant.color;
+            
+            imageBlobs = [...variant.images]; // Load existing URLs
+            renderImagePreviews();
+
+            sizeContainer.innerHTML = '';
+            variant.inventory.filter(inv => inv.isActive).forEach(inv => addSizeRow(inv.size, inv.stock));
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            if (imageBlobs.length < 3 && imageBlobs.length > 4) {
+                Swal.fire({ icon: 'error', title: 'Images Required', text: 'Please add 3 to 4 images.', background: '#141414', color: '#fff' });
+                return;
+            }
+
+            Swal.fire({ title: 'Saving...', allowOutsideClick: false, background: '#141414', color: '#fff', didOpen: () => Swal.showLoading() });
+
+            const formData = new FormData();
+            formData.append('color', colorInput.value);
+            
+            const inventory = Array.from(document.querySelectorAll('#sizeContainer > div')).map(row => ({
+                size: Number(row.querySelector('.size-val').value),
+                stock: Number(row.querySelector('.stock-val').value)
+            }));
+            formData.append('sizes', JSON.stringify(inventory));
+
+            imageBlobs.forEach((item) => {
+                if (item instanceof Blob) {
+                    formData.append('variantImages', item);
+                } else {
+                    formData.append('existingImages', item);
+                }
+            });
+
+            const url = isEditMode ? `/admin/products/variants/edit/${editingIdInput.value}` : `/admin/products/<%= product._id %>/variants/add`;
+            
+            try {
+                const res = await fetch(url, { method: isEditMode ? 'PATCH' : 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: 'Success', text: data.message, background: '#141414', color: '#fff',timer:1500, showConfirmButton: false })
+                    .then(() => window.location.reload());
+                } else { throw new Error(data.message); }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#141414', color: '#fff' });
+            }
+        };
+
+        async function toggleVariantStatus(variantId) {
+            const result = await Swal.fire({
+                title: 'Change Status?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#5c56f6',
+                background: '#141414',
+                color: '#fff'
+            });
+
+            if (result.isConfirmed) {
+                const response = await fetch(`/admin/products/variants/toggle/${variantId}`, { method: 'PATCH' });
+                if (response.ok) location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

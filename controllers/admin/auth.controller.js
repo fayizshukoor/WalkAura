@@ -71,5 +71,5 @@ export const adminLogout = (req, res) => {
   res.clearCookie("adminAccessToken");
   res.clearCookie("adminRefreshToken");
 
-  res.redirect("/admin");
+  return res.status(200).json({message:"logout success"})
 };

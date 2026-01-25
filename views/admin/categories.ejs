@@ -51,6 +51,7 @@
                             </thead>
                             <tbody id="categoryTableBody" class="divide-y divide-gray-900">
                                 <% categories.forEach(category => { %>
+                                    <% if (!category.isDeleted) { %>
                                     <tr class="hover:bg-white/[0.02] transition-colors">
                                         <td class="p-5">
                                             <div class="font-medium text-white"><%= category.name %></div>
@@ -74,6 +75,7 @@
                                                 >
                                                     <span class="material-symbols-outlined text-[22px]">edit_square</span>
                                                 </button>
+                                                
                                                 <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" class="sr-only peer status-toggle" 
                                                         data-id="<%= category._id %>" 
@@ -82,9 +84,18 @@
                                                         <%= category.isListed ? 'checked' : '' %>>
                                                     <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                                                 </label>
+
+                                                <button 
+                                                    class="delete-btn text-gray-400 hover:text-red-500 transition-colors"
+                                                    data-id="<%= category._id %>"
+                                                    data-name="<%= category.name %>"
+                                                >
+                                                    <span class="material-symbols-outlined text-[22px]">delete</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
+                                    <% } %>
                                 <% }) %>
                             </tbody>
                         </table>
@@ -160,25 +171,24 @@
         let searchVal = '';
         let pageNum = 1;
 
-        // Set min date for date pickers to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('addExpiry').min = today;
         document.getElementById('editExpiry').min = today;
 
-        // --- CORE FETCH DATA ---
         async function refreshData() {
             try {
                 const res = await fetch(`/admin/categories/data?search=${encodeURIComponent(searchVal)}&page=${pageNum}`);
                 if (!res.ok) throw new Error('Failed to fetch data');
                 const data = await res.json();
-                renderTable(data.categories);
+                // Filter out isDeleted categories on frontend too just in case
+                const visibleCategories = data.categories.filter(c => !c.isDeleted);
+                renderTable(visibleCategories);
                 renderPagination(data.currentPage, data.totalPages);
             } catch (err) {
                 console.error(err);
             }
         }
 
-        // --- RENDERERS ---
         function renderTable(categories) {
             const tbody = document.getElementById('categoryTableBody');
             if (categories.length === 0) {
@@ -204,8 +214,11 @@
                             </button>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" class="sr-only peer status-toggle" data-id="${cat._id}" data-name="${cat.name}" data-status="${cat.isListed}" ${cat.isListed ? 'checked' : ''}>
-                                <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                             </label>
+                            <button class="delete-btn text-gray-400 hover:text-red-500 transition-colors" data-id="${cat._id}" data-name="${cat.name}">
+                                <span class="material-symbols-outlined text-[22px]">delete</span>
+                            </button>
                         </div>
                     </td>
                 </tr>`).join('');
@@ -222,7 +235,6 @@
             container.innerHTML = html;
         }
 
-        // --- INTERACTIONS ---
         function handlePageChange(p) { pageNum = p; refreshData(); }
 
         let searchTimeout;
@@ -235,24 +247,21 @@
             }, 300);
         });
 
-        // Event Delegation for Table Buttons
+        // Event Delegation
         document.getElementById('categoryTableBody').addEventListener('click', async (e) => {
             const editBtn = e.target.closest('.edit-btn');
             const toggleInput = e.target.closest('.status-toggle');
+            const deleteBtn = e.target.closest('.delete-btn');
 
             if (editBtn) {
                 const d = editBtn.dataset;
                 document.getElementById('editCategoryId').value = d.id;
                 document.getElementById('editName').value = d.name;
                 document.getElementById('editDescription').value = d.description;
-        
                 const editOffer = document.getElementById('editOffer');
                 const editExpiry = document.getElementById('editExpiry');
-        
                 editOffer.value = d.offer;
                 editExpiry.value = d.offerExpiry;
-
-                // Sync the disabled state for Edit Modal
                 if (parseFloat(d.offer) > 0) {
                     editExpiry.disabled = false;
                     editExpiry.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -260,7 +269,6 @@
                     editExpiry.disabled = true;
                     editExpiry.classList.add('opacity-50', 'cursor-not-allowed');
                 }
-
                 toggleModal('editModal', true);
             }
 
@@ -268,7 +276,6 @@
                 e.preventDefault();
                 const { id, name, status } = toggleInput.dataset;
                 const action = status === 'true' ? 'Unlist' : 'List';
-                
                 const result = await Swal.fire({
                     title: `${action} Category?`,
                     text: `Do you want to ${action.toLowerCase()} "${name}"?`,
@@ -277,28 +284,51 @@
                     confirmButtonColor: '#5c56f6',
                     background: '#111', color: '#fff'
                 });
-
                 if (result.isConfirmed) {
                     const res = await fetch(`/admin/categories/toggle/${id}`, { method: 'PATCH' });
                     if (res.ok) refreshData();
                 }
             }
+
+            // SOFT DELETE LOGIC
+            if (deleteBtn) {
+                const { id, name } = deleteBtn.dataset;
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: `Category "${name}" will be moved to trash and hidden from the store.`,
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Yes, delete it!',
+                    background: '#111', color: '#fff'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`/admin/categories/delete/${id}`, { method: 'PATCH' });
+                        const data = await res.json();
+                        if (res.ok) {
+                            Swal.fire({ icon: 'success', title: 'Deleted', text: data.message, timer: 1500, background: '#111', color: '#fff' });
+                            refreshData();
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#111', color: '#fff' });
+                    }
+                }
+            }
         });
 
-        // Form Submission Logic
         async function handleFormSubmit(e, url, method, modalId) {
             e.preventDefault();
             const btn = e.target.querySelector('.submit-btn');
             const formData = Object.fromEntries(new FormData(e.target));
-
-            // Frontend Validation
             if (formData.offer > 0 && !formData.offerExpiry) {
                 return Swal.fire({ icon: 'error', title: 'Offer Expiry Required', text: 'Please set an expiry date for the offer.', background: '#111', color: '#fff' });
             }
-
             btn.disabled = true;
             btn.innerHTML = 'Processing...';
-
             try {
                 const res = await fetch(url, {
                     method: method,
@@ -306,9 +336,7 @@
                     body: JSON.stringify(formData)
                 });
                 const result = await res.json();
-
                 if (!res.ok) throw new Error(result.message || 'Action failed');
-
                 toggleModal(modalId, false);
                 e.target.reset();
                 refreshData();
@@ -327,12 +355,9 @@
             handleFormSubmit(e, `/admin/categories/edit/${id}`, 'PATCH', 'editModal');
         });
 
-        // Updated toggleModal to reset states correctly
         function toggleModal(id, show) {
             const modal = document.getElementById(id);
             modal.classList.toggle('hidden', !show);
-            
-            // If opening Add Modal, ensure date is disabled initially
             if (show && id === 'addModal') {
                 const expiry = document.getElementById('addExpiry');
                 const offer = document.getElementById('addOffer');
@@ -343,26 +368,22 @@
             }
         }
 
-        // Logic to toggle expiry date based on offer value
         function setupOfferValidation(offerId, expiryId) {
             const offerInput = document.getElementById(offerId);
             const expiryInput = document.getElementById(expiryId);
-
             offerInput.addEventListener('input', () => {
                 const offerValue = parseFloat(offerInput.value) || 0;
-        
                 if (offerValue > 0) {
                     expiryInput.disabled = false;
                     expiryInput.classList.remove('opacity-50', 'cursor-not-allowed');
                 } else {
                     expiryInput.disabled = true;
-                    expiryInput.value = ''; // Clear date if offer is 0 or less
+                    expiryInput.value = '';
                     expiryInput.classList.add('opacity-50', 'cursor-not-allowed');
                 }
             });
         }
 
-        // Initialize for both modals
         setupOfferValidation('addOffer', 'addExpiry');
         setupOfferValidation('editOffer', 'editExpiry');
     </script>

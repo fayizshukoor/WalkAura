@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>WalkAura | Shop All</title>
+    <title>WalkAura</title>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -45,7 +45,7 @@
 </head>
 <body class="bg-background-dark text-white font-sans antialiased">
 
-<main class="pt-24 pb-20 px-4 max-w-[95%] xl:max-w-[90%] mx-auto">
+<main class="flex-1 pt-24 pb-20 px-4 max-w-[95%] xl:max-w-[90%] mx-auto w-full">
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <nav class="flex" aria-label="Breadcrumb">
@@ -62,13 +62,25 @@
             </ol>
         </nav>
 
-        <div class="relative w-full md:w-80">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="material-icons-outlined text-gray-400">search</span>
+        <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <div class="relative w-full md:w-80">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="material-icons-outlined text-gray-400">search</span>
+                </div>
+                <input type="text" id="searchInput" name="search" value="<%= filters.search %>"
+                    class="bg-surface-dark border border-border-dark text-white text-sm rounded-xl focus:ring-primary focus:border-primary block w-full pl-10 p-3 placeholder-gray-500 transition-all hover:border-gray-500" 
+                    placeholder="Search products...">
             </div>
-            <input type="text" id="searchInput" name="search" value="<%= filters.search %>"
-                class="bg-surface-dark border border-border-dark text-white text-sm rounded-xl focus:ring-primary focus:border-primary block w-full pl-10 p-3 placeholder-gray-500 transition-all hover:border-gray-500" 
-                placeholder="Search products...">
+            <div class="flex gap-2">
+                <button id="searchBtn" class="flex-1 sm:flex-none bg-primary hover:bg-indigo-600 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95">
+                    Search
+                </button>
+                <% if (filters.search) { %>
+                    <button id="clearSearchBtn" class="bg-card-dark hover:bg-gray-700 px-4 rounded-xl text-gray-400 transition-all border border-border-dark flex items-center justify-center">
+                        <span class="material-icons-outlined text-sm">close</span>
+                    </button>
+                <% } %>
+            </div>
         </div>
     </div>
 
@@ -82,6 +94,8 @@
                 </div>
 
                 <form action="/shop" method="GET" class="space-y-5">
+                    <input type="hidden" name="search" value="<%= filters.search %>">
+                    
                     <div>
                         <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Category</label>
                         <select name="category" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
@@ -118,7 +132,7 @@
                     <div>
                         <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Sort By</label>
                         <select name="sort" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
-                            <option value="">>All</option>
+                            <option value="">All</option>
                             <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
                             <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
                             <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Name: A - Z</option>
@@ -211,17 +225,44 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
-        let debounceTimer;
+        const searchBtn = document.getElementById('searchBtn');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
 
-        if(searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('search', e.target.value);
-                    url.searchParams.set('page', 1); // Reset to first page on search
-                    window.location.href = url.toString();
-                }, 800);
+        function executeSearch() {
+            const url = new URL(window.location.href);
+            const query = searchInput.value.trim();
+            
+            if (query) {
+                url.searchParams.set('search', query);
+            } else {
+                url.searchParams.delete('search');
+            }
+            
+            url.searchParams.set('page', 1); // Reset to first page
+            window.location.href = url.toString();
+        }
+
+        // Trigger on Search button click
+        if (searchBtn) {
+            searchBtn.addEventListener('click', executeSearch);
+        }
+
+        // Trigger on "Enter" key press
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    executeSearch();
+                }
+            });
+        }
+
+        // Clear Search button functionality
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('search');
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
             });
         }
     });

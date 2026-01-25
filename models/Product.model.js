@@ -1,162 +1,89 @@
-  import mongoose from "mongoose";
+import mongoose from "mongoose";
 
-  // Size Schema
+// Review Schema
+const reviewSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      required: true,
+    },
+    comment: {
+      type: String,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
 
-  const sizeSchema = new mongoose.Schema(
-      {
-          size:{
-              type:Number,
-              enum:[6,7,8,9,10],
-              required:true 
-          },
-          sku: {
-            type: String,
-            required: true,
-            index: true
-          },
-          stock:{
-              type:Number,
-              min:0,
-              required:true,
-              default:0
-          },
-      },
-      {_id:false}
-  );
+// Product Schema (PARENT)
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
+    slug: {
+      type: String,
+      unique: true,
+      index: true,
+    },
 
-  // Review Schema
+    description: {
+      type: String,
+      required: true,
+    },
 
-  const reviewSchema = new mongoose.Schema(
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        rating: {
-          type: Number,
-          min: 1,
-          max: 5,
-          required: true,
-        },
-        comment: {
-          type: String,
-          trim: true,
-        },
-      },
-      { timestamps: true }
-    );
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
 
+    gender: {
+      type: String,
+      enum: ["Men", "Women", "Unisex"],
+      required: true,
+    },
 
-  // Product Schema
+    // Shared pricing
+    price: {
+      type: Number,
+      min: 0,
+      required: true,
+    },
 
-  const productSchema = new mongoose.Schema(
-      {
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        },
+    offerPercent: {
+      type: Number,
+      min: 0,
+      max: 90,
+    },
 
-        slug:{
-          type:String,
-          unique:true,
-          index:true
-        },
+    offerExpiry: {
+      type: Date,
+    },
 
-        description: {
-          type: String,
-          required: true,
-        },
-    
-        category: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Category",
-          required: true,
-        },
-    
-        gender: {
-          type: String,
-          enum: ["Men", "Women", "Unisex"],
-          required: true,
-        },
+    isListed: {
+      type: Boolean,
+      default: true,
+    },
 
-        color:{
-          type:String,
-          required:true,
-          trim:true
-        },
+    reviews: [reviewSchema],
 
-        images:{
-          type:[
-            {
-              url:{
-                type:String,
-                required:true
-              },
-              publicId:{
-                type:String,
-                required:true
-              }
-            }
-          ],
-          required:true,
-          validate:{
-              validator: imgs => imgs.length === 4,
-              message: "Product must have 4 images" 
-            }
-        },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true }
+);
 
-        sizes:{
-          type:[sizeSchema],
-          required:true,
-          validate:{
-            validator:sizes => sizes.length === 5,
-            message: "Sizes must be from 6 to 10"
-          }
-        },
-    
-        // Price
-        price: {
-          type: Number,
-          min: 0,
-          required: true,
-        },
-    
-        // source of truth for product-level offer
-        offerPercent: {
-          type: Number,
-          min: 0,
-          max: 90,
-        },
-    
-        // derived from price & offerPercent
-        offerPrice: {
-          type: Number,
-          min: 0,
-        },
-    
-        offerExpiry: {
-          type: Date,
-        },
-    
-        // visibility
-        isListed: {
-          type: Boolean,
-          default: true,
-        },
-    
-        // Reviews
-        reviews: [reviewSchema],
-    
-        averageRating: {
-          type: Number,
-          default: 0,
-        },
-      },
-      { timestamps: true }
-    );
-
-    export default mongoose.model("Product",productSchema);
-  
+export default mongoose.model("Product", productSchema);

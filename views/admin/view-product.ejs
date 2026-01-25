@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalkAura | Product Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root { 
+            --bg-main: #000000; 
+            --bg-card: #141414; 
+            --accent: #5c56f6; 
+            --border: rgba(255,255,255,0.08);
+        }
+        body { background-color: var(--bg-main); color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .detail-card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 1.25rem; }
+        .label-text { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body class="antialiased pb-20">
+
+    <div class="max-w-6xl mx-auto px-4 pt-10">
+        
+        <div class="flex items-center justify-between mb-10 border-b border-white/5 pb-8">
+            <div class="flex items-center gap-5">
+                <a href="/admin/products" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#141414] border border-white/10 hover:bg-white/5 transition-all">
+                    <span class="material-symbols-outlined text-gray-400">arrow_back</span>
+                </a>
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <h1 class="text-3xl font-black tracking-tight text-white"><%= product.name %></h1>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider <%= product.isListed ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20' %>">
+                            <%= product.isListed ? 'Active' : 'Disabled' %>
+                        </span>
+                    </div>
+                    <p class="text-slate-500 text-sm font-medium">
+                        <%= product.category.name %> • <span class="capitalize"><%= product.gender %></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 space-y-8">
+                
+                <div class="flex items-center gap-3 px-2">
+                    <span class="material-symbols-outlined text-indigo-400">style</span>
+                    <h2 class="text-xl font-bold">Product Variants</h2>
+                </div>
+
+                <% variants.forEach(variant => { %>
+                    <div class="detail-card p-6 space-y-6">
+                        <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                            <div>
+                                <p class="label-text">Color Variant</p>
+                                <h3 class="text-lg font-bold text-indigo-400"><%= variant.color %></h3>
+                            </div>
+                            <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase <%= variant.isActive ? 'bg-indigo-500/10 text-indigo-400' : 'bg-white/5 text-slate-500' %>">
+                                <%= variant.isActive ? 'Variant Active' : 'Variant Disabled' %>
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <% variant.images.forEach(img => { %>
+                                <div class="aspect-square rounded-xl overflow-hidden bg-black border border-white/5">
+                                    <img src="<%= img %>" alt="Product" class="w-full h-full object-cover">
+                                </div>
+                            <% }) %>
+                        </div>
+
+                        <div>
+                            <p class="label-text mb-3">Inventory Status</p>
+                            <div class="flex flex-wrap gap-3">
+                                <% variant.inventory.forEach(inv => { %>
+                                    <div class="px-4 py-3 rounded-xl border <%= inv.isActive && inv.stock > 0 ? 'border-white/10 bg-white/5' : 'border-white/5 bg-transparent opacity-40 grayscale' %>">
+                                        <p class="text-[10px] font-black text-slate-500 uppercase">UK <%= inv.size %></p>
+                                        <p class="text-sm font-bold <%= inv.stock < 5 && inv.stock > 0 ? 'text-amber-500' : '' %>">
+                                            <%= inv.stock %> <span class="text-[10px] font-medium">units</span>
+                                        </p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <div class="space-y-8">
+                
+                <div class="detail-card p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="material-symbols-outlined text-indigo-400">payments</span>
+                        <h2 class="text-lg font-bold">Pricing Details</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400 text-sm">Base Price</span>
+                            <span class="font-bold text-white">₹<%= product.price %></span>
+                        </div>
+
+                        <% if (product.offerPercent > 0) { %>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 text-sm">Discount</span>
+                                <span class="text-emerald-500 font-bold text-sm">-<%= product.offerPercent %>%</span>
+                            </div>
+                            
+                            <div class="pt-4 border-t border-white/5">
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <span class="text-slate-400 text-xs block mb-1">Final Price</span>
+                                        <span class="text-3xl font-black text-white">₹<%= product.finalPrice %></span>
+                                    </div>
+                                    <div class="text-right">
+                                        <% if (new Date(product.offerExpiry) > new Date()) { %>
+                                            <span class="text-[9px] font-black uppercase px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded">Offer Active</span>
+                                            <p class="text-[10px] text-slate-500 mt-1">Ends <%= new Date(product.offerExpiry).toLocaleDateString() %></p>
+                                        <% } else { %>
+                                            <span class="text-[9px] font-black uppercase px-2 py-1 bg-rose-500/10 text-rose-500 rounded">Offer Expired</span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="pt-4 border-t border-white/5">
+                                <span class="text-slate-400 text-xs block mb-1">Final Price</span>
+                                <span class="text-3xl font-black text-white">₹<%= product.price %></span>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="detail-card p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="material-symbols-outlined text-indigo-400">info</span>
+                        <h2 class="text-lg font-bold">General Information</h2>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <p class="label-text mb-2">Description</p>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                <%= product.description %>
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="label-text mb-1">Category</p>
+                                <p class="text-sm font-bold"><%= product.category.name %></p>
+                            </div>
+                            <div>
+                                <p class="label-text mb-1">Gender</p>
+                                <p class="text-sm font-bold capitalize"><%= product.gender %></p>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/5">
+                            <p class="label-text mb-1">Product ID</p>
+                            <p class="text-[10px] font-mono text-slate-500 truncate"><%= product._id %></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

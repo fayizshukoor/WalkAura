@@ -47,19 +47,7 @@
             });
         });
 
-        // Standardized SweetAlert Mixin for use in all pages
-        window.WalkAuraSwal = Swal.mixin({
-            customClass: {
-                popup: 'walkaura-swal-popup',
-                confirmButton: 'walkaura-swal-confirm',
-                cancelButton: 'walkaura-swal-cancel'
-            },
-            background: '#111',
-            color: '#fff',
-            buttonsStyling: true,
-            confirmButtonColor: '#5c56f6',
-            cancelButtonColor: '#1f2937'
-        });
+    
 
          // additional safety if loaded from bfcache
         window.addEventListener("pageshow", function (event) {

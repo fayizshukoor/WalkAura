@@ -6,7 +6,6 @@ const categorySchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
-          unique: true,
           minlength: 2,
           maxlength: 30
         },
@@ -20,6 +19,11 @@ const categorySchema = new mongoose.Schema(
         isListed: {
           type: Boolean,
           default: true
+        },
+
+        isDeleted:{
+          type : Boolean,
+          default:false
         },
     
         offer: {
