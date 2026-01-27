@@ -57,7 +57,7 @@
                                             <div class="font-medium text-white"><%= category.name %></div>
                                             <div class="text-xs text-gray-500 truncate max-w-[250px]"><%= category.description || 'No description provided' %></div>
                                         </td>
-                                        <td class="p-5 text-center text-gray-400 font-mono"><%= category.offer %>%</td>
+                                        <td class="p-5 text-center text-gray-400 font-mono"><%= category.offerPercent %>%</td>
                                         <td class="p-5 text-center">
                                             <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs <%= category.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20' %> border">
                                                 <%= category.isListed ? 'Listed' : 'Unlisted' %>
@@ -70,7 +70,7 @@
                                                     data-id="<%= category._id %>"
                                                     data-name="<%= category.name %>"
                                                     data-description="<%= category.description %>"
-                                                    data-offer="<%= category.offer %>"
+                                                    data-offer="<%= category.offerPercent %>"
                                                     data-offer-expiry="<%= category.offerExpiry ? new Date(category.offerExpiry).toISOString().split('T')[0] : '' %>"
                                                 >
                                                     <span class="material-symbols-outlined text-[22px]">edit_square</span>
@@ -127,7 +127,7 @@
                         <input type="text" name="name" placeholder="Category Name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6]">
                         <textarea name="description" placeholder="Description (Optional)" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] resize-none"></textarea>
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="addOffer" name="offer" placeholder="Offer % (0-90)" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="number" id="addOffer" name="offerPercent" placeholder="Offer % (0-90)" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                             <input type="date" id="addExpiry" name="offerExpiry" disabled class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none opacity-50 cursor-not-allowed">
                         </div>
                     </div>
@@ -154,7 +154,7 @@
                         <input type="text" id="editName" name="name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                         <textarea id="editDescription" name="description" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none resize-none"></textarea>
                         <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="editOffer" name="offer" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+                            <input type="number" id="editOffer" name="offerPercent" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                             <input type="date" id="editExpiry" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
                         </div>
                     </div>
@@ -201,7 +201,7 @@
                         <div class="font-medium text-white">${cat.name}</div>
                         <div class="text-xs text-gray-500 truncate max-w-[250px]">${cat.description || 'No description'}</div>
                     </td>
-                    <td class="p-5 text-center text-gray-400 font-mono">${cat.offer}%</td>
+                    <td class="p-5 text-center text-gray-400 font-mono">${cat.offerPercent}%</td>
                     <td class="p-5 text-center">
                         <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs ${cat.isListed ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'} border">
                             ${cat.isListed ? 'Listed' : 'Unlisted'}
@@ -209,7 +209,7 @@
                     </td>
                     <td class="p-5 text-center">
                         <div class="flex items-center justify-center gap-4">
-                            <button class="edit-btn text-gray-400 hover:text-[#5c56f6]" data-id="${cat._id}" data-name="${cat.name}" data-description="${cat.description || ''}" data-offer="${cat.offer}" data-offer-expiry="${cat.offerExpiry ? cat.offerExpiry.split('T')[0] : ''}">
+                            <button class="edit-btn text-gray-400 hover:text-[#5c56f6]" data-id="${cat._id}" data-name="${cat.name}" data-description="${cat.description || ''}" data-offer="${cat.offerPercent}" data-offer-expiry="${cat.offerExpiry ? cat.offerExpiry.split('T')[0] : ''}">
                                 <span class="material-symbols-outlined text-[22px]">edit_square</span>
                             </button>
                             <label class="relative inline-flex items-center cursor-pointer">
@@ -260,9 +260,9 @@
                 document.getElementById('editDescription').value = d.description;
                 const editOffer = document.getElementById('editOffer');
                 const editExpiry = document.getElementById('editExpiry');
-                editOffer.value = d.offer;
+                editOffer.value = d.offerPercent;
                 editExpiry.value = d.offerExpiry;
-                if (parseFloat(d.offer) > 0) {
+                if (parseFloat(d.offerPercent) > 0) {
                     editExpiry.disabled = false;
                     editExpiry.classList.remove('opacity-50', 'cursor-not-allowed');
                 } else {
@@ -324,7 +324,7 @@
             e.preventDefault();
             const btn = e.target.querySelector('.submit-btn');
             const formData = Object.fromEntries(new FormData(e.target));
-            if (formData.offer > 0 && !formData.offerExpiry) {
+            if (formData.offerPercent > 0 && !formData.offerExpiry) {
                 return Swal.fire({ icon: 'error', title: 'Offer Expiry Required', text: 'Please set an expiry date for the offer.', background: '#111', color: '#fff' });
             }
             btn.disabled = true;

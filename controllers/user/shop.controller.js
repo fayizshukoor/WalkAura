@@ -2,124 +2,197 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import Product from "../../models/Product.model.js";
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Category from "../../models/Category.model.js";
+import mongoose from "mongoose";
+import ProductVariant from "../../models/ProductVariant.model.js";
+import Inventory from "../../models/Inventory.model.js";
+
 
 export const getProducts = asyncHandler(async (req, res) => {
+  const {
+    search,
+    category,
+    gender,
+    sort,
+    priceRange,
+    page = 1
+  } = req.query;
 
-    const {
-      search,
-      category,
-      priceRange,
-      sort,
-      gender,
-      page = 1
-    } = req.query;
+  const limit = 6;
+  const currentPage = Number(page) || 1;
+  const skip = (currentPage - 1) * limit;
 
-    const activeCategories = await Category.find({isDeleted : false,isListed : true}).select("_id");
-    
+  /* -------- Active Categories (used in filter + UI) -------- */
+  const activeCategories = await Category.find({
+    isListed: true,
+    isDeleted: false
+  }).select("_id name offerPercent offerExpiry");
 
-    // Listed products with active categories only
-    let query = {
-      isListed: true,
-      category : {$in : activeCategories }
-    };
+  const activeCategoryIds = activeCategories.map(c => c._id);
 
-    // Search
-    if (search) {
-      query.name = { $regex: search, $options: "i" };
+  /* -------- Base Product Filters -------- */
+  const matchStage = {
+    isListed: true,
+    category: { $in: activeCategoryIds }
+  };
+
+  if (search) {
+    matchStage.name = { $regex: search.trim(), $options: "i" };
+  }
+
+  if (category && category !== "all") {
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      matchStage.category = new mongoose.Types.ObjectId(category);
     }
+  }
 
-    // Category filter
-    if (category && category !== "all") {
-        query.category = {
-          $in : activeCategories.map(c => c._id).filter(id => id.toString() === category)
-        };
-      }
+  if (gender && gender !== "all") {
+    matchStage.gender = gender;
+  }
 
-    // Gender filter
-    if (gender && gender !== "all") {
-        query.gender = gender;
-      }
-
-    // Price range filter
-    const priceRangeMap = {
-      "below_1000": { $lt: 1000 },
-      "1000_2000": { $gte: 1000, $lte: 2000 },
-      "2000_3000": { $gte: 2000, $lte: 3000 },
-      "above_3000": { $gt: 3000 }
-    };
-
-    if (priceRange && priceRange !== "all" && priceRangeMap[priceRange]) {
-        query.price = priceRangeMap[priceRange];
-      }
-
-    // Sorting
-    const sortOptions = {
-      price_asc: { price: 1 },
-      price_desc: { price: -1 },
-      name_asc: { name: 1 },
-      name_desc: { name: -1 }
-    };
-
-    const sortQuery = sortOptions[sort] || { createdAt: -1 };
-
-    // pagination
-    const pageNumber = Number(page) || 1;
-    const limit = 6;
-    const skip = (pageNumber - 1) * limit;
-
-    // Populate category offer
-    const products = await Product.find(query)
-      .populate("category", "name offerPercent offerExpiry")
-      .sort(sortQuery)
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    const totalProducts = await Product.countDocuments(query);
-
-    // Apply offer
-    const processedProducts = products.map(product => {
-      const finalPrice = calculateFinalPrice({
-        price: product.price,
-        productOffer: product.offerPercent,
-        productOfferExpiry: product.offerExpiry,
-        categoryOffer: product.category?.offerPercent,
-        categoryOfferExpiry: product.category?.offerExpiry
-      });
-
-
-      return {
-        ...product,
-        finalPrice
-      };
-    });
-
-    const categories = await Category.find({isListed : true, isDeleted : false});
-
-
-    const pagination = {
-      totalProducts,
-      currentPage: pageNumber,
-      totalPages: Math.ceil(totalProducts / limit)
-    };
-
-
-    // Initial render
-    res.render("user/shop", {
-      products: processedProducts,
-      categories,
-      pagination,
-      filters: {
-        search: search || "",
-        category: category || "all",
-        priceRange: priceRange || "all",
-        gender: gender || "all",
-        sort: sort || "all"
-      }
-    });
-
+  const priceRangeMap = {
+    below_5000: { $lt: 5000 },
+    "5000_10000": { $gte: 5000, $lte: 10000 },
+    above_10000: { $gt: 10000 }
+  };
   
+  if (priceRange && priceRange !== "all" && priceRangeMap[priceRange]) {
+    matchStage.price = priceRangeMap[priceRange];
+  }
+  
+
+  /* -------- Sorting -------- */
+  const sortMap = {
+    price_asc: { price: 1 },
+    price_desc: { price: -1 },
+    name_asc: { name: 1 },
+    name_desc: { name: -1 }
+  };
+
+  const sortStage = sortMap[sort] || { createdAt: -1 };
+
+  /* -------- Aggregation Pipeline -------- */
+  const basePipeline = [
+    { $match: matchStage },
+
+    /* Join Category (for offers) */
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category"
+      }
+    },
+    { $unwind: "$category" },
+
+    /* Ensure at least ONE active variant + get thumbnail */
+    {
+      $lookup: {
+        from: "productvariants",
+        let: { productId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$product", "$$productId"] },
+                  { $eq: ["$isActive", true] }
+                ]
+              }
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              images: 1
+            }
+          },
+          { $limit: 1 }
+        ],
+        as: "variant"
+      }
+    },
+
+    /* Remove products with no active variants */
+    { $match: { "variant.0": { $exists: true } } },
+
+    /* Extract thumbnail */
+    {
+      $addFields: {
+        thumbnail: {
+          $arrayElemAt: [{
+            $arrayElemAt:["$variant.images.url", 0]
+          },0]
+        }
+      }
+    },
+
+    /* Final projection for UI */
+    {
+      $project: {
+        name: 1,
+        slug: 1,
+        price: 1,
+        offerPercent: 1,
+        offerExpiry: 1,
+        category: 1,
+        thumbnail: 1,
+        createdAt: 1
+      }
+    }
+  ];
+
+  /* -------- Products + Count in Parallel -------- */
+  const [products, countResult] = await Promise.all([
+    Product.aggregate([
+      ...basePipeline,
+      { $sort: sortStage },
+      { $skip: skip },
+      { $limit: limit }
+    ]),
+    Product.aggregate([
+      ...basePipeline,
+      { $count: "count" }
+    ])
+  ]);
+
+
+  const totalProducts = countResult[0]?.count || 0;
+
+  /* -------- Final Price Calculation -------- */
+  const processedProducts = products.map(p => ({
+    ...p,
+    finalPrice: calculateFinalPrice({
+      price: p.price,
+      productOffer: p.offerPercent,
+      productOfferExpiry: p.offerExpiry,
+      categoryOffer: p.category.offerPercent,
+      categoryOfferExpiry: p.category.offerExpiry
+    })
+  }));
+
+
+
+  /* -------- Render -------- */
+  res.render("user/shop", {
+    products: processedProducts,
+    activeCategories,
+    filters: {
+      search: search || "",
+      category: category || "all",
+      gender: gender || "all",
+      sort: sort || "",
+      priceRange: priceRange || ""
+    },
+    pagination: {
+      currentPage,
+      totalPages: Math.ceil(totalProducts / limit)
+    }
+  });
 });
+
+
+
 
 
 
@@ -128,7 +201,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 export const getProductDetails = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
-  //  Fetch listed product only
+  /* ---------------- 1️⃣ Fetch Product + Category ---------------- */
   const product = await Product.findOne({
     slug,
     isListed: true
@@ -136,27 +209,71 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     .populate("category", "name offerPercent offerExpiry isListed isDeleted")
     .lean();
 
-  // If product not found or category is inactive redirect to shop
-  if (!product || !product.category.isListed || product.category.isDeleted) {
+  if (
+    !product ||
+    !product.category ||
+    !product.category.isListed ||
+    product.category.isDeleted
+  ) {
     return res.redirect("/shop");
   }
 
-  // Calculate total stock from sizes
-  const totalStock = product.sizes.reduce(
-    (sum, size) => sum + size.stock,
+  /* ---------------- 2️⃣ Fetch ACTIVE Variants ---------------- */
+  const variants = await ProductVariant.find({
+    product: product._id,
+    isActive: true
+  })
+    .select("color images")
+    .lean();
+
+  // No active variants → product should not be visible
+  if (!variants.length) {
+    return res.redirect("/shop");
+  }
+
+  const variantIds = variants.map(v => v._id);
+
+  /* ---------------- 3️⃣ Fetch Inventory (Sizes + Stock) ---------------- */
+  const inventory = await Inventory.find({
+    variant: { $in: variantIds },
+    isActive: true
+  })
+    .select("variant size stock")
+    .lean();
+
+  /* ---------------- 4️⃣ Merge Variants + Sizes ---------------- */
+  const variantsWithSizes = variants.map(variant => {
+    const sizes = inventory
+      .filter(i => i.variant.toString() === variant._id.toString())
+      .map(i => ({
+        size: i.size,
+        stock: i.stock,
+        inStock: i.stock > 0
+      }));
+
+    return {
+      ...variant,
+      sizes,
+      totalStock: sizes.reduce((sum, s) => sum + s.stock, 0)
+    };
+  });
+
+  /* ---------------- 5️⃣ Total Stock (Product Level) ---------------- */
+  const totalStock = variantsWithSizes.reduce(
+    (sum, v) => sum + v.totalStock,
     0
   );
 
-  // Calculate final price
+  /* ---------------- 6️⃣ Final Price Calculation ---------------- */
   const finalPrice = calculateFinalPrice({
     price: product.price,
     productOffer: product.offerPercent,
     productOfferExpiry: product.offerExpiry,
-    categoryOffer: product.category?.offerPercent,
-    categoryOfferExpiry: product.category?.offerExpiry
+    categoryOffer: product.category.offerPercent,
+    categoryOfferExpiry: product.category.offerExpiry
   });
 
-  // Review stats (read-only)
+  /* ---------------- 7️⃣ Reviews ---------------- */
   const reviewCount = product.reviews.length;
   const averageRating =
     reviewCount > 0
@@ -165,25 +282,103 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         ).toFixed(1)
       : 0;
 
-  // Related products (same category)
-  const relatedProducts = await Product.find({
-    category: product.category._id,
-    _id: { $ne: product._id },
-    isListed: true
-  })
-    .limit(4)
-    .lean();
+  /* ---------------- 8️⃣ Related Products (Shop Rules Applied) ---------------- */
+  const relatedRaw = await Product.aggregate([
+    {
+      $match: {
+        _id: { $ne: product._id },
+        category: product.category._id,
+        isListed: true
+      }
+    },
 
-  // Render Product Detail page
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category"
+      }
+    },
+    { $unwind: "$category" },
+
+    {
+      $lookup: {
+        from: "productvariants",
+        let: { productId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$product", "$$productId"] },
+                  { $eq: ["$isActive", true] }
+                ]
+              }
+            }
+          },
+          {
+            $project: {
+              images: 1
+            }
+          },
+          { $limit: 1 }
+        ],
+        as: "variant"
+      }
+    },
+
+    { $match: { "variant.0": { $exists: true } } },
+
+    {
+      $addFields: {
+        thumbnail: {
+          $arrayElemAt: [
+            { $arrayElemAt: ["$variant.images.url", 0] },
+            0
+          ]
+        }
+      }
+    },
+
+    { $limit: 4 },
+
+    {
+      $project: {
+        name: 1,
+        slug: 1,
+        price: 1,
+        offerPercent: 1,
+        offerExpiry: 1,
+        category: 1,
+        thumbnail: 1
+      }
+    }
+  ]);
+
+  const relatedProducts = relatedRaw.map(p => ({
+    ...p,
+    finalPrice: calculateFinalPrice({
+      price: p.price,
+      productOffer: p.offerPercent,
+      productOfferExpiry: p.offerExpiry,
+      categoryOffer: p.category.offerPercent,
+      categoryOfferExpiry: p.category.offerExpiry
+    })
+  }));
+
+  /* ---------------- 9️⃣ Render ---------------- */
   res.render("user/product-details", {
     product,
-    finalPrice,
+    variants: variantsWithSizes,
     totalStock,
+    finalPrice,
     averageRating,
     reviewCount,
     relatedProducts
   });
 });
+
 
 
 

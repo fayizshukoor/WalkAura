@@ -26,7 +26,7 @@ const categorySchema = new mongoose.Schema(
           default:false
         },
     
-        offer: {
+        offerPercent: {
           type: Number, 
           min: 0,
           max: 90,

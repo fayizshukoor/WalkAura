@@ -16,6 +16,7 @@ export const calculateFinalPrice = ({
       categoryOfferExpiry && categoryOfferExpiry > now
         ? categoryOffer
         : 0;
+        console.log(validCategoryOffer);
   
     const appliedOffer = Math.max(validProductOffer, validCategoryOffer);
   

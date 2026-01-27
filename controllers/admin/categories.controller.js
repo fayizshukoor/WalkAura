@@ -10,7 +10,7 @@ export const showCategories = asyncHandler( async (req,res)=>{
     await expireCategoryOffers();
 
     const page =  1;
-    const limit = 5;
+    const limit = 3;
     const skip = 0;
 
     const [categories,totalCategories] = await Promise.all([
@@ -38,7 +38,7 @@ export const getCategoriesAjax = asyncHandler( async (req,res)=>{
     const search = req.query.search?.trim() || "";
     const page = parseInt(req.query.page) || 1;
 
-    const limit = 5;
+    const limit = 3;
     const skip = (page-1) * limit;
 
     const query = {
@@ -65,28 +65,17 @@ export const getCategoriesAjax = asyncHandler( async (req,res)=>{
 // Add Category
 export const addCategory = asyncHandler(async(req,res)=>{
 
-    const {name,description,offer,offerExpiry} = req.body;
+    const {name,description,offerPercent,offerExpiry} = req.body;
 
     if(!name || name.trim()===""){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category name is required"});    
     }
 
-
-    const exists = await Category.findOne({
-        name:{$regex:`^${name.trim()}$`,$options:"i"},
-        isDeleted : false
-    });
-
-    
-    if(exists){
-        return res.status(429).json({message:"Category already exists"});
-    }
-
-    if(offer < 0 || offer > 90){
+    if(offerPercent < 0 || offerPercent > 90){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer should be between 0 and 90"});
     }
 
-    if(offer > 0 && !offerExpiry){
+    if(offerPercent > 0 && !offerExpiry){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer expiry date needed when offer is applied"});
     } 
 
@@ -94,10 +83,30 @@ export const addCategory = asyncHandler(async(req,res)=>{
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Please set a future expiry date"});
     }
 
+    const existingCategory = await Category.findOne({
+        name:{$regex:`^${name.trim()}$`,$options:"i"},
+    });
+
+    if (existingCategory && existingCategory.isDeleted) {
+        existingCategory.isDeleted = false;
+        existingCategory.isListed = true;
+        existingCategory.description = description?.trim();
+        existingCategory.offerPercent = offerPercent || 0;
+        existingCategory.offerExpiry = offerExpiry || null;
+    
+        await existingCategory.save();
+    
+        return res.status(200).json({message: "Category restored successfully" });
+      }
+
+      if(existingCategory){
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category already exists"});
+    }
+
     await Category.create({
         name:name.trim(),
         description:description?.trim(),
-        offer:offer || 0,
+        offerPercent:offerPercent || 0,
         offerExpiry:offerExpiry || null
     });
 
@@ -110,28 +119,17 @@ export const addCategory = asyncHandler(async(req,res)=>{
 export const editCategory = asyncHandler(async(req,res)=>{
 
     const {id} = req.params;
-    const {name,description,offer,offerExpiry} = req.body;
+    const {name,description,offerPercent,offerExpiry} = req.body;
 
     if(!name || name.trim()===""){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category name is required"});    
     }
 
-
-    const exists = await Category.findOne({
-        _id:{$ne:id},
-        name:{$regex:`^${name.trim()}$`,$options:"i"},
-        isDeleted : false
-    });
-
-    if(exists){
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category already exists"});
-    }
-
-    if(offer < 0 || offer > 90){
+    if(offerPercent < 0 || offerPercent > 90){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer should be between 0 and 90"});
     }
 
-    if(offer > 0 && !offerExpiry){
+    if(offerPercent > 0 && !offerExpiry){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer expiry date needed when offer is applied"});
     } 
 
@@ -139,10 +137,32 @@ export const editCategory = asyncHandler(async(req,res)=>{
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Please set a future expiry date"});
     }
 
+    const existingCategory = await Category.findOne({
+        _id:{$ne:id},
+        name:{$regex:`^${name.trim()}$`,$options:"i"},
+    });
+
+    if (existingCategory && existingCategory.isDeleted) {
+        existingCategory.isDeleted = false;
+        existingCategory.isListed = true;
+        existingCategory.description = description?.trim();
+        existingCategory.offerPercent = offerPercent || 0;
+        existingCategory.offerExpiry = offerExpiry || null;
+    
+        await existingCategory.save();
+    
+        return res.status(200).json({message: "Category restored successfully" });
+      }
+
+    if(existingCategory){
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category already exists"});
+    }
+
+
     await Category.findByIdAndUpdate(id,{
         name:name.trim(),
         description:description?.trim(),
-        offer:offer || 0,
+        offerPercent:offerPercent || 0,
         offerExpiry:offerExpiry || null
     });
 
