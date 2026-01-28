@@ -70,6 +70,15 @@
         </div>
 
         <div class="lg:col-span-7 xl:col-span-7 flex flex-col">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 bg-white/5 text-gray-300 text-[12px] font-bold uppercase tracking-widest rounded-full border border-white/10">
+                    <%= product.gender %>
+                </span>
+                <span class="px-3 py-1 bg-white/5 text-gray-300 text-[12px] font-bold uppercase tracking-widest rounded-full border border-white/10">
+                    <%= product.category.name %>
+                </span>
+            </div>
+
             <h1 class="text-4xl xl:text-5xl font-extrabold mb-4 tracking-tight"><%= product.name %></h1>
             
             <div class="flex items-center gap-2 mb-6 text-sm">
@@ -119,7 +128,7 @@
                 <span class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-gray-500">Quantity</span>
                 <div class="flex items-center bg-surface-dark border border-white/5 rounded-xl overflow-hidden">
                     <button onclick="updateQty(-1)" class="p-3 hover:bg-white/5 transition-colors text-gray-400 select-none"><span class="material-icons-outlined">remove</span></button>
-                    <input type="number" id="qtyInput" value="1" readonly class="bg-transparent w-16 text-center font-bold text-sm focus:outline-none">
+                    <input type="number" id="qtyInput" value="1" readonly class="bg-transparent w-16 text-center font-bold text-sm focus:outline-none border rounded-md">
                     <button onclick="updateQty(1)" class="p-3 hover:bg-white/5 transition-colors text-gray-400 select-none"><span class="material-icons-outlined">add</span></button>
                 </div>
             </div>
@@ -163,11 +172,16 @@
                             <img src="<%= rel.thumbnail %>" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
                         </div>
                         <div class="px-1">
-                            <h3 class="font-bold text-sm lg:text-base mb-1 truncate text-white"><%= rel.name %></h3>
+                            <h3 class="font-bold text-sm lg:text-base mb-1 truncate text-white uppercase"><%= rel.name %></h3>
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-tighter"><%= rel.category.name %></span>
+                                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">•</span>
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-tighter"><%= rel.gender %>'s</span>
+                            </div>
                             <div class="flex items-center gap-2">
                                 <p class="font-extrabold text-base text-primary">₹<%= rel.finalPrice.toLocaleString() %></p>
                                 <% if(rel.price > rel.finalPrice) { %>
-                                    <p class="text-xs text-gray-500 line-through">₹<%= rel.price %></p>
+                                    <p class="text-xs text-gray-500 line-through">₹<%= rel.price.toLocaleString() %></p>
                                 <% } %>
                             </div>
                         </div>
@@ -213,7 +227,16 @@
 
         const sortedSizes = [...variant.sizes].sort((a, b) => parseFloat(a.size) - parseFloat(b.size));
         renderSizes(sortedSizes);
-        updateStockDisplay();
+
+        const isAllOutOfStock = variant.sizes.every(s => !s.inStock || s.stock <= 0);
+        
+        if (isAllOutOfStock) {
+            stockStatus.textContent = "Out of Stock";
+            stockStatus.className = "text-[10px] text-red-500 font-bold uppercase tracking-widest";
+            addToCartBtn.classList.add('opacity-70', 'cursor-not-allowed');
+        } else {
+            updateStockDisplay();
+        }
     }
 
     function renderSizes(sizes) {
@@ -241,21 +264,32 @@
     }
 
     function updateStockDisplay() {
+        const variant = variants.find(v => v._id === selectedVariantId);
+        const isAllOutOfStock = variant.sizes.every(s => !s.inStock || s.stock <= 0);
+
+        if (isAllOutOfStock) {
+            stockStatus.textContent = "Out of Stock";
+            stockStatus.className = "text-[10px] text-red-500 font-bold uppercase tracking-widest";
+            addToCartBtn.classList.add('opacity-70', 'cursor-not-allowed');
+            return;
+        }
+
         if (!selectedSize) {
             stockStatus.textContent = "Select a size";
             stockStatus.className = "text-[10px] text-gray-500 font-bold uppercase tracking-widest";
             addToCartBtn.classList.add('opacity-70');
+            addToCartBtn.classList.remove('cursor-not-allowed');
             return;
         }
 
         if (currentMaxStock > 0) {
-            stockStatus.textContent = `In Stock (${currentMaxStock} available)`;
+            stockStatus.textContent = "In Stock";
             stockStatus.className = "text-[10px] text-green-500 font-bold uppercase tracking-widest";
-            addToCartBtn.classList.remove('opacity-70');
+            addToCartBtn.classList.remove('opacity-70', 'cursor-not-allowed');
         } else {
             stockStatus.textContent = "Out of Stock";
             stockStatus.className = "text-[10px] text-red-500 font-bold uppercase tracking-widest";
-            addToCartBtn.classList.add('opacity-70');
+            addToCartBtn.classList.add('opacity-70', 'cursor-not-allowed');
         }
     }
 
@@ -281,7 +315,6 @@
 
         if (currentMaxStock <= 0) return;
 
-        // Add logic here to interact with your cart API
         console.log('Product added to cart:', {
             variantId: selectedVariantId,
             size: selectedSize,

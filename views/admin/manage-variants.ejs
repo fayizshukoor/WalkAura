@@ -194,8 +194,13 @@
                 cropperImg.src = event.target.result;
                 cropperModal.style.display = 'flex';
                 if (cropper) cropper.destroy();
-                cropper = new Cropper(cropperImg, { aspectRatio: 1, viewMode: 1 });
-            };
+            cropper = new Cropper(cropperImg, { 
+                aspectRatio: 1, 
+                viewMode: 0,       // ViewMode 0 allows the crop box to exceed image bounds
+                dragMode: 'move', 
+                background: false,
+                autoCropArea: 1
+            });            };
             reader.readAsDataURL(file);
         };
 
@@ -203,12 +208,17 @@
 
         function confirmCrop() {
             if(!cropper) return;
-            const canvas = cropper.getCroppedCanvas({ width: 1000, height: 1000 });
+            // adding fillColor: '#000' ensures blank areas are black
+            const canvas = cropper.getCroppedCanvas({ 
+                width: 1000, 
+                height: 1000,
+                fillColor: '#000' 
+            });
             canvas.toBlob((blob) => {
                 imageBlobs.push(blob);
                 renderImagePreviews();
                 closeCropper();
-            }, 'image/jpeg');
+            }, 'image/jpeg', 0.9); // 0.9 maintains high quality
         }
 
         function renderImagePreviews() {

@@ -303,6 +303,8 @@ export const showEditProduct = asyncHandler(async (req, res) => {
 });
 
 export const editProduct = asyncHandler(async (req, res) => {
+
+
   const productId = req.params.id;
 
   const {
@@ -314,6 +316,7 @@ export const editProduct = asyncHandler(async (req, res) => {
     offerPercent,
     offerExpiry,
   } = req.body;
+
 
   const product = await Product.findById(productId);
 

@@ -1,7 +1,7 @@
 import express from "express";
 
 //Controller imports
-import { showHomePage } from "../controllers/user/home.controller.js";
+import { getHomePage } from "../controllers/user/home.controller.js";
 import {
   showSignup,
   showLogin,
@@ -43,7 +43,7 @@ import { noCache } from "../middlewares/cache.middleware.js";
 
 const router = express.Router();
 
-router.get("/", noCache, showHomePage);
+router.get("/", noCache, getHomePage);
 
 router
   .route("/signup")

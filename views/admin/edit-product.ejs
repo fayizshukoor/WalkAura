@@ -54,7 +54,7 @@
                                 <label class="label-style">Category</label>
                                 <select name="category" class="form-input">
                                     <% categories.forEach(cat => { %>
-                                        <option value="<%= cat._id %>" <%= product.category.toString() === cat._id.toString() ? 'selected' : '' %>>
+                                        <option value="<%= cat._id %>" <%= (product.category._id && product.category._id.toString() === cat._id.toString()) || (product.category.toString() === cat._id.toString()) ? 'selected' : '' %>>
                                             <%= cat.name %>
                                         </option>
                                     <% }) %>

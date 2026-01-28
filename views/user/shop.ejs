@@ -93,7 +93,7 @@
                     <a href="/shop" class="text-[10px] text-primary hover:underline uppercase font-bold tracking-tighter">Clear All</a>
                 </div>
 
-                <form action="/shop" method="GET" class="space-y-5">
+                <form id="filterForm" action="/shop" method="GET" class="space-y-5">
                     <input type="hidden" name="search" value="<%= filters.search %>">
                     
                     <div>
@@ -207,24 +207,30 @@
             <div class="mt-12 flex justify-center">
                 <nav class="flex items-center gap-2">
                     <% 
-                        const baseQuery = `search=${encodeURIComponent(filters.search || '')}&category=${filters.category || 'all'}&priceRange=${filters.priceRange || 'all'}&gender=${filters.gender || 'all'}&sort=${filters.sort || ''}`;
+                        let queryParts = [];
+                        if (filters.search) queryParts.push(`search=${encodeURIComponent(filters.search)}`);
+                        if (filters.category && filters.category !== 'all') queryParts.push(`category=${filters.category}`);
+                        if (filters.priceRange && filters.priceRange !== 'all') queryParts.push(`priceRange=${filters.priceRange}`);
+                        if (filters.gender && filters.gender !== 'all') queryParts.push(`gender=${filters.gender}`);
+                        if (filters.sort) queryParts.push(`sort=${filters.sort}`);
+                        const baseQuery = queryParts.join('&');
                     %>
                     
                     <% if (pagination.currentPage > 1) { %>
-                        <a href="?page=<%= pagination.currentPage - 1 %>&<%= baseQuery %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+                        <a href="?page=<%= pagination.currentPage - 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
                             <span class="material-icons-outlined text-sm">chevron_left</span>
                         </a>
                     <% } %>
                     
                     <% for(let i = 1; i <= pagination.totalPages; i++) { %>
-                        <a href="?page=<%= i %>&<%= baseQuery %>" 
+                        <a href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>" 
                            class="w-10 h-10 flex items-center justify-center rounded-lg <%= i === pagination.currentPage ? 'bg-primary text-white shadow-lg shadow-indigo-500/20' : 'border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white' %> transition-colors">
                             <%= i %>
                         </a>
                     <% } %>
 
                     <% if (pagination.currentPage < pagination.totalPages) { %>
-                        <a href="?page=<%= pagination.currentPage + 1 %>&<%= baseQuery %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+                        <a href="?page=<%= pagination.currentPage + 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
                             <span class="material-icons-outlined text-sm">chevron_right</span>
                         </a>
                     <% } %>
@@ -240,19 +246,43 @@
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const filterForm = document.getElementById('filterForm');
 
         function executeSearch() {
-            const url = new URL(window.location.href);
+            const url = new URL(window.location.origin + window.location.pathname);
             const query = searchInput.value.trim();
             
+            // Re-apply existing non-default filters when searching
+            const formData = new FormData(filterForm);
+            for (let [key, value] of formData.entries()) {
+                if (value && value !== 'all' && key !== 'search') {
+                    url.searchParams.set(key, value);
+                }
+            }
+
             if (query) {
                 url.searchParams.set('search', query);
-            } else {
-                url.searchParams.delete('search');
             }
             
             url.searchParams.set('page', 1);
             window.location.href = url.toString();
+        }
+
+        // Intercept form submission to clean "all" values from URL
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const url = new URL(window.location.origin + window.location.pathname);
+                const formData = new FormData(this);
+                
+                for (let [key, value] of formData.entries()) {
+                    if (value && value !== 'all') {
+                        url.searchParams.set(key, value);
+                    }
+                }
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
         }
 
         if (searchBtn) searchBtn.addEventListener('click', executeSearch);
@@ -262,8 +292,14 @@
 
         if (clearSearchBtn) {
             clearSearchBtn.addEventListener('click', function() {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('search');
+                const url = new URL(window.location.origin + window.location.pathname);
+                // Keep other filters but clear search
+                const formData = new FormData(filterForm);
+                for (let [key, value] of formData.entries()) {
+                    if (value && value !== 'all' && key !== 'search') {
+                        url.searchParams.set(key, value);
+                    }
+                }
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
