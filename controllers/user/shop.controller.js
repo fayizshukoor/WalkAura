@@ -141,6 +141,7 @@ export const getProducts = asyncHandler(async (req, res) => {
         offerPercent: 1,
         offerExpiry: 1,
         category: 1,
+        gender: 1,
         thumbnail: 1,
         createdAt: 1
       }
@@ -206,7 +207,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 export const getProductDetails = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
-  /* ---------------- Fetch Product + Category ---------------- */
+  // Fetch product and category
   const product = await Product.findOne({
     slug,
     isListed: true
@@ -246,6 +247,7 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     const sizes = inventory
       .filter(i => i.variant.toString() === variant._id.toString())
       .map(i => ({
+        inventoryId: i._id,
         size: i.size,
         stock: i.stock,
         inStock: i.stock > 0

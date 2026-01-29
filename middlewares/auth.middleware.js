@@ -24,6 +24,7 @@ export const authenticateUser = (req,res,next)=>{
 
 export const requireAuth = (req,res,next)=>{
     if(req.user){
+        console.log(req.user);
         return next();
     }else{
         return res.redirect("/login");

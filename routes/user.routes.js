@@ -2,29 +2,12 @@ import express from "express";
 
 //Controller imports
 import { getHomePage } from "../controllers/user/home.controller.js";
-import {
-  showSignup,
-  showLogin,
-  handleSignup,
-  handleLogin,
-  logout,
-  handleForgotPassword,
-  handleResetPassword,
-  showForgotPassword,
-  showResetPassword,
-} from "../controllers/user/auth.controller.js";
-import {
-  showVerifyOTP,
-  verifyOTP,
-  resendOTP,
-} from "../controllers/user/authOtp.controller.js";
-import {
-  showProfile,
-  showEditProfile,
-  updateProfile,
-  uploadProfilePhoto,
-  removeProfilePhoto,
-} from "../controllers/user/profile.controller.js";
+
+import { showSignup, showLogin, handleSignup, handleLogin, logout, handleForgotPassword, handleResetPassword, showForgotPassword, showResetPassword } from "../controllers/user/auth.controller.js";
+
+import { showVerifyOTP, verifyOTP, resendOTP } from "../controllers/user/authOtp.controller.js";
+
+import { showProfile, showEditProfile, updateProfile, uploadProfilePhoto, removeProfilePhoto } from "../controllers/user/profile.controller.js";
 
 import { requestEmailChange, resendEmailChangeOTP, showChangeEmail, showVerifyEmailChangeOTP, verifyEmailChangeOTP } from "../controllers/user/profileEmail.controller.js";
 
@@ -33,6 +16,9 @@ import { handleAuthForgotPassword, handleChangePassword, showChangePassword } fr
 import { addAddress, deleteAddress, showAddressManagement, updateAddress} from "../controllers/user/address.controller.js";
 
 import { getProductDetails, getProducts } from "../controllers/user/shop.controller.js";
+
+import { addToCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
+
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -122,5 +108,12 @@ router.delete("/addresses/:addressId", requireAuth, deleteAddress);
 
 router.get("/shop",getProducts);
 router.get("/product/:slug", getProductDetails);
+
+// Cart
+
+router.get("/cart",requireAuth,getCart);
+router.post("/cart/add",addToCart);
+router.patch("/cart/update-quantity",updateCartItemQuantity);
+router.delete("/cart/remove/:inventoryId",removeCartItem);
 
 export default router;
