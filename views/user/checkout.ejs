@@ -1,0 +1,286 @@
+<main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-[1400px] mx-auto">
+      
+      <nav class="flex text-[10px] sm:text-xs text-gray-500 mb-6 space-x-2 uppercase tracking-[0.2em]">
+        <a href="/cart" class="hover:text-primary transition-colors">Cart</a>
+        <span>/</span>
+        <span class="text-white font-bold">Checkout</span>
+        <span>/</span>
+        <span class="opacity-30">Confirmation</span>
+      </nav>
+  
+      <h1 class="text-3xl sm:text-4xl font-black mb-10 tracking-tighter uppercase text-white">Checkout</h1>
+  
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        
+        <div class="xl:col-span-8 space-y-8">
+          
+          <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">
+              <h2 class="text-sm font-extrabold uppercase tracking-widest flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">shopping_bag</span>
+                Your Selection
+              </h2>
+              <span class="text-xs font-bold text-white bg-primary/20 border border-primary/30 px-3 py-1 rounded-full">
+                <%= checkout.items.length %> Items
+              </span>
+            </div>
+            <div class="p-6 divide-y divide-white/5">
+              <% checkout.items.forEach(item => { %>
+                <div class="flex flex-col sm:flex-row gap-6 items-center py-4 first:pt-0 last:pb-0">
+                  <div class="w-24 h-24 rounded-2xl overflow-hidden bg-black border border-white/10 flex-shrink-0">
+                    <img src="<%= item.image %>" alt="<%= item.productName %>" class="w-full h-full object-contain p-2">
+                  </div>
+                  <div class="flex-1 text-center sm:text-left">
+                    <h3 class="font-bold text-lg text-white"><%= item.productName %></h3>
+                    <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-1">
+                      Size: <%= item.size %> <span class="mx-2 text-white/10">|</span> 
+                      Color: <%= item.color %> <span class="mx-2 text-white/10">|</span> 
+                      QTY: <%= item.quantity %>
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-black text-xl text-white">₹<%= item.itemTotal.toLocaleString() %></p>
+                    <p class="text-[10px] text-gray-500 font-bold tracking-widest uppercase">₹<%= item.price %> per unit</p>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </section>
+  
+          <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+            <div class="p-6 border-b border-white/10 bg-white/[0.03]">
+              <h2 class="text-sm font-extrabold uppercase tracking-widest flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">location_on</span>
+                Shipping Details
+              </h2>
+            </div>
+            
+            <div class="p-6">
+              <% if (checkout.addresses && checkout.addresses.length > 0) { %>
+                <div class="space-y-4 mb-10">
+                  <% checkout.addresses.forEach((addr, index) => { %>
+                    <label class="relative flex items-start p-6 bg-white/[0.02] border border-white/5 rounded-2xl cursor-pointer group hover:border-primary/40 transition-all has-[:checked]:bg-primary/5 has-[:checked]:border-primary/40">
+                      <input type="radio" name="selectedAddress" value="<%= addr._id %>" class="mt-1 w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30" <%= index === 0 ? 'checked' : '' %>>
+                      <div class="ml-4 flex-1">
+                        <div class="flex items-center gap-3">
+                          <p class="font-bold text-lg text-white"><%= addr.fullName %></p>
+                          <% if (addr.isDefault) { %>
+                            <span class="text-[9px] bg-primary text-white px-2 py-0.5 rounded font-black uppercase tracking-tighter shadow-lg shadow-primary/20">Default</span>
+                          <% } %>
+                        </div>
+                        <p class="text-gray-300 text-sm mt-1 font-medium"><%= addr.phone %></p>
+                        <p class="text-gray-400 text-sm leading-relaxed mt-2 max-w-md italic">
+                          <%= addr.streetAddress %>, <%= addr.city %>, <%= addr.state %> - <%= addr.pincode %>
+                        </p>
+                      </div>
+                      <a href="/addresses" class="text-primary text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">Edit</a>
+                    </label>
+                  <% }) %>
+                </div>
+              <% } %>
+  
+              <div class="pt-2">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8 flex items-center gap-4">
+                  Or Add New Address
+                  <span class="h-px flex-grow bg-white/10"></span>
+                </h3>
+                <form id="addressForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="md:col-span-1 space-y-2">
+                    <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Full Name</label>
+                    <input type="text" name="fullName" placeholder="e.g. John Doe" class="w-full bg-black border-white/10 rounded-xl focus:ring-primary focus:border-primary py-3.5 px-4 text-sm transition-all placeholder:text-gray-600 text-white shadow-inner" required>
+                  </div>
+                  <div class="md:col-span-1 space-y-2">
+                    <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Phone Number</label>
+                    <input type="text" name="phone" placeholder="+91" class="w-full bg-black border-white/10 rounded-xl focus:ring-primary focus:border-primary py-3.5 px-4 text-sm transition-all placeholder:text-gray-600 text-white shadow-inner" required>
+                  </div>
+                  <div class="md:col-span-2 space-y-2">
+                    <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Street Address</label>
+                    <input type="text" name="streetAddress" placeholder="House no, Street name..." class="w-full bg-black border-white/10 rounded-xl focus:ring-primary focus:border-primary py-3.5 px-4 text-sm transition-all placeholder:text-gray-600 text-white shadow-inner" required>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:col-span-2">
+                      <div class="space-y-2 col-span-2 md:col-span-1">
+                          <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">PIN Code</label>
+                          <div class="relative">
+                            <input type="text" name="pincode" id="pincodeInput" maxlength="6" class="w-full bg-black border-white/10 rounded-xl focus:ring-primary focus:border-primary py-3 px-4 text-sm transition-all text-white shadow-inner" required>
+                            <div id="pincodeLoader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                              <div class="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                            </div>
+                          </div>
+                          <p id="pincodeError" class="text-[9px] text-red-500 font-bold uppercase hidden">Invalid Pincode</p>
+                      </div>
+                      <div class="space-y-2">
+                          <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1 italic opacity-60">City (Auto)</label>
+                          <input type="text" name="city" id="cityInput" readonly class="w-full bg-white/[0.02] border-white/5 rounded-xl py-3 px-4 text-sm text-gray-400 cursor-not-allowed outline-none font-medium">
+                      </div>
+                      <div class="space-y-2">
+                          <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1 italic opacity-60">State (Auto)</label>
+                          <input type="text" name="state" id="stateInput" readonly class="w-full bg-white/[0.02] border-white/5 rounded-xl py-3 px-4 text-sm text-gray-400 cursor-not-allowed outline-none font-medium">
+                      </div>
+                  </div>
+                  
+                  <div class="md:col-span-2 flex flex-col sm:flex-row gap-4 pt-6">
+                    <button type="submit" class="bg-primary hover:bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-primary/40 active:scale-95">Save & Continue</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+        </div>
+  
+        <aside class="xl:col-span-4 space-y-8 lg:sticky lg:top-24">
+          <div class="bg-[#12141a] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -mr-16 -mt-16 rounded-full"></div>
+  
+            <div class="p-8 border-b border-white/10 bg-white/[0.03]">
+              <h2 class="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">receipt_long</span>
+                Order Summary
+              </h2>
+            </div>
+  
+            <div class="p-8">
+              <div class="mb-10">
+                <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4 ml-1">Apply Coupon</label>
+                <div class="flex gap-2">
+                  <input type="text" id="couponCode" placeholder="Enter code" class="flex-1 bg-black border-white/10 rounded-2xl px-5 py-4 text-sm focus:ring-primary focus:border-primary transition-all uppercase font-bold tracking-widest placeholder:normal-case placeholder:font-normal text-white shadow-inner">
+                  <button onclick="applyCoupon()" class="bg-white text-black hover:bg-primary hover:text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg">Apply</button>
+                </div>
+              </div>
+  
+              <div class="space-y-4 mb-10">
+                <div class="flex justify-between items-center text-sm font-medium">
+                  <span class="text-gray-400">Subtotal</span>
+                  <span class="text-white">₹<%= checkout.pricing.subtotal.toLocaleString() %></span>
+                </div>
+                <div class="flex justify-between items-center text-sm font-medium">
+                  <span class="text-gray-400">Tax (GST 18%)</span>
+                  <span class="text-white">₹<%= checkout.pricing.tax.toLocaleString() %></span>
+                </div>
+                <div class="flex justify-between items-center text-sm font-medium">
+                  <span class="text-gray-400">Standard Delivery</span>
+                  <% if(checkout.pricing.shippingCharge === 0) { %>
+                      <span class="font-black text-green-500 uppercase text-[9px] bg-green-500/10 px-2 py-1 rounded-md">Free</span>
+                  <% } else { %>
+                      <span class="text-white">₹<%= checkout.pricing.shippingCharge %></span>
+                  <% } %>
+                </div>
+                <div class="flex justify-between items-center text-sm font-bold pt-2">
+                  <span class="text-gray-400">Coupon Discount</span>
+                  <span class="text-green-500 font-black">- ₹<%= checkout.pricing.discount.toLocaleString() %></span>
+                </div>
+                
+                <div class="pt-6 border-t border-white/10 mt-6">
+                  <div class="flex justify-between items-end">
+                    <div>
+                      <span class="text-[10px] font-black uppercase tracking-[0.2em] text-primary block mb-1">Total Payable</span>
+                      <span class="text-3xl font-black text-white tracking-tighter" id="totalAmountDisplay">₹<%= checkout.pricing.totalAmount.toLocaleString() %></span>
+                    </div>
+                    <span class="material-symbols-outlined text-primary/40 mb-2">payments</span>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="space-y-3 mb-10">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
+                  Secure Payment
+                  <span class="h-px flex-grow bg-white/10"></span>
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
+                      <input type="radio" name="paymentMethod" value="razorpay" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30" checked>
+                      <div class="ml-4 flex items-center gap-3">
+                          <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">bolt</span>
+                          <span class="text-sm font-bold text-white">RazorPay</span>
+                      </div>
+                    </label>
+  
+                    <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
+                      <input type="radio" name="paymentMethod" value="wallet" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
+                      <div class="ml-4 flex flex-col">
+                          <div class="flex items-center gap-3">
+                              <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">account_balance_wallet</span>
+                              <span class="text-sm font-bold text-white">Digital Wallet</span>
+                          </div>
+                          <span class="text-[9px] text-primary font-black uppercase mt-1 tracking-widest ml-9">Instant & Secure</span>
+                      </div>
+                    </label>
+  
+                    <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
+                      <input type="radio" name="paymentMethod" value="cod" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
+                      <div class="ml-4 flex items-center gap-3">
+                          <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">local_atm</span>
+                          <span class="text-sm font-bold text-white">Cash on Delivery</span>
+                      </div>
+                    </label>
+                </div>
+              </div>
+  
+              <button onclick="handlePlaceOrder()" class="w-full bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs py-5 rounded-2xl shadow-2xl shadow-primary/40 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                Place Order
+                <span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+  
+  <script>
+    // Pincode Validation and Autofill
+    const pincodeInput = document.getElementById('pincodeInput');
+    const cityInput = document.getElementById('cityInput');
+    const stateInput = document.getElementById('stateInput');
+    const pincodeLoader = document.getElementById('pincodeLoader');
+    const pincodeError = document.getElementById('pincodeError');
+  
+    pincodeInput.addEventListener('input', async (e) => {
+      const pincode = e.target.value;
+      
+      // Clear previous errors/data
+      pincodeError.classList.add('hidden');
+      if (pincode.length < 6) {
+        cityInput.value = '';
+        stateInput.value = '';
+        return;
+      }
+  
+      if (pincode.length === 6) {
+        pincodeLoader.classList.remove('hidden');
+        try {
+          // Using the free Zippopotam.us API for India
+          const response = await fetch(`https://api.zippopotam.us/in/${pincode}`);
+          if (!response.ok) throw new Error('Not found');
+          
+          const data = await response.json();
+          const place = data.places[0];
+          cityInput.value = place['place name'];
+          stateInput.value = place['state'];
+          
+          // Visual feedback
+          pincodeInput.classList.remove('border-white/10');
+          pincodeInput.classList.add('border-green-500/50');
+        } catch (err) {
+          cityInput.value = '';
+          stateInput.value = '';
+          pincodeError.classList.remove('hidden');
+          pincodeInput.classList.add('border-red-500/50');
+        } finally {
+          pincodeLoader.classList.add('hidden');
+        }
+      }
+    });
+  
+    // Example functions (placeholders for your existing logic)
+    function applyCoupon() {
+      console.log("Coupon applied:", document.getElementById('couponCode').value);
+    }
+  
+    function handlePlaceOrder() {
+      const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked')?.value;
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+      console.log("Order Data:", { selectedAddress, paymentMethod });
+    }
+  </script>

@@ -17,8 +17,9 @@ import { addAddress, deleteAddress, showAddressManagement, updateAddress} from "
 
 import { getProductDetails, getProducts } from "../controllers/user/shop.controller.js";
 
-import { addToCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
+import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
+import { getCheckoutPage } from "../controllers/user/checkout.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -115,5 +116,10 @@ router.get("/cart",requireAuth,getCart);
 router.post("/cart/add",addToCart);
 router.patch("/cart/update-quantity",updateCartItemQuantity);
 router.delete("/cart/remove/:inventoryId",removeCartItem);
+router.delete("/cart/clear",clearCart);
+
+// Checkout Page
+
+router.get("/checkout",requireAuth,getCheckoutPage);
 
 export default router;

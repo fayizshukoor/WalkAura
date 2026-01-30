@@ -3,13 +3,22 @@
 
 <main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-10 w-full mx-auto max-w-[1800px]">
     
-    <div class="mb-10 px-2">
-        <h1 class="text-3xl md:text-5xl font-black tracking-tighter mb-4 mt-10 text-white uppercase">Your Bag</h1>
-        <div class="flex items-center gap-3">
-            <p class="text-gray-400 text-[11px] font-bold uppercase tracking-[0.2em]">
-                Selection: <span class="text-white ml-2"><%= cart ? cart.totalItems : 0 %> items</span>
-            </p>
+    <div class="mb-10 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tighter mb-4 mt-10 text-white uppercase">Your Cart</h1>
+            <div class="flex items-center gap-3">
+                <p class="text-gray-400 text-[11px] font-bold uppercase tracking-[0.2em]">
+                    Selection: <span class="text-white ml-2"><%= cart ? cart.totalItems : 0 %> items</span>
+                </p>
+            </div>
         </div>
+
+        <% if (cart && cart.items.length > 0) { %>
+            <button onclick="clearCart()" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95">
+                <span class="material-icons-outlined text-lg">delete_sweep</span>
+                Empty Cart
+            </button>
+        <% } %>
     </div>
 
     <% if (cart && cart.items.length > 0) { %>
@@ -46,7 +55,7 @@
                                         <span class="material-icons-outlined text-xl">remove</span>
                                     </button>
                                     
-                                    <input type="number" id="qty-<%= item.inventory._id %>" value="<%= item.quantity %>" readonly class="bg-transparent w-14 text-center font-black text-lg border-none focus:ring-0 text-white p-0">
+                                    <input type="number" id="qty-<%= item.inventory._id %>" value="<%= item.quantity %>" readonly class="bg-transparent w-10 text-center font-black text-lg border-none focus:ring-0 text-white p-0">
                                     
                                     <button onclick="updateQuantity('<%= item.inventory._id %>', 1)" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-all hover:bg-white/5 rounded-lg active:scale-90" >
                                         <span class="material-icons-outlined text-xl">add</span>
@@ -146,7 +155,6 @@
         const input = document.getElementById(`qty-${inventoryId}`);
         const currentQty = parseInt(input.value);
         
-        // Determine action string for backend
         const action = change > 0 ? "increment" : "decrement";
 
         if (action === "decrement" && currentQty <= 1) {
@@ -158,7 +166,6 @@
             const response = await fetch('/cart/update-quantity', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                // Passing action and inventoryId in the body
                 body: JSON.stringify({ inventoryId, action })
             });
 
@@ -175,41 +182,71 @@
     }
 
     async function removeItem(inventoryId) {
-    // Premium SWAL Confirmation
-    const result = await Swal.fire({
-        title: 'REMOVE ITEM?',
-        text: "Are you sure you want to drop this from your bag?",
-        icon: 'warning',
-        showCancelButton: true,
-        background: '#0f111a',
-        color: '#ffffff',
-        confirmButtonColor: '#4f46e5', // Your primary color
-        cancelButtonColor: '#161925',
-        confirmButtonText: 'YES, REMOVE',
-        cancelButtonText: 'KEEP IT'
-    });
+        const result = await Swal.fire({
+            title: 'REMOVE ITEM?',
+            text: "Are you sure you want to drop this from your cart?",
+            icon: 'warning',
+            showCancelButton: true,
+            background: '#0f111a',
+            color: '#ffffff',
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#161925',
+            confirmButtonText: 'YES, REMOVE',
+            cancelButtonText: 'KEEP IT'
+        });
 
-    // If user confirmed
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch(`/cart/remove/${inventoryId}`, { 
-                method: 'DELETE',
-            });
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`/cart/remove/${inventoryId}`, { 
+                    method: 'DELETE',
+                });
 
-            const result = await response.json();
-            
-            if (response.ok) {
-                // Show success toast using your existing custom toast
-                showToast("Item removed from bag", "success");
+                const result = await response.json();
                 
-                // Slight delay before reload for the user to see the toast
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                showToast(`${result.message}`, "error");
+                if (response.ok) {
+                    showToast("Item removed from bag", "success");
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showToast(`${result.message}`, "error");
+                }
+            } catch (error) {
+                showToast("Network error occurred", "error");
             }
-        } catch (error) {
-            showToast("Network error occurred", "error");
         }
     }
-}
+
+    async function clearCart() {
+        const result = await Swal.fire({
+            title: 'EMPTY CART?',
+            text: "This will remove all items from your selection. Continue?",
+            icon: 'warning',
+            showCancelButton: true,
+            background: '#0f111a',
+            color: '#ffffff',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#161925',
+            confirmButtonText: 'YES, CLEAR ALL',
+            cancelButtonText: 'CANCEL'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/cart/clear', { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast(`${result.message}`, "success");
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showToast(`${result.message}`, "error");
+                }
+            } catch (error) {
+                showToast("Network error occurred", "error");
+            }
+        }
+    }
 </script>

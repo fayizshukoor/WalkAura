@@ -220,9 +220,9 @@ export const getCart = asyncHandler(async (req,res)=>{
             categoryOffer: item.product.category.offerPercent,
             categoryOfferExpiry: item.product.category.offerExpiry,
           });
-    
-          item.currentPrice = currentPrice;
+
           item.priceChanged = currentPrice !== item.priceAtAdd;
+          item.priceAtAdd = currentPrice;
     
           validItems.push(item);
         }
@@ -242,7 +242,7 @@ export const getCart = asyncHandler(async (req,res)=>{
 })
 
 
-
+// Update cart item 
 export const updateCartItemQuantity = asyncHandler(async (req, res) => {
    
     const { inventoryId, action } = req.body; // 'increment' or 'decrement'
@@ -348,7 +348,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
 
 
 // Remove Item from cart
-    export const removeCartItem = asyncHandler(async (req, res) => {
+export const removeCartItem = asyncHandler(async (req, res) => {
 
         const { inventoryId } = req.params;
         const userId = req.user.userId;
@@ -385,6 +385,29 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
         await cart.save();
     
         res.status(200).json({
-          message: "Item removed from cart",
+          message: "Item removed from cart"
         });  
-      })  
+      })
+      
+      
+export const clearCart = asyncHandler(async (req, res) => {
+    const userId = req.user.userId;
+    
+    const cart = await Cart.findOne({ user: userId });
+    
+    if (!cart) {
+      return res.status(404).json({
+        message: "Cart not found"
+      });
+    }
+    
+    cart.items = [];
+    cart.totalItems = 0;
+    cart.totalAmount = 0;
+    
+    await cart.save();
+    
+    res.status(200).json({
+      message: "Cart cleared successfully"
+    });
+  })

@@ -253,18 +253,35 @@
             renderImagePreviews();
         }
 
-        function addSizeRow(size = '', stock = '0') {
-            const id = Date.now() + Math.random();
-            const div = document.createElement('div');
-            div.className = 'grid grid-cols-12 gap-3 items-start bg-black/40 p-4 rounded-xl border border-white/10';
-            div.id = `row-${id}`;
-            div.innerHTML = `
-                <div class="col-span-5"><label class="label-style">Size (UK)</label><input type="number" class="size-val form-input" value="${size}"></div>
-                <div class="col-span-5"><label class="label-style">Stock</label><input type="number" class="stock-val form-input" value="${stock}"></div>
-                <div class="col-span-2 pt-8"><button type="button" onclick="document.getElementById('row-${id}').remove();" class="w-full py-2 text-rose-500 hover:bg-rose-500/10 rounded-lg"><span class="material-symbols-outlined">delete</span></button></div>
-            `;
-            sizeContainer.appendChild(div);
-        }
+        function addSizeRow(size = '', stock = '0', isExisting = false) {
+    const id = Date.now() + Math.random();
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-12 gap-3 items-start bg-black/40 p-4 rounded-xl border border-white/10';
+    div.id = `row-${id}`;
+
+    // If it's an existing size, we lock it. If it's a new row, it's editable.
+    const sizeInputHtml = isExisting 
+        ? `<input type="number" class="size-val form-input bg-zinc-900 text-slate-500 cursor-not-allowed" value="${size}" readonly>`
+        : `<input type="number" class="size-val form-input" value="${size}" placeholder="e.g. 9">`;
+
+    div.innerHTML = `
+        <div class="col-span-5">
+            <label class="label-style">Size (UK)</label>
+            ${sizeInputHtml}
+        </div>
+        <div class="col-span-5">
+            <label class="label-style">Stock</label>
+            <input type="number" class="stock-val form-input" value="${stock}">
+        </div>
+        <div class="col-span-2 pt-8">
+                <button type="button" onclick="document.getElementById('row-${id}').remove();" class="w-full py-2 text-rose-500 hover:bg-rose-500/10 rounded-lg">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+          
+        </div>
+    `;
+    sizeContainer.appendChild(div);
+}
 
         // Edit Mode Logic
         document.addEventListener('click', (e) => {
@@ -288,7 +305,7 @@
             renderImagePreviews();
 
             sizeContainer.innerHTML = '';
-            variant.inventory.filter(inv => inv.isActive).forEach(inv => addSizeRow(inv.size, inv.stock));
+            variant.inventory.filter(inv => inv.isActive).forEach(inv => addSizeRow(inv.size, inv.stock,true));
         }
 
         form.onsubmit = async (e) => {
