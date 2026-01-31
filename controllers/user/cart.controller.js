@@ -222,7 +222,10 @@ export const getCart = asyncHandler(async (req,res)=>{
           });
 
           item.priceChanged = currentPrice !== item.priceAtAdd;
-          item.priceAtAdd = currentPrice;
+          if(item.priceChanged){
+            item.priceAtAdd = currentPrice;
+            hasChanges = true;
+          }
     
           validItems.push(item);
         }

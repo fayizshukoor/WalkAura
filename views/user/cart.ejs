@@ -3,6 +3,8 @@
 
 <main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-10 w-full mx-auto max-w-[1800px]">
     
+    <%- include('../partials/alerts') %>
+    
     <div class="mb-10 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
             <h1 class="text-3xl md:text-5xl font-black tracking-tighter mb-4 mt-10 text-white uppercase">Your Cart</h1>
@@ -12,6 +14,8 @@
                 </p>
             </div>
         </div>
+
+       
 
         <% if (cart && cart.items.length > 0) { %>
             <button onclick="clearCart()" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95">
@@ -103,20 +107,20 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="window.location.href='/checkout'" class="mt-10 group w-full bg-primary hover:bg-indigo-600 text-white font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest shadow-xl shadow-primary/20">
+                <button onclick="proceedToCheckout()" class="mt-10 group w-full bg-primary hover:bg-indigo-600 text-white font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest shadow-xl shadow-primary/20">
                     <span>Checkout</span>
                     <span class="material-icons-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </button>
             </div>
         </div>
-    </div>
+    </div>  
     <% } else { %>
         <div class="flex flex-col items-center justify-center py-32 text-center">
             <div class="w-56 h-56 bg-white/5 rounded-full flex items-center justify-center mb-10 border border-white/5 relative">
                 <div class="absolute inset-0 bg-primary/5 blur-2xl rounded-full"></div>
                 <span class="material-icons-outlined text-8xl text-gray-800 relative z-10">remove_shopping_cart</span>
             </div>
-            <h2 class="text-3xl font-black text-white mb-4 uppercase tracking-[0.2em]">Your Bag is Empty</h2>
+            <h2 class="text-3xl font-black text-white mb-4 uppercase tracking-[0.2em]">Your Cart is Empty</h2>
             <a href="/shop" class="group flex items-center gap-3 bg-primary text-black font-black px-12 py-5 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all uppercase tracking-widest text-xs">
                 <span>Browse Shop</span>
                 <span class="material-icons-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -249,4 +253,52 @@
             }
         }
     }
+
+
+    async function proceedToCheckout() {
+    try {
+        // We fetch the checkout page via AJAX first to check for validation errors
+        const response = await fetch('/checkout', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json' 
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // If everything is fine, redirect to the checkout page
+            window.location.href = '/checkout';
+        } else if (response.status === 400) {
+            // Handle the specific "Invalid Items" or "Stock Issues" from your controller
+            let errorMessage = `<div class="text-left mt-4 space-y-2">`;
+            
+            result.invalidItems.forEach(item => {
+                errorMessage += `
+                    <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p class="text-red-500 font-bold text-xs uppercase">${item.name}</p>
+                        <p class="text-gray-400 text-[10px]">${item.reason}</p>
+                    </div>`;
+            });
+            errorMessage += `</div>`;
+
+            Swal.fire({
+                title: 'ACTION REQUIRED',
+                html: `<p class="text-sm text-gray-300">${result.message}</p>${errorMessage}`,
+                icon: 'error',
+                background: '#0f111a',
+                color: '#ffffff',
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'UPDATE CART'
+            });
+        } else if (response.status === 404) {
+            showToast("Your cart is empty", "error");
+        }
+    } catch (error) {
+        // If the response is HTML (which happens when everything is OK), 
+        // the JSON parsing fails, so we just redirect.
+        window.location.href = '/checkout';
+    }
+}
 </script>

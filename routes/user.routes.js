@@ -19,7 +19,7 @@ import { getProductDetails, getProducts } from "../controllers/user/shop.control
 
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
-import { getCheckoutPage } from "../controllers/user/checkout.controller.js";
+import { getCheckoutPage, getOrderDetails, getOrderSuccess, placeOrder } from "../controllers/user/checkout.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -121,5 +121,7 @@ router.delete("/cart/clear",clearCart);
 // Checkout Page
 
 router.get("/checkout",requireAuth,getCheckoutPage);
+router.post("/place-order",placeOrder);
+router.get("/success/:orderId",getOrderSuccess);
 
 export default router;

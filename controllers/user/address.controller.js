@@ -11,8 +11,8 @@ export const showAddressManagement = asyncHandler(async (req,res)=>{
       const skip = (page-1)*limit;
 
     const [addresses,totalAddress] = await Promise.all([
-      Address.find({userId}).sort({createdAt:-1}).skip(skip).limit(limit),
-      Address.countDocuments({userId})
+      Address.find({userId , isDeleted: false}).sort({createdAt:-1}).skip(skip).limit(limit),
+      Address.countDocuments({userId, isDeleted: false})
     ]) ;
 
     const totalPages = Math.ceil(totalAddress/limit);
@@ -21,141 +21,92 @@ export const showAddressManagement = asyncHandler(async (req,res)=>{
 });
 
 
-// Address Adding
 export const addAddress = asyncHandler(async (req, res) => {
-    const {
-      fullName,
-      phone,
-      pincode,
-      streetAddress,  
-      city,
-      state,
-      country
-    } = req.body;
+  const { fullName, phone, pincode, streetAddress, city, state } = req.body;
 
-    // Basic validation 
-    if (!fullName || !phone || !streetAddress || !city || !state || !pincode) {
-      req.flash("error", "All required fields must be filled");
-      return res.redirect("/addresses");
-    }
+  // Strict Server-side Validation
+  if (!fullName || !phone || !streetAddress || !city || !state || !pincode) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+  }
 
-   
-    if (!/^\d{10}$/.test(phone)) {
-      req.flash("error", "Enter a valid 10-digit phone number");
-      return res.redirect("/addresses");
-    }
+  if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ success: false, message: "Invalid 10-digit phone number" });
+  }
 
-    if (!/^\d{6}$/.test(pincode)) {
-      req.flash("error", "Enter a valid 6-digit pincode");
-      return res.redirect("/addresses");
-    }
+  if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ success: false, message: "Invalid 6-digit pincode" });
+  }
 
-    // Check if this is the first address
-    const hasAddress = await Address.exists({
-      userId: req.user.userId
-    });
-
-    //  Create address
-    const address = await Address.create({
+  const address = await Address.create({
       userId: req.user.userId,
       fullName,
       phone,
-      streetAddress, 
+      streetAddress,
       city,
       state,
       pincode,
-      country,
-      isDefault: !hasAddress
-    });
+      country: "India"
+  });
 
-    req.flash("success", "Address added successfully");
-    res.redirect("/addresses");
+  return res.status(201).json({ 
+      success: true, 
+      message: "Address added successfully", 
+      address 
+  });
 });
 
-
-// controllers/user/address.controller.js
-
-
+// AJAX: Update Address
 export const updateAddress = asyncHandler(async (req, res) => {
-
-    const userId = req.user.userId; 
-    const { addressId } = req.params;
-    console.log(addressId);
-    console.log(userId);
-
-    const {
-      fullName,
-      phone,
-      pincode,
-      streetAddress,
-      city,
-      state
-    } = req.body;
-
-    //  Find address owned by user
-    const address = await Address.findOne({
-      _id: addressId,
-      userId: userId
-    });
-
-    if (!address) {
-        
-      req.flash("error", "Address not found");
-      return res.redirect("/addresses");
-    }
-
-    // Basic validation 
-    if (!fullName || !phone || !pincode || !streetAddress || !city || !state ) {
-      req.flash("error", "All required fields must be filled");
-      return res.redirect("/addresses");
-    }
-
-   
-    if (!/^\d{10}$/.test(phone)) {
-      req.flash("error", "Enter a valid 10-digit phone number");
-      return res.redirect("/addresses");
-    }
-
-    if (!/^\d{6}$/.test(pincode)) {
-      req.flash("error", "Enter a valid 6-digit pincode");
-      return res.redirect("/addresses");
-    }
-
-    //  Update fields
-    address.fullName = fullName;
-    address.phone = phone;
-    address.pincode = pincode;
-    address.streetAddress = streetAddress; 
-    address.city = city;
-    address.state = state;
-
-    await address.save();
-
-    //  Success feedback
-    req.flash("success", "Address updated successfully");
-    res.redirect("/addresses");
-
-});
-
-export const deleteAddress = asyncHandler(async (req, res) => {
-
+  const userId = req.user.userId;
   const { addressId } = req.params;
-    const userId = req.user.userId; // from JWT
+  const { fullName, phone, pincode, streetAddress, city, state } = req.body;
 
-    // delete only if address belongs to user
-    const deletedAddress = await Address.findOneAndDelete({
-      _id: addressId,
-      userId: userId
-    });
+  const address = await Address.findOne({ _id: addressId, userId, isDeleted: false });
 
-    if (!deletedAddress) {
-      req.flash("error", "Address not found or not authorized");
-      return res.redirect("/addresses");
-    }
+  if (!address) {
+      return res.status(404).json({ success: false, message: "Address not found" });
+  }
 
-    req.flash("success", "Address deleted successfully");
-    return res.redirect("/addresses");
+  // Validation
+  if (!fullName || !phone || !pincode || !streetAddress || !city || !state) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+  }
 
+  if (!/^\d{10}$/.test(phone)) {
+    return res.status(400).json({ success: false, message: "Invalid 10-digit phone number" });
+}
 
+  if (!/^\d{6}$/.test(pincode)) {
+    return res.status(400).json({ success: false, message: "Invalid 6-digit pincode" });
+  }
+
+  // Update
+  Object.assign(address, { fullName, phone, pincode, streetAddress, city, state });
+  await address.save();
+
+  return res.status(200).json({ 
+      success: true, 
+      message: "Address updated successfully" 
+  });
 });
 
+// AJAX: Delete Address
+export const deleteAddress = asyncHandler(async (req, res) => {
+  const { addressId } = req.params;
+  const userId = req.user.userId;
+
+  const deletedAddress = await Address.findOneAndUpdate(
+      { _id: addressId, userId: userId },
+      { $set: { isDeleted: true } },
+      { new: true }
+  );
+
+  if (!deletedAddress) {
+      return res.status(404).json({ success: false, message: "Address not found" });
+  }
+
+  return res.status(200).json({ 
+      success: true, 
+      message: "Address deleted successfully" 
+  });
+});

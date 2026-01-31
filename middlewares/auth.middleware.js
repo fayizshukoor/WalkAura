@@ -1,4 +1,6 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.model.js";
+import { generateAccessToken } from "../utils/userTokens.utils.js";
 
 export const authenticateUser = (req,res,next)=>{
 
@@ -72,6 +74,7 @@ export const silentRefresh = async (req, res, next) => {
   } catch (error) {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
+    console.log("Error in silent refresh:",error);
   }
   next();
 };

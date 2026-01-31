@@ -41,6 +41,7 @@ export const showProducts = asyncHandler(async (req, res) => {
   const variantIds = variants.map((v) => v._id);
   const inventories = await Inventory.find({
     variant: { $in: variantIds },
+    isActive: true
   }).lean();
 
   const stockMap = inventories.reduce((acc, item) => {
@@ -115,6 +116,7 @@ export const getProductsAjax = asyncHandler(async (req, res) => {
   const variantIds = variants.map((v) => v._id);
   const inventories = await Inventory.find({
     variant: { $in: variantIds },
+    isActive: true
   }).lean();
 
   const stockMap = inventories.reduce((acc, item) => {
