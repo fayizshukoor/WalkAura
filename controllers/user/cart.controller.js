@@ -8,7 +8,8 @@ import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Wishlist from "../../models/Wishlist.model.js";
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
 
-const MAX_QUANTITY_PER_ITEM = 10;
+const MAX_QUANTITY_PER_ITEM = 3;
+const MAX_CART_QUANTITY = 10;
 
 // Add to cart
 export const addToCart = asyncHandler(async (req, res) => {
@@ -123,6 +124,15 @@ export const addToCart = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json({ message: `Only ${inventory.stock} items available in stock` });
+    }
+
+    const currentTotal = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const newTotal = currentTotal - cart.items[existingItemIndex].quantity + newQuantity;
+
+    if (newTotal > MAX_CART_QUANTITY) {
+      return res.status(400).json({
+        message: `Cart limit exceeded. Maximum ${MAX_CART_QUANTITY} items allowed in cart`,
+      });
     }
 
     cart.items[existingItemIndex].quantity = newQuantity;
@@ -345,6 +355,15 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
     if (newQuantity > inventory.stock) {
       return res.status(400).json({
         message: `Only ${inventory.stock} items available in stock`,
+      });
+    }
+
+    const currentTotal = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const newTotal = currentTotal - cart.items[itemIndex].quantity + newQuantity;
+
+    if (newTotal > MAX_CART_QUANTITY) {
+      return res.status(400).json({
+        message: `Cart limit exceeded. Maximum ${MAX_CART_QUANTITY} items allowed in cart`,
       });
     }
 

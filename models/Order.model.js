@@ -94,8 +94,8 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ["Placed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+      default: "Placed",
     },
     pricing: {
       subtotal: { type: Number, required: true },

@@ -66,6 +66,29 @@
                                     </div>
                                 </div>
                             <% }) %>
+                    
+                            <div class="flex justify-center items-center gap-2 mt-10">
+                                <% if (currentPage > 1) { %>
+                                    <a href="?page=<%= currentPage - 1 %>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-[#111] border border-gray-800 text-gray-400 hover:border-[#5c56f6] hover:text-white transition-all">
+                                        <span class="material-symbols-outlined">chevron_left</span>
+                                    </a>
+                                <% } %>
+                    
+                                <% for(let i = 1; i <= totalPages; i++) { %>
+                                    <a href="?page=<%= i %>" 
+                                       class="w-10 h-10 flex items-center justify-center rounded-lg border transition-all font-bold text-sm
+                                       <%= i === currentPage ? 'bg-[#5c56f6] border-[#5c56f6] text-white' : 'bg-[#111] border-gray-800 text-gray-400 hover:border-gray-600' %>">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
+                    
+                                <% if (currentPage < totalPages) { %>
+                                    <a href="?page=<%= currentPage + 1 %>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-[#111] border border-gray-800 text-gray-400 hover:border-[#5c56f6] hover:text-white transition-all">
+                                        <span class="material-symbols-outlined">chevron_right</span>
+                                    </a>
+                                <% } %>
+                            </div>
+                    
                         <% } else { %>
                             <div id="no-addresses" class="flex flex-col items-center justify-center py-20 border border-dashed border-gray-800 rounded-2xl bg-[#080808]">
                                 <span class="material-symbols-outlined text-gray-700 text-6xl mb-4">location_off</span>
@@ -73,6 +96,7 @@
                             </div>
                         <% } %>
                     </div>
+
                 </div>
             </main>
         </div>

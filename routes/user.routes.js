@@ -19,8 +19,9 @@ import { getProductDetails, getProducts } from "../controllers/user/shop.control
 
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
-import { getCheckoutPage, getOrderSuccess, placeOrder } from "../controllers/user/checkout.controller.js";
+import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
 
+import { getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -112,14 +113,18 @@ router.get("/shop",getProducts);
 router.get("/product/:slug", getProductDetails);
 
 // Cart
-
 router.get("/cart",requireAuth,getCart);
 router.post("/cart/add",addToCart);
 router.patch("/cart/update-quantity",updateCartItemQuantity);
 router.delete("/cart/remove/:inventoryId",removeCartItem);
 router.delete("/cart/clear",clearCart);
 
+// Checkout
 router.get("/checkout",getCheckoutPage);
 router.post("/place-order",placeOrder);
-router.get("/success/:orderId",getOrderSuccess);
+
+// Order 
+router.get("/order-success/:orderId",getOrderSuccess);
+router.get("/orders/:orderId",getOrderDetails);
+router.get("/orders",getUserOrders);
 export default router;

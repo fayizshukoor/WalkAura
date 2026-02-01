@@ -505,7 +505,7 @@
                 
                 // Usually, you'd redirect after a short delay:
                 setTimeout(() => {
-                    window.location.href = `/success/${result.order.orderId}`;
+                    window.location.href = `/order-success/${result.order.orderId}`;
                 }, 2000);
             } else {
                 // Error from backend (e.g., out of stock, invalid address)

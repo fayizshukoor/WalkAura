@@ -153,7 +153,7 @@ export const getCheckoutPage = asyncHandler(async (req,res)=>{
 
     const subtotal = validatedItems.reduce((sum, item) => sum + item.itemTotal, 0);
     const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);; 
-    const shippingCharge = 50; 
+    const shippingCharge = 0; 
     const discount = 0; 
     const totalAmount = subtotal + tax + shippingCharge - discount;
 
@@ -274,7 +274,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
         if (item.inventory.stock < item.quantity) {
           return res.status(400).json({
             success: false,
-            message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available`,
+            message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available on ${item.variant.color} color of size ${item.inventory.size}`,
           });
         }
   
@@ -334,7 +334,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
         },
         paymentMethod,
         paymentStatus: "Pending",
-        orderStatus: "Pending",
+        orderStatus: "Placed",
         pricing: {
           subtotal,
           tax,
@@ -373,77 +373,3 @@ export const placeOrder = asyncHandler(async (req, res) => {
   });
 
 
-  export const getOrderSuccess = async (req, res) => {
-
-    const { orderId } = req.params;
-      const userId = req.user.userId;
-  
-      const order = await Order.findOne({
-        orderId,
-        user: userId,
-      }).select("orderId pricing createdAt orderStatus items");
-  
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: "Order not found",
-        });
-      }
-  
-      // Structure the response with everything needed for the success page
-    const orderData = {
-      // Basic order info
-      orderId: order.orderId,
-      orderStatus: order.orderStatus,
-      orderDate: order.createdAt,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
-
-      // All items with full details (already snapshotted, no populate needed)
-      items: order.items.map((item) => ({
-        _id: item._id,
-        productName: item.productName,
-        image: item.image,
-        color: item.color,
-        size: item.size,
-        sku: item.sku,
-        quantity: item.quantity,
-        price: item.price,
-        itemTotal: item.itemTotal,
-        status: item.status,
-      })),
-
-      // Shipping address
-      shippingAddress: {
-        fullName: order.shippingAddress.fullName,
-        phone: order.shippingAddress.phone,
-        streetAddress: order.shippingAddress.streetAddress,
-        city: order.shippingAddress.city,
-        state: order.shippingAddress.state,
-        pincode: order.shippingAddress.pincode,
-        country: order.shippingAddress.country,
-      },
-
-      // Pricing breakdown
-      pricing: {
-        subtotal: order.pricing.subtotal,
-        tax: order.pricing.tax,
-        taxPercentage: order.pricing.taxPercentage,
-        shippingCharge: order.pricing.shippingCharge,
-        discount: order.pricing.discount,
-        totalAmount: order.pricing.totalAmount,
-      },
-    };
-
-
-      res.render("user/order-confirmation",{
-        success: true,
-        order:orderData
-      });
-   
-  };
-
-
-export const getOrderDetails = async (req,res)=>{
-    res.render("user/order-confirmation");
-}

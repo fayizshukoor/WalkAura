@@ -2,331 +2,336 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-10 w-full mx-auto max-w-[1800px]">
-    
-    <%- include('../partials/alerts') %>
 
-    <div class="mb-10 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
+  <%- include('../partials/alerts') %>
 
-        <div>
-        
-        <h1 class="text-3xl md:text-5xl font-black tracking-tighter mb-4 mt-10 text-white uppercase">Your Cart</h1>
-        
-        <div class="flex items-center gap-3">
-        
+  <div class="mb-10 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
+
+    <div>
+
+      <h1 class="text-3xl md:text-5xl font-black tracking-tighter mb-4 mt-10 text-white uppercase">Your Cart</h1>
+
+      <div class="flex items-center gap-3">
+
         <p class="text-gray-400 text-[11px] font-bold uppercase tracking-[0.2em]">
-        
-        Selection: <span class="text-white ml-2"><%= cart ? cart.totalItems : 0 %> items</span>
-        
-        </p>
-        
-        </div>
-        
-        </div>
-        
-        
-        
-        <% if (cart && cart.items.length > 0) { %>
-        
-        <button onclick="clearCart()" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95">
-        
-        <span class="material-icons-outlined text-lg">delete_sweep</span>
-        
-        Empty Cart
-        
-        </button>
-        
-        <% } %>
-        
-        </div>
 
-    
+          Selection: <span class="text-white ml-2"><%= cart ? cart.totalItems : 0 %> items</span>
+
+        </p>
+
+      </div>
+
+    </div>
+
+
 
     <% if (cart && cart.items.length > 0) { %>
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
 
-        
-        
-        <div class="xl:col-span-9 space-y-6">
-            <% cart.items.forEach(item => { %>
-                <div class="bg-[#0f111a] rounded-[2rem] p-6 flex flex-col sm:flex-row items-center gap-8 border <%= item.inventory.stock === 0 ? 'border-red-500/20' : 'border-white/5' %> hover:border-white/10 transition-all group relative">
-                    
-                    <% if (item.inventory.stock === 0) { %>
-                        <div class="absolute top-6 right-6 z-10">
-                            <span class="bg-red-500 text-white text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.15em] shadow-lg shadow-red-500/20">Out of Stock</span>
-                        </div>
-                    <% } %>
+    <button onclick="clearCart()" class="flex items-center gap-2 px-6 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-widest active:scale-95">
 
-                    <div class="w-32 h-32 sm:w-40 sm:h-40 bg-[#161925] rounded-3xl overflow-hidden flex-shrink-0 flex items-center justify-center p-6 border border-white/5 shadow-inner">
-                        <img src="<%= item.variant.images[0].url %>" alt="<%= item.product.name %>" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 <%= item.inventory.stock === 0 ? 'grayscale opacity-40' : '' %>">
-                    </div>
+      <span class="material-icons-outlined text-lg">delete_sweep</span>
 
-                    <div class="flex-1 w-full flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div class="text-center sm:text-left">
-                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-primary transition-colors uppercase">
-                                <%= item.product.name %>
-                            </h3>
-                            
-                            <div class="flex flex-wrap justify-center sm:justify-start gap-3 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-6">
-                                <span class="bg-white/5 px-3 py-1.5 rounded-lg text-gray-300 border border-white/5">SIZE: UK <%= item.inventory.size %></span>
-                                <span class="bg-white/5 px-3 py-1.5 rounded-lg text-gray-300 border border-white/5">COLOR: <%= item.variant.color %></span>
-                            </div>
-                            
-                            <div class="flex justify-center sm:justify-start">
-                                <div class="flex items-center bg-black/40 rounded-xl border border-white/10 p-1 group/qty shadow-inner h-12">
-                                    <button onclick="updateQuantity('<%= item.inventory._id %>', -1)" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-all hover:bg-white/5 rounded-lg active:scale-90">
-                                        <span class="material-icons-outlined text-xl">remove</span>
-                                    </button>
-                                    
-                                    <input type="number" id="qty-<%= item.inventory._id %>" value="<%= item.quantity %>" readonly class="bg-transparent w-14 text-center font-black text-lg border-none focus:ring-0 text-white p-0">
-                                    
-                                    <button onclick="updateQuantity('<%= item.inventory._id %>', 1)" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-all hover:bg-white/5 rounded-lg active:scale-90" >
-                                        <span class="material-icons-outlined text-xl">add</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <% if (item.inventory.stock > 0 && item.inventory.stock < 5) { %>
-                                <p class="text-orange-500 text-[10px] font-black mt-4 uppercase tracking-[0.1em] animate-pulse">Low Stock: Only <%= item.inventory.stock %> left</p>
-                            <% } %>
-                        </div>
+      Empty Cart
 
-                        <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-6">
-                            <div class="text-right lg:mt-10">
-                                <span class="text-3xl font-black text-white tracking-tighter block mb-2">₹<%= (item.priceAtAdd * item.quantity).toLocaleString() %></span>
-                                <% if(item.priceChanged) { %>
-                                    <span class="text-[9px] text-orange-400 font-black uppercase tracking-widest border border-orange-400/30 px-2 py-0.5 rounded">Price Updated</span>
-                                <% } %>
-                            </div>
-                            <button onclick="removeItem('<%= item.inventory._id %>')" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-red-500/5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 transition-all active:scale-90">
-                                <span class="material-icons-outlined text-2xl">delete</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
+    </button>
 
-        <div class="xl:col-span-3 lg:sticky lg:top-24">
-            <div class="bg-[#0f111a] rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden w-[calc(100%-2px)] mx-auto">
-                <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full -mr-12 -mt-12"></div>
-                <h2 class="text-lg font-black mb-8 tracking-widest text-white border-b border-white/5 pb-5 uppercase">Summary</h2>
-                <div class="space-y-5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Subtotal</span>
-                        <span class="text-white font-extrabold text-base">₹<%= cart.totalAmount.toLocaleString() %></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Items</span>
-                        <span class="text-white font-extrabold text-base"><%= cart.totalItems %></span>
-                    </div>
-                    <div class="flex justify-between items-end pt-8 border-t border-white/10 mt-2">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total</span>
-                        <div class="text-right">
-                            <span class="block text-3xl font-black text-primary tracking-tighter">₹<%= cart.totalAmount.toLocaleString() %></span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="proceedToCheckout()" class="mt-10 group w-full bg-primary hover:bg-indigo-600 text-white font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest shadow-xl shadow-primary/20">
-                    <span>Checkout</span>
-                    <span class="material-icons-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    <% } else { %>
-        <div class="flex flex-col items-center justify-center py-32 text-center">
-            <div class="w-56 h-56 bg-white/5 rounded-full flex items-center justify-center mb-10 border border-white/5 relative">
-                <div class="absolute inset-0 bg-primary/5 blur-2xl rounded-full"></div>
-                <span class="material-icons-outlined text-8xl text-gray-800 relative z-10">remove_shopping_cart</span>
-            </div>
-            <h2 class="text-3xl font-black text-white mb-4 uppercase tracking-[0.2em]">Your Cart is Empty</h2>
-            <a href="/shop" class="group flex items-center gap-3 bg-primary text-black font-black px-12 py-5 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all uppercase tracking-widest text-xs">
-                <span>Browse Shop</span>
-                <span class="material-icons-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </a>
-        </div>
     <% } %>
+
+  </div>
+
+
+
+  <% if (cart && cart.items.length > 0) { %>
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+
+
+
+    <div class="xl:col-span-9 space-y-6">
+      <% cart.items.forEach(item => { %>
+      <div class="bg-[#0f111a] rounded-[2rem] p-6 flex flex-col sm:flex-row items-center gap-8 border <%= item.inventory.stock === 0 ? 'border-red-500/20' : 'border-white/5' %> hover:border-white/10 transition-all group relative">
+
+        <% if (item.inventory.stock === 0) { %>
+        <div class="absolute top-6 right-6 z-10">
+          <span class="bg-red-500 text-white text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.15em] shadow-lg shadow-red-500/20">Out of Stock</span>
+        </div>
+        <% } %>
+
+        <div class="w-32 h-32 sm:w-40 sm:h-40 bg-[#161925] rounded-3xl overflow-hidden flex-shrink-0 flex items-center justify-center p-6 border border-white/5 shadow-inner">
+          <img src="<%= item.variant.images[0].url %>" alt="<%= item.product.name %>" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 <%= item.inventory.stock === 0 ? 'grayscale opacity-40' : '' %>">
+        </div>
+
+        <div class="flex-1 w-full flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="text-center sm:text-left">
+            <h3 class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-primary transition-colors uppercase">
+              <%= item.product.name %>
+            </h3>
+
+            <div class="flex flex-wrap justify-center sm:justify-start gap-3 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-6">
+              <span class="bg-white/5 px-3 py-1.5 rounded-lg text-gray-300 border border-white/5">SIZE: UK <%= item.inventory.size %></span>
+              <span class="bg-white/5 px-3 py-1.5 rounded-lg text-gray-300 border border-white/5">COLOR: <%= item.variant.color %></span>
+            </div>
+
+            <div class="flex justify-center sm:justify-start">
+              <div class="flex items-center bg-black/40 rounded-xl border border-white/10 p-1 group/qty shadow-inner h-12">
+                <button onclick="updateQuantity('<%= item.inventory._id %>', -1)" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-all hover:bg-white/5 rounded-lg active:scale-90">
+                  <span class="material-icons-outlined text-xl">remove</span>
+                </button>
+
+                <input type="number" id="qty-<%= item.inventory._id %>" value="<%= item.quantity %>" readonly class="bg-transparent w-14 text-center font-black text-lg border-none focus:ring-0 text-white p-0">
+
+                <button onclick="updateQuantity('<%= item.inventory._id %>', 1)" class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-white transition-all hover:bg-white/5 rounded-lg active:scale-90">
+                  <span class="material-icons-outlined text-xl">add</span>
+                </button>
+              </div>
+            </div>
+            <% if (item.inventory.stock > 0 && item.inventory.stock < 5) { %>
+            <p class="text-orange-500 text-[10px] font-black mt-4 uppercase tracking-[0.1em] animate-pulse">Low Stock: Only <%= item.inventory.stock %> left</p>
+            <% } %>
+          </div>
+
+          <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-6">
+            <div class="text-right lg:mt-10">
+              <span class="text-3xl font-black text-white tracking-tighter block mb-2">₹<%= (item.priceAtAdd * item.quantity).toLocaleString() %></span>
+              <% if(item.priceChanged) { %>
+              <span class="text-[9px] text-orange-400 font-black uppercase tracking-widest border border-orange-400/30 px-2 py-0.5 rounded">Price Updated</span>
+              <% } %>
+            </div>
+            <button onclick="removeItem('<%= item.inventory._id %>')" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-red-500/5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 transition-all active:scale-90">
+              <span class="material-icons-outlined text-2xl">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+    <div class="xl:col-span-3 lg:sticky lg:top-24">
+      <div class="bg-[#0f111a] rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden w-[calc(100%-2px)] mx-auto">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full -mr-12 -mt-12"></div>
+        <h2 class="text-lg font-black mb-8 tracking-widest text-white border-b border-white/5 pb-5 uppercase">Summary</h2>
+        <div class="space-y-5">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Subtotal</span>
+            <span class="text-white font-extrabold text-base">₹<%= cart.totalAmount.toLocaleString() %></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Items</span>
+            <span class="text-white font-extrabold text-base"><%= cart.totalItems %></span>
+          </div>
+          <div class="flex justify-between items-end pt-8 border-t border-white/10 mt-2">
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total</span>
+            <div class="text-right">
+              <span class="block text-3xl font-black text-primary tracking-tighter">₹<%= cart.totalAmount.toLocaleString() %></span>
+            </div>
+          </div>
+        </div>
+        <button onclick="proceedToCheckout()" class="mt-10 group w-full bg-primary hover:bg-indigo-600 text-white font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest shadow-xl shadow-primary/20">
+          <span>Checkout</span>
+          <span class="material-icons-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <% } else { %>
+  <div class="flex flex-col items-center justify-center py-32 text-center">
+    <div class="w-56 h-56 bg-white/5 rounded-full flex items-center justify-center mb-10 border border-white/5 relative">
+      <div class="absolute inset-0 bg-primary/5 blur-2xl rounded-full"></div>
+      <span class="material-icons-outlined text-8xl text-gray-800 relative z-10">remove_shopping_cart</span>
+    </div>
+    <h2 class="text-3xl font-black text-white mb-4 uppercase tracking-[0.2em]">Your Cart is Empty</h2>
+    <a href="/shop" class="group flex items-center gap-3 bg-primary text-black font-black px-12 py-5 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all uppercase tracking-widest text-xs">
+      <span>Browse Shop</span>
+      <span class="material-icons-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+    </a>
+  </div>
+  <% } %>
 </main>
 
 <script>
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `fixed top-24 right-8 flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 transform translate-x-full opacity-0 z-[100] shadow-2xl backdrop-blur-md`;
-        
-        const bgColor = type === 'success' ? 'bg-[#0f111a]/90' : 'bg-[#1a0f0f]/90';
-        const borderColor = type === 'success' ? 'border-green-500/50' : 'border-red-500/50';
-        const icon = type === 'success' ? 'check_circle' : 'error_outline';
-        const iconColor = type === 'success' ? 'text-green-500' : 'text-red-500';
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed top-24 right-8 flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 transform translate-x-full opacity-0 z-[100] shadow-2xl backdrop-blur-md`;
 
-        toast.classList.add(bgColor, borderColor, 'text-white');
-        toast.innerHTML = `
+    const bgColor = type === 'success' ? 'bg-[#0f111a]/90' : 'bg-[#1a0f0f]/90';
+    const borderColor = type === 'success' ? 'border-green-500/50' : 'border-red-500/50';
+    const icon = type === 'success' ? 'check_circle' : 'error_outline';
+    const iconColor = type === 'success' ? 'text-green-500' : 'text-red-500';
+
+    toast.classList.add(bgColor, borderColor, 'text-white');
+    toast.innerHTML = `
             <div class="flex items-center justify-center w-8 h-8 rounded-full ${type === 'success' ? 'bg-green-500/10' : 'bg-red-500/10'}">
                 <span class="material-icons-outlined ${iconColor} text-lg">${icon}</span>
             </div>
             <span class="text-sm font-bold tracking-wide">${message}</span>
         `;
 
-        document.body.appendChild(toast);
-        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 100);
-        setTimeout(() => {
-            toast.classList.add('translate-x-full', 'opacity-0');
-            setTimeout(() => toast.remove(), 500);
-        }, 3000);
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 100);
+    setTimeout(() => {
+      toast.classList.add('translate-x-full', 'opacity-0');
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+
+  async function updateQuantity(inventoryId, change) {
+    const input = document.getElementById(`qty-${inventoryId}`);
+    const currentQty = parseInt(input.value);
+
+    // Determine action string for backend
+    const action = change > 0 ? "increment" : "decrement";
+
+    if (action === "decrement" && currentQty <= 1) {
+      showToast("Minimum quantity reached", "error");
+      return;
     }
 
-    async function updateQuantity(inventoryId, change) {
-        const input = document.getElementById(`qty-${inventoryId}`);
-        const currentQty = parseInt(input.value);
-        
-        // Determine action string for backend
-        const action = change > 0 ? "increment" : "decrement";
+    try {
+      const response = await fetch('/cart/update-quantity', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        // Passing action and inventoryId in the body
+        body: JSON.stringify({
+          inventoryId,
+          action
+        })
+      });
 
-        if (action === "decrement" && currentQty <= 1) {
-            showToast("Minimum quantity reached", "error");
-            return;
-        }
+      const result = await response.json();
 
-        try {
-            const response = await fetch('/cart/update-quantity', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                // Passing action and inventoryId in the body
-                body: JSON.stringify({ inventoryId, action })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-               window.location.reload()
-            } else {
-                showToast(result.message || "Stock limit reached", "error");
-            }
-        } catch (error) {
-            showToast("Network error occurred", "error");
-        }
+      if (response.ok) {
+        window.location.reload()
+      } else {
+        showToast(result.message || "Stock limit reached", "error");
+      }
+    } catch (error) {
+      showToast("Network error occurred", "error");
     }
+  }
 
-    async function removeItem(inventoryId) {
+  async function removeItem(inventoryId) {
     // Premium SWAL Confirmation
     const result = await Swal.fire({
-        title: 'REMOVE ITEM?',
-        text: "Are you sure you want to drop this from your Cart?",
-        icon: 'warning',
-        showCancelButton: true,
-        background: '#0f111a',
-        color: '#ffffff',
-        confirmButtonColor: '#4f46e5', // Your primary color
-        cancelButtonColor: '#161925',
-        confirmButtonText: 'YES, REMOVE',
-        cancelButtonText: 'KEEP IT'
+      title: 'REMOVE ITEM?',
+      text: "Are you sure you want to drop this from your Cart?",
+      icon: 'warning',
+      showCancelButton: true,
+      background: '#0f111a',
+      color: '#ffffff',
+      confirmButtonColor: '#4f46e5', // Your primary color
+      cancelButtonColor: '#161925',
+      confirmButtonText: 'YES, REMOVE',
+      cancelButtonText: 'KEEP IT'
     });
 
     // If user confirmed
     if (result.isConfirmed) {
-        try {
-            const response = await fetch(`/cart/remove/${inventoryId}`, { 
-                method: 'DELETE',
-            });
-
-            const result = await response.json();
-            
-            if (response.ok) {
-                // Show success toast using your existing custom toast
-                showToast("Item removed from Cart", "success");
-                
-                // Slight delay before reload for the user to see the toast
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                showToast(`${result.message}`, "error");
-            }
-        } catch (error) {
-            showToast("Network error occurred", "error");
-        }
-    }
-}
-
-async function clearCart() {
-    const result = await Swal.fire({
-        title: 'EMPTY CART?',
-        text: 'This will remove all items from your selection. Continue?',
-        icon: 'warning',
-        showCancelButton: true,
-        background: '#0f111a',
-        color: '#ffffff',
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#161925',
-        confirmButtonText: 'YES, CLEAR ALL',
-        cancelButtonText: 'CANCEL'
-    });
-
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch('/cart/clear', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                showToast(`${result.message}`, 'success');
-                setTimeout(() => window.location.reload(), 800);
-            } else {
-                showToast(`${result.message}`, 'error');
-            }
-
-        } catch (error) {
-            showToast('Network error occurred', 'error');
-        }
-    }
-}
-
-
-async function proceedToCheckout() {
-    try {
-        // We fetch the checkout page via AJAX first to check for validation errors
-        const response = await fetch('/checkout', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Optional: to identify AJAX request
-            }
+      try {
+        const response = await fetch(`/cart/remove/${inventoryId}`, {
+          method: 'DELETE',
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            // If everything is fine, redirect to the checkout page
-            window.location.href = '/checkout';
-        } else if (response.status === 400) {
-            // Handle the specific "Invalid Items" or "Stock Issues" from your controller
-            let errorMessage = `<div class="text-left mt-4 space-y-2">`;
-            
-            result.invalidItems.forEach(item => {
-                errorMessage += `
+          // Show success toast using your existing custom toast
+          showToast("Item removed from Cart", "success");
+
+          // Slight delay before reload for the user to see the toast
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast(`${result.message}`, "error");
+        }
+      } catch (error) {
+        showToast("Network error occurred", "error");
+      }
+    }
+  }
+
+  async function clearCart() {
+    const result = await Swal.fire({
+      title: 'EMPTY CART?',
+      text: 'This will remove all items from your selection. Continue?',
+      icon: 'warning',
+      showCancelButton: true,
+      background: '#0f111a',
+      color: '#ffffff',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#161925',
+      confirmButtonText: 'YES, CLEAR ALL',
+      cancelButtonText: 'CANCEL'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch('/cart/clear', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast(`${result.message}`, 'success');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast(`${result.message}`, 'error');
+        }
+
+      } catch (error) {
+        showToast('Network error occurred', 'error');
+      }
+    }
+  }
+
+
+  async function proceedToCheckout() {
+    try {
+      // We fetch the checkout page via AJAX first to check for validation errors
+      const response = await fetch('/checkout', {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest' // Optional: to identify AJAX request
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // If everything is fine, redirect to the checkout page
+        window.location.href = '/checkout';
+      } else if (response.status === 400) {
+        // Handle the specific "Invalid Items" or "Stock Issues" from your controller
+        let errorMessage = `<div class="text-left mt-4 space-y-2">`;
+
+        result.invalidItems.forEach(item => {
+          errorMessage += `
                     <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                         <p class="text-red-500 font-bold text-xs uppercase">${item.name}</p>
                         <p class="text-gray-400 text-[10px]">${item.reason}</p>
                     </div>`;
-            });
-            errorMessage += `</div>`;
+        });
+        errorMessage += `</div>`;
 
-            Swal.fire({
-                title: 'ACTION REQUIRED',
-                html: `<p class="text-sm text-gray-300">${result.message}</p>${errorMessage}`,
-                icon: 'error',
-                background: '#0f111a',
-                color: '#ffffff',
-                confirmButtonColor: '#4f46e5',
-                confirmButtonText: 'UPDATE CART'
-            });
-        } else if (response.status === 404) {
-            showToast("Your cart is empty", "error");
-        }
+        Swal.fire({
+          title: 'ACTION REQUIRED',
+          html: `<p class="text-sm text-gray-300">${result.message}</p>${errorMessage}`,
+          icon: 'error',
+          background: '#0f111a',
+          color: '#ffffff',
+          confirmButtonColor: '#4f46e5',
+          confirmButtonText: 'UPDATE CART'
+        });
+      } else if (response.status === 404) {
+        showToast("Your cart is empty", "error");
+      }
     } catch (error) {
-        // If the response is HTML (which happens when everything is OK), 
-        // the JSON parsing fails, so we just redirect.
-        window.location.href = '/checkout';
+      // If the response is HTML (which happens when everything is OK), 
+      // the JSON parsing fails, so we just redirect.
+      window.location.href = '/checkout';
     }
-}
+  }
 </script>
