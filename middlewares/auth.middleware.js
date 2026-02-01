@@ -1,4 +1,6 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.model.js";
+import { generateAccessToken } from "../utils/userTokens.utils.js";
 
 export const authenticateUser = (req,res,next)=>{
 
@@ -24,7 +26,6 @@ export const authenticateUser = (req,res,next)=>{
 
 export const requireAuth = (req,res,next)=>{
     if(req.user){
-        console.log(req.user);
         return next();
     }else{
         return res.redirect("/login");
