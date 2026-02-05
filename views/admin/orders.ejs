@@ -1,0 +1,141 @@
+<main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
+    <div class="max-w-[1250px] mx-auto space-y-8">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter uppercase text-white">Order Management</h1>
+                <p class="text-gray-500 font-bold text-sm tracking-widest uppercase mt-1">
+                    Total Volume: <span class="text-primary"><%= pagination.totalOrders %> Orders</span>
+                </p>
+            </div>
+        </div>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] p-6 shadow-xl">
+            <form action="/admin/orders" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2 relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">search</span>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        placeholder="Search by Order ID..." 
+                        value="<%= filters.search %>"
+                        class="w-full bg-black border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none"
+                    >
+                </div>
+
+                <select name="status" onchange="this.form.submit()" class="bg-black border border-white/10 rounded-xl py-3 px-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none cursor-pointer">
+                    <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Status</option>
+                    <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="Out for Delivery" <%= filters.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                    <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                </select>
+
+                <select name="sort" onchange="this.form.submit()" class="bg-black border border-white/10 rounded-xl py-3 px-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none cursor-pointer">
+                    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                    <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                    <option value="amount_high" <%= filters.sort === 'amount_high' ? 'selected' : '' %>>Price: High</option>
+                    <option value="amount_low" <%= filters.sort === 'amount_low' ? 'selected' : '' %>>Price: Low</option>
+                </select>
+
+                <% if (filters.search || filters.status !== 'all' || filters.sort !== 'newest') { %>
+                    <a href="/admin/orders" class="md:col-span-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors">
+                        [ Clear All Filters ]
+                    </a>
+                <% } %>
+            </form>
+        </section>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-white/5 bg-white/[0.02]">
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Order Info</th>
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Customer</th>
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Amount</th>
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Status</th>
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        <% if (orders.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="px-8 py-20 text-center">
+                                    <span class="material-symbols-outlined text-4xl text-white/10 mb-2">inbox</span>
+                                    <p class="text-gray-500 font-black uppercase tracking-widest text-xs">No orders found</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% orders.forEach(order => { %>
+                                <tr class="group hover:bg-white/[0.02] transition-all">
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-white font-black tracking-tight text-sm">#<%= order.orderId %></span>
+                                            <span class="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                                                <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-white font-bold text-xs"><%= order.user.name %></span>
+                                            <span class="text-[9px] text-gray-500 font-medium truncate max-w-[150px]"><%= order.user.email %></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-white font-black text-sm tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
+                                            <span class="text-[9px] text-primary font-black uppercase tracking-widest"><%= order.items.length %> Items</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <% 
+                                            let statusColor = "text-yellow-500 bg-yellow-500/10";
+                                            if (order.orderStatus === 'Delivered') statusColor = "text-green-500 bg-green-500/10";
+                                            if (order.orderStatus === 'Cancelled') statusColor = "text-red-500 bg-red-500/10";
+                                            if (order.orderStatus === 'Shipped') statusColor = "text-primary bg-primary/10";
+                                        %>
+                                        <span class="<%= statusColor %> px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-current/20">
+                                            <%= order.orderStatus %>
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <a href="/admin/orders/<%= order.orderId %>" class="inline-flex items-center gap-2 bg-white/5 hover:bg-primary text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
+                                            View Details
+                                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <% if (pagination.totalPages > 1) { %>
+            <div class="flex items-center justify-between pt-4">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    Page <%= pagination.currentPage %> of <%= pagination.totalPages %>
+                </p>
+                <div class="flex gap-2">
+                    <% if (pagination.currentPage > 1) { %>
+                        <a href="?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                           class="px-6 py-3 bg-[#12141a] border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all">
+                            Prev
+                        </a>
+                    <% } %>
+                    <% if (pagination.currentPage < pagination.totalPages) { %>
+                        <a href="?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                           class="px-6 py-3 bg-[#12141a] border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all">
+                            Next
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+
+    </div>
+</main>

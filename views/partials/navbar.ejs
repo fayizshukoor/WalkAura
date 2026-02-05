@@ -18,7 +18,11 @@
 
     <a href="/cart" class="hidden md:block relative text-gray-400 hover:text-white transition">
       <span class="material-symbols-outlined">shopping_cart</span>
-      <span id="cartCount" class="absolute -top-1 -right-1 hidden w-4 h-4 bg-red-600 text-[10px] font-bold rounded-full flex items-center justify-center text-white">0</span>
+      <% const count = (locals.cart && cart.totalItems > 0) ? cart.totalItems : 0; %>
+      <span id="cartCount" 
+      class="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-[10px] font-bold rounded-full flex items-center justify-center text-white <%= cartCount > 0 ? '' : 'hidden' %>">
+      <%= cartCount %>
+      </span>
     </a>
     
     <% const user = locals.user || null; %>
@@ -95,5 +99,27 @@
           !e.target.closest("#profileMenu")) {
         profile.classList.add("hidden");
       }
+    });
+
+    window.addEventListener('cartUpdated', (e) => {
+        const count = e.detail.count;
+        const badge = document.getElementById('cartCount'); // Match your HTML ID
+        
+        if (badge) {
+            badge.innerText = count;
+            
+            // Toggle visibility based on count
+            if (count > 0) {
+                badge.classList.remove('hidden');
+                // Optional: Add a little pop effect
+                badge.animate([
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.3)' },
+                    { transform: 'scale(1)' }
+                ], { duration: 200 });
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
     });
   </script>

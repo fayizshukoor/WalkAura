@@ -5,6 +5,27 @@
 
   <%- include('../partials/alerts') %>
 
+  <% if (typeof changes !== "undefined" && changes.length > 0) { %>
+    <div class="mb-8 p-5 rounded-2xl border border-orange-500/30 bg-orange-500/10">
+      <h3 class="text-orange-400 font-black uppercase text-sm mb-3 tracking-widest">
+        Cart Updated
+      </h3>
+  
+      <div class="space-y-3">
+        <% changes.forEach(change => { %>
+          <div class="p-3 bg-black/40 rounded-lg border border-white/5">
+            <p class="text-white text-sm font-bold">
+              <%= change.productName %>
+            </p>
+            <p class="text-gray-300 text-xs mt-1">
+              <%= change.reason %>
+            </p>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
   <div class="mb-10 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6">
 
     <div>
@@ -63,7 +84,7 @@
         <div class="flex-1 w-full flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div class="text-center sm:text-left">
             <h3 class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-primary transition-colors uppercase">
-              <%= item.product.name %>
+              <%= item.product.name %> - ₹<%= item.priceAtAdd.toLocaleString() %>
             </h3>
 
             <div class="flex flex-wrap justify-center sm:justify-start gap-3 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-6">
@@ -84,14 +105,12 @@
                 </button>
               </div>
             </div>
-            <% if (item.inventory.stock > 0 && item.inventory.stock < 5) { %>
-            <p class="text-orange-500 text-[10px] font-black mt-4 uppercase tracking-[0.1em] animate-pulse">Low Stock: Only <%= item.inventory.stock %> left</p>
-            <% } %>
+
           </div>
 
           <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-6">
             <div class="text-right lg:mt-10">
-              <span class="text-3xl font-black text-white tracking-tighter block mb-2">₹<%= (item.priceAtAdd * item.quantity).toLocaleString() %></span>
+              <span id="item-total-<%= item.inventory._id %>" class="text-3xl font-black text-white tracking-tighter block mb-2">₹<%= (item.priceAtAdd * item.quantity).toLocaleString() %></span>
               <% if(item.priceChanged) { %>
               <span class="text-[9px] text-orange-400 font-black uppercase tracking-widest border border-orange-400/30 px-2 py-0.5 rounded">Price Updated</span>
               <% } %>
@@ -109,22 +128,24 @@
       <div class="bg-[#0f111a] rounded-[2.5rem] p-8 border border-white/10 shadow-2xl relative overflow-hidden w-[calc(100%-2px)] mx-auto">
         <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full -mr-12 -mt-12"></div>
         <h2 class="text-lg font-black mb-8 tracking-widest text-white border-b border-white/5 pb-5 uppercase">Summary</h2>
+
         <div class="space-y-5">
           <div class="flex justify-between items-center">
             <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Subtotal</span>
-            <span class="text-white font-extrabold text-base">₹<%= cart.totalAmount.toLocaleString() %></span>
+            <span id="summary-subtotal" class="text-white font-extrabold text-base">₹<%= cart.totalAmount.toLocaleString() %></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Items</span>
-            <span class="text-white font-extrabold text-base"><%= cart.totalItems %></span>
+            <span id="summary-items" class="text-white font-extrabold text-base"><%= cart.totalItems %></span>
           </div>
           <div class="flex justify-between items-end pt-8 border-t border-white/10 mt-2">
             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total</span>
             <div class="text-right">
-              <span class="block text-3xl font-black text-primary tracking-tighter">₹<%= cart.totalAmount.toLocaleString() %></span>
+              <span id="summary-total" class="block text-3xl font-black text-primary tracking-tighter">₹<%= cart.totalAmount.toLocaleString() %></span>
             </div>
           </div>
         </div>
+
         <button onclick="proceedToCheckout()" class="mt-10 group w-full bg-primary hover:bg-indigo-600 text-white font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-3 active:scale-[0.98] text-sm uppercase tracking-widest shadow-xl shadow-primary/20">
           <span>Checkout</span>
           <span class="material-icons-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -175,40 +196,76 @@
 
   async function updateQuantity(inventoryId, change) {
     const input = document.getElementById(`qty-${inventoryId}`);
-    const currentQty = parseInt(input.value);
+    const itemTotalDisplay = document.getElementById(`item-total-${inventoryId}`);
+    const summarySubtotal = document.getElementById('summary-subtotal');
+    const summaryTotal = document.getElementById('summary-total');
+    const summaryItems = document.getElementById('summary-items');
+    const selectionCount = document.querySelector('.text-white.ml-2'); // Top selection count
 
-    // Determine action string for backend
+    const currentQty = parseInt(input.value);
     const action = change > 0 ? "increment" : "decrement";
 
     if (action === "decrement" && currentQty <= 1) {
-      showToast("Minimum quantity reached", "error");
-      return;
+        showToast("Minimum quantity reached", "error");
+        return;
     }
 
     try {
-      const response = await fetch('/cart/update-quantity', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        // Passing action and inventoryId in the body
-        body: JSON.stringify({
-          inventoryId,
-          action
-        })
-      });
+        const response = await fetch('/cart/update-quantity', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inventoryId, action })
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (response.ok) {
-        window.location.reload()
-      } else {
-        showToast(result.message || "Stock limit reached", "error");
-      }
+        if (!response.ok && result.code === "ITEM_UNAVAILABLE") {
+          showToast(result.message || "Item no longer available", "error");
+          setTimeout(() => window.location.reload(), 800);
+          return;
+        }
+
+        if (response.ok) {
+
+          const itemCard = input.closest('.group'); 
+          const outOfStockLabel = itemCard.querySelector('.bg-red-500.text-white');
+
+        if (outOfStockLabel && result.updatedItem.quantity > 0) {
+        // If it was out of stock and we just added 1, reload to fix UI classes/filters
+          showToast("Item is back in stock!", "success");
+          setTimeout(() => window.location.reload(), 1000);
+          return; // Exit function as reload is happening
+        }
+            // 1. Update the Input Field
+            input.value = result.updatedItem.quantity;
+
+            // 2. Update the Individual Item Total Price
+            // Note: Use result values from backend to ensure sync
+            const newItemTotal = result.updatedItem.priceAtAdd * result.updatedItem.quantity;
+            itemTotalDisplay.innerText = `₹${newItemTotal.toLocaleString()}`;
+
+            // 3. Update the Summary Sidebar
+            summarySubtotal.innerText = `₹${result.cart.totalAmount.toLocaleString()}`;
+            summaryTotal.innerText = `₹${result.cart.totalAmount.toLocaleString()}`;
+            summaryItems.innerText = result.cart.totalItems;
+
+            // 4. Update the "Selection" count at the top of the page
+            if (selectionCount) {
+                selectionCount.innerText = `${result.cart.totalItems} items`;
+            }
+
+            window.dispatchEvent(new CustomEvent('cartUpdated', { 
+                detail: { count: result.newCount } 
+            }));
+
+            showToast("Quantity updated", "success");
+        } else {
+            showToast(result.message || "Stock limit reached", "error");
+        }
     } catch (error) {
-      showToast("Network error occurred", "error");
+        showToast("Network error occurred", "error");
     }
-  }
+}
 
   async function removeItem(inventoryId) {
     // Premium SWAL Confirmation
@@ -303,30 +360,51 @@
       if (response.ok) {
         // If everything is fine, redirect to the checkout page
         window.location.href = '/checkout';
-      } else if (response.status === 400) {
+        return;
+      } else if (response.status === 409) {
+        // Case: cart became empty
+        if (result.cartEmpty) {
+          await Swal.fire({
+            title: "Cart Updated",
+            text: result.message,
+            icon: "warning",
+            background: "#0f111a",
+            color: "#ffffff",
+            confirmButtonColor: "#4f46e5",
+            confirmButtonText: "VIEW CART",
+          });
+
+          window.location.href = "/cart";
+          return;
+        }
+        
         // Handle the specific "Invalid Items" or "Stock Issues" from your controller
         let errorMessage = `<div class="text-left mt-4 space-y-2">`;
 
-        result.invalidItems.forEach(item => {
+        result.changes.forEach(change => {
           errorMessage += `
                     <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p class="text-red-500 font-bold text-xs uppercase">${item.name}</p>
-                        <p class="text-gray-400 text-[10px]">${item.reason}</p>
+                        <p class="text-red-500 font-bold text-[15px] uppercase">${change.productName}</p>
+                        <p class="text-white text-[15px]">${change.reason}</p>
                     </div>`;
         });
         errorMessage += `</div>`;
 
-        Swal.fire({
-          title: 'ACTION REQUIRED',
-          html: `<p class="text-sm text-gray-300">${result.message}</p>${errorMessage}`,
+        await Swal.fire({
+          title: 'UPDATE CART',
+          html: `<p class="text-sm text-gray-300-[15px]">${result.message}</p>${errorMessage}`,
           icon: 'error',
           background: '#0f111a',
           color: '#ffffff',
           confirmButtonColor: '#4f46e5',
-          confirmButtonText: 'UPDATE CART'
+          confirmButtonText: 'REVIEW CART'
         });
+        
+        window.location.href = "/cart";
+        return;
       } else if (response.status === 404) {
         showToast("Your cart is empty", "error");
+        return;
       }
     } catch (error) {
       // If the response is HTML (which happens when everything is OK), 

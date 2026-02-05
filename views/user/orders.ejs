@@ -30,7 +30,7 @@
                     <select name="status" onchange="this.form.submit()" 
                         class="w-full bg-black border border-white/10 rounded-xl py-4 px-5 text-white text-xs font-bold uppercase tracking-widest appearance-none focus:outline-none focus:border-primary cursor-pointer hover:border-white/20 transition-all">
                         <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Statuses</option>
-                        <option value="Placed" <%= filters.status === 'Placed' ? 'selected' : '' %>>Placed</option>
+                        <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                         <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                         <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                         <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>

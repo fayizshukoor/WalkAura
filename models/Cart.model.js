@@ -23,7 +23,7 @@ const cartItemSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: true,
-      min: 1,
+      min: 0,
       default: 1,
     },
     
@@ -54,7 +54,7 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true, 
-      index: true,
+      index: true
     },
     
     items: [cartItemSchema],

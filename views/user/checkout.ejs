@@ -67,7 +67,9 @@
                       <div class="ml-4 flex-1">
                         <div class="flex items-center gap-3">
                           <p class="font-bold text-lg text-white"><%= addr.fullName %></p>
-                        
+                          <% if (addr.isDefault) { %>
+                            <span class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-md font-black uppercase border border-primary/20">Default</span>
+                          <% } %>
                         </div>
                         <p class="text-gray-300 text-sm mt-1 font-medium"><%= addr.phone %></p>
                         <p class="text-gray-400 text-sm leading-relaxed mt-2 max-w-md italic">
@@ -122,8 +124,13 @@
                         <label class="block text-[10px] font-black text-gray-300 uppercase tracking-widest ml-1">Street Address</label>
                         <input type="text" name="streetAddress" placeholder="House no, Street name..." class="w-full bg-black border-white/10 rounded-xl focus:ring-primary focus:border-primary py-3.5 px-4 text-sm text-white shadow-inner">
                     </div>
+
+                    <div class="md:col-span-2 flex items-center gap-3 py-2">
+                        <input type="checkbox" name="isDefault" id="addIsDefault" class="w-4 h-4 bg-black border-white/10 rounded text-primary focus:ring-primary focus:ring-offset-black">
+                        <label for="addIsDefault" class="text-[10px] font-black text-gray-300 uppercase tracking-widest cursor-pointer">Set as default address</label>
+                    </div>
                     
-                    <div class="md:col-span-2 flex pt-6">
+                    <div class="md:col-span-2 flex pt-4">
                         <button type="submit" class="bg-primary hover:bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-primary/40 active:scale-95">Add Address</button>
                     </div>
                 </form>
@@ -271,6 +278,11 @@
                   <input type="text" name="streetAddress" id="editStreetAddress" class="w-full bg-black border-white/10 rounded-xl py-3.5 px-4 text-sm text-white focus:ring-primary">
               </div>
 
+              <div class="md:col-span-2 flex items-center gap-3 py-2">
+                <input type="checkbox" name="isDefault" id="editIsDefault" class="w-4 h-4 bg-black border-white/10 rounded text-primary focus:ring-primary focus:ring-offset-black">
+                <label for="editIsDefault" class="text-[10px] font-black text-gray-300 uppercase tracking-widest cursor-pointer">Set as default address</label>
+              </div>
+
               <div class="md:col-span-2 flex justify-end gap-4 pt-4">
                   <button type="button" onclick="closeEditModal()" class="px-8 py-3 rounded-xl font-bold uppercase text-[10px] text-gray-400 hover:text-white transition-colors">Cancel</button>
                   <button type="submit" class="bg-primary hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all">Save Changes</button>
@@ -367,6 +379,7 @@
         document.getElementById('editStreetAddress').value = addr.streetAddress;
         document.getElementById('editCity').value = addr.city;
         document.getElementById('editState').value = addr.state;
+        document.getElementById('editIsDefault').checked = addr.isDefault || false;
         
         document.getElementById('editAddressModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -392,7 +405,8 @@
             pincode: f.get('pincode'),
             streetAddress: f.get('streetAddress'),
             city: f.get('city'),
-            state: f.get('state')
+            state: f.get('state'),
+            isDefault: document.getElementById('addIsDefault').checked // Capture checkbox
         };
         
         if(!orderedData.city || !orderedData.state) {
@@ -430,7 +444,8 @@
             pincode: f.get('pincode'),
             streetAddress: f.get('streetAddress'),
             city: f.get('city'),
-            state: f.get('state')
+            state: f.get('state'),
+            isDefault: document.getElementById('editIsDefault').checked // Capture checkbox
         };
         
         if (!orderedData.city || !orderedData.state) {
@@ -462,13 +477,9 @@
      * ORDER LOGIC
      */
      async function handlePlaceOrder() {
-        // 1. Capture the selected Address ID
         const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-        
-        // 2. Capture the selected Payment Method
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
 
-        // Validation
         if (!selectedAddress) {
             return showSwal("Notice", "Please select a shipping address", "info");
         }
@@ -477,7 +488,6 @@
         }
 
         try {
-            // Show a loading state (Optional but recommended)
             Swal.fire({
                 title: 'Processing Order...',
                 text: 'Please do not refresh the page',
@@ -487,7 +497,6 @@
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            // 3. Perform POST request to /place-order
             const response = await fetch('/place-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -500,15 +509,11 @@
             const result = await response.json();
 
             if (response.ok) {
-                // Success: Redirect to a success page or show message
                 showSwal("Success!", result.message || "Your order has been placed.", "success");
-                
-                // Usually, you'd redirect after a short delay:
                 setTimeout(() => {
                     window.location.href = `/order-success/${result.order.orderId}`;
                 }, 2000);
             } else {
-                // Error from backend (e.g., out of stock, invalid address)
                 showSwal("Order Failed", result.message || "Something went wrong", "error");
             }
         } catch (err) {

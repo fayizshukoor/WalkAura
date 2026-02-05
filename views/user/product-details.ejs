@@ -326,6 +326,11 @@
             const response = await fetch('/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cartData) });
             const result = await response.json();
             if (response.ok) {
+
+                window.dispatchEvent(new CustomEvent('cartUpdated', { 
+                detail: { count: result.newCount } 
+            }));
+            
                 showToast(result.message);
                 btnText.textContent = "Added!";
                 addToCartBtn.classList.add('bg-green-600');

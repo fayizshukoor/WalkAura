@@ -10,7 +10,7 @@ export const showAddressManagement = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [addresses, totalAddress] = await Promise.all([
-        Address.find({ userId, isDeleted: false }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+        Address.find({ userId, isDeleted: false }).sort({ isDefault: -1,createdAt: -1 }).skip(skip).limit(limit),
         Address.countDocuments({ userId, isDeleted: false })
     ]);
 
@@ -20,7 +20,8 @@ export const showAddressManagement = asyncHandler(async (req, res) => {
 
 // AJAX: Add Address
 export const addAddress = asyncHandler(async (req, res) => {
-    const { fullName, phone, pincode, streetAddress, city, state } = req.body;
+    const { fullName, phone, pincode, streetAddress, city, state, isDefault } = req.body;
+    console.log(req.body);
 
     // Strict Server-side Validation
     if (!fullName || !phone || !streetAddress || !city || !state || !pincode) {
@@ -43,6 +44,7 @@ export const addAddress = asyncHandler(async (req, res) => {
         city,
         state,
         pincode,
+        isDefault,
         country: "India"
     });
 
@@ -57,7 +59,7 @@ export const addAddress = asyncHandler(async (req, res) => {
 export const updateAddress = asyncHandler(async (req, res) => {
     const userId = req.user.userId;
     const { addressId } = req.params;
-    const { fullName, phone, pincode, streetAddress, city, state } = req.body;
+    const { fullName, phone, pincode, streetAddress, city, state, isDefault } = req.body;
 
     const address = await Address.findOne({ _id: addressId, userId, isDeleted: false });
 
@@ -71,7 +73,18 @@ export const updateAddress = asyncHandler(async (req, res) => {
     }
 
     // Update
-    Object.assign(address, { fullName, phone, pincode, streetAddress, city, state });
+    Object.assign(address, { fullName, phone, pincode, streetAddress, city, state, isDefault });
+
+    // Remove existing default address
+    const defaultAddress = await Address.findOne({isDefault: true});
+
+    console.log(defaultAddress);
+
+    if(defaultAddress){
+        defaultAddress.isDefault = false;
+        await defaultAddress.save();
+    }
+
     await address.save();
 
     return res.status(200).json({ 

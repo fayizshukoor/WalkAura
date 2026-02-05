@@ -22,6 +22,14 @@
         .swal2-popup { background: #111 !important; color: #fff !important; border: 1px solid #333 !important; border-radius: 1.25rem !important; }
         .swal2-title, .swal2-html-container { color: #fff !important; }
         .swal2-confirm { background-color: #5c56f6 !important; box-shadow: 0 4px 10px rgba(92, 86, 246, 0.3) !important; }
+
+        /* Checkbox Styling */
+        .custom-checkbox {
+            accent-color: #5c56f6;
+            width: 1.1rem;
+            height: 1.1rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-black text-white font-sans antialiased">
@@ -46,10 +54,17 @@
                                 <div id="address-card-<%= address._id %>" class="bg-[#111] border border-gray-800/60 rounded-xl p-6 flex items-center justify-between group hover:border-gray-700 transition-all">
                                     <div class="flex items-start gap-5">
                                         <div class="w-12 h-12 rounded-lg bg-[#1a1a1a] border border-gray-800 flex items-center justify-center shrink-0">
-                                            <span class="material-symbols-outlined text-gray-400 text-[22px]">home</span>
+                                            <span class="material-symbols-outlined <%= address.isDefault ? 'text-[#5c56f6]' : 'text-gray-400' %> text-[22px]">
+                                                <%= address.isDefault ? 'stars' : 'home' %>
+                                            </span>
                                         </div>
                                         <div>
-                                            <h3 class="text-white font-bold text-base mb-1"><%= address.fullName %></h3>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h3 class="text-white font-bold text-base"><%= address.fullName %></h3>
+                                                <% if (address.isDefault) { %>
+                                                    <span class="bg-[#5c56f6]/10 text-[#5c56f6] text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-[#5c56f6]/20">Default</span>
+                                                <% } %>
+                                            </div>
                                             <p class="text-gray-400 text-sm leading-relaxed">
                                                 <%= address.streetAddress %><br>
                                                 <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
@@ -142,6 +157,10 @@
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">State</label>
                         <input type="text" name="state" id="add_state" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                     </div>
+                    <div class="md:col-span-2 flex items-center gap-3 mt-2">
+                        <input type="checkbox" name="isDefault" id="add_isDefault" class="custom-checkbox">
+                        <label for="add_isDefault" class="text-sm text-gray-300 font-medium cursor-pointer">Set as default address</label>
+                    </div>
                 </div>
                 <div class="flex gap-4 mt-8">
                     <button type="button" onclick="toggleModal('addAddressModal')" class="flex-1 px-4 py-3 border border-gray-800 text-gray-400 rounded-xl font-bold hover:bg-gray-900 transition-colors">Cancel</button>
@@ -192,6 +211,10 @@
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">State</label>
                         <input type="text" id="edit_state" name="state" readonly class="w-full input-readonly rounded-lg px-4 py-2.5 focus:outline-none">
                     </div>
+                    <div class="md:col-span-2 flex items-center gap-3 mt-2">
+                        <input type="checkbox" name="isDefault" id="edit_isDefault" class="custom-checkbox">
+                        <label for="edit_isDefault" class="text-sm text-gray-300 font-medium cursor-pointer">Set as default address</label>
+                    </div>
                 </div>
                 <div class="flex gap-4 mt-8">
                     <button type="button" onclick="toggleModal('editAddressModal')" class="flex-1 px-4 py-3 border border-gray-800 text-gray-400 rounded-xl font-bold hover:bg-gray-900 transition-colors">Cancel</button>
@@ -209,7 +232,11 @@
             const isOpening = modal.classList.contains('hidden');
             if (isOpening) {
                 const form = modal.querySelector('form');
-                if (form && modalId === 'addAddressModal') form.reset();
+                if (form && modalId === 'addAddressModal') {
+                    form.reset();
+                    // Ensure checkbox is unchecked by default on reset
+                    if(form.isDefault) form.isDefault.checked = false;
+                }
                 modal.querySelectorAll('.error-message').forEach(m => m.style.display = 'none');
                 modal.querySelectorAll('input').forEach(i => i.classList.remove('input-error'));
                 modal.classList.remove('hidden');
@@ -224,7 +251,6 @@
 
         // --- Pincode Autofill & Clearing Logic ---
         async function fetchPincode(pincode, cityInp, stateInp, statusEl) {
-            // If pincode is cleared or too short, empty the dependent fields
             if (pincode.length < 6) {
                 cityInp.value = "";
                 stateInp.value = "";
@@ -242,7 +268,6 @@
                     cityInp.value = data[0].PostOffice[0].District;
                     stateInp.value = data[0].PostOffice[0].State;
                 } else {
-                    // Pincode is 6 digits but invalid according to API
                     cityInp.value = "";
                     stateInp.value = "";
                 }
@@ -266,7 +291,11 @@
             
             const btn = document.getElementById('addSubmitBtn');
             btn.disabled = true;
-            const data = Object.fromEntries(new FormData(this).entries());
+            
+            // Explicitly capture checkbox value
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            data.isDefault = this.isDefault.checked; 
 
             try {
                 const response = await fetch('/addresses/add', {
@@ -305,6 +334,7 @@
             document.getElementById('edit_streetAddress').value = address.streetAddress;
             document.getElementById('edit_city').value = address.city;
             document.getElementById('edit_state').value = address.state;
+            document.getElementById('edit_isDefault').checked = address.isDefault || false;
         }
 
         document.getElementById('editAddressForm').addEventListener('submit', async function(e) {
@@ -314,7 +344,10 @@
             const btn = document.getElementById('editSubmitBtn');
             const addressId = document.getElementById('edit_addressId').value;
             btn.disabled = true;
-            const data = Object.fromEntries(new FormData(this).entries());
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            data.isDefault = this.isDefault.checked;
 
             try {
                 const response = await fetch(`/addresses/${addressId}`, {
@@ -405,7 +438,6 @@
                     e.innerText = "Enter valid 6-digit pincode"; e.style.display = 'block';
                     isValid = false;
                 }
-                // Final check to ensure city/state were fetched
                 if (!form.city.value || !form.state.value) {
                     const e = document.getElementById(`err_${prefix}pincode`);
                     e.innerText = "Invalid pincode or location not found"; e.style.display = 'block';

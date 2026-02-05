@@ -55,7 +55,9 @@ const orderItemSchema = new mongoose.Schema({
     default: "Pending",
   },
   cancellationReason: String,
+  cancelledAt: Date,     
   returnReason: String,
+  returnedAt: Date
 });
 
 const orderSchema = new mongoose.Schema(
@@ -94,8 +96,8 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["Placed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-      default: "Placed",
+      enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
+      default: "Pending",
     },
     pricing: {
       subtotal: { type: Number, required: true },

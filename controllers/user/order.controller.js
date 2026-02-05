@@ -1,3 +1,4 @@
+import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 
@@ -107,3 +108,73 @@ export const getUserOrders = asyncHandler(async (req, res) => {
       },
     });
 });
+
+
+
+// CANCEL SINGLE ITEM
+export const cancelItem = asyncHandler(async (req, res) => {
+  const { orderId, itemId } = req.params;
+  const { reason } = req.body;
+  const userId = req.user.userId;
+
+  const order = await Order.findOne({
+    orderId,
+    user: userId,
+  });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  // Can only cancel items if order status is Pending
+  if (order.orderStatus !== "Pending") {
+    return res.status(400).json({
+      success: false,
+      message: `Cannot cancel items. Order status: ${order.orderStatus}`,
+    });
+  }
+
+  const item = order.items.id(itemId);
+
+  if (!item) {
+    return res.status(404).json({
+      success: false,
+      message: "Item not found in order",
+    });
+  }
+
+  if (item.status !== "Pending") {
+    return res.status(400).json({
+      success: false,
+      message: `Cannot cancel this item. Current status: ${item.status}`,
+    });
+  }
+
+  // Cancel the item
+  item.status = "Cancelled";
+  item.cancellationReason = reason || "Cancelled by user";
+  item.cancelledAt = new Date();
+
+  // Check if ALL items are now cancelled
+  const allCancelled = order.items.every(i => i.status === "Cancelled");
+  if (allCancelled) {
+    order.orderStatus = "Cancelled";
+    order.cancelledAt = new Date();
+  }
+
+  await order.save();
+
+  // Increment stock
+  await Inventory.findByIdAndUpdate(item.inventory, {
+    $inc: { stock: item.quantity },
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Item cancelled successfully",
+  });
+});
+

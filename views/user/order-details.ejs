@@ -1,44 +1,40 @@
-<main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-[1250px] mx-auto space-y-8">
-        
-        <div class="space-y-4">
-            <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
-                <a href="/orders" class="text-gray-500 hover:text-primary transition-colors">Orders</a>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<main class="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-base"> <div class="max-w-[1250px] mx-auto space-y-10"> <div class="space-y-6">
+            <nav class="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em]"> <a href="/orders" class="text-gray-500 hover:text-primary transition-colors">Orders</a>
                 <span class="text-gray-700">/</span>
                 <span class="text-primary">Order Details</span>
             </nav>
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                 <div>
-                    <h1 class="text-4xl font-black tracking-tighter uppercase text-white">Order Details</h1>
-                    <p class="text-gray-500 font-bold text-sm tracking-widest uppercase mt-1">
-                        Order ID: <span class="text-primary">#<%= order.orderId %></span>
+                    <h1 class="text-5xl font-black tracking-tighter uppercase text-white">Order Details</h1> <p class="text-gray-400 font-bold text-base tracking-widest uppercase mt-2"> Order ID: <span class="text-primary">#<%= order.orderId %></span>
                     </p>
                 </div>
-                <div class="bg-primary/10 border border-primary/20 px-4 py-2 rounded-full hidden sm:block">
-                    <span class="text-primary text-[10px] font-black uppercase tracking-widest"><%= order.orderStatus %></span>
+                <div class="bg-primary/10 border border-primary/20 px-6 py-3 rounded-full hidden sm:block">
+                    <span class="text-primary text-xs font-black uppercase tracking-widest"><%= order.orderStatus %></span>
                 </div>
             </div>
         </div>
 
-        <section class="bg-[#12141a] border border-white/10 rounded-[2.5rem] p-10 shadow-xl overflow-x-auto">
-            <div class="min-w-[700px] flex justify-between relative px-4">
-                <div class="absolute top-5 left-0 w-full h-[2px] bg-white/5 z-0"></div>
+        <section class="bg-[#12141a] border border-white/10 rounded-[2.5rem] p-12 shadow-xl overflow-x-auto">
+            <div class="min-w-[800px] flex justify-between relative px-4">
+                <div class="absolute top-6 left-0 w-full h-[3px] bg-white/5 z-0"></div>
                 
                 <% 
-                    const statuses = ['Placed', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
+                    const statuses = ['Pending', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
                     const currentIndex = statuses.indexOf(order.orderStatus);
                     const progressWidth = (currentIndex / (statuses.length - 1)) * 100;
                 %>
-                <div class="absolute top-5 left-0 h-[2px] bg-primary z-0 transition-all duration-1000" style="width: <%= progressWidth %>%"></div>
+                <div class="absolute top-6 left-0 h-[3px] bg-primary z-0 transition-all duration-1000" style="width: <%= progressWidth %>%"></div>
 
                 <% statuses.forEach((status, index) => { %>
-                    <div class="relative z-10 flex flex-col items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 <%= index <= currentIndex ? 'bg-primary border-primary text-white shadow-[0_0_15px_rgba(92,86,246,0.5)]' : 'bg-black border-white/10 text-gray-600' %>">
-                            <span class="material-symbols-outlined text-sm">
+                    <div class="relative z-10 flex flex-col items-center gap-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 <%= index <= currentIndex ? 'bg-primary border-primary text-white shadow-[0_0_20px_rgba(92,86,246,0.6)]' : 'bg-black border-white/10 text-gray-600' %>">
+                            <span class="material-symbols-outlined text-base">
                                 <%= index < currentIndex ? 'check' : (index === currentIndex ? 'radio_button_checked' : 'circle') %>
                             </span>
                         </div>
-                        <span class="text-[9px] font-black uppercase tracking-widest <%= index <= currentIndex ? 'text-white' : 'text-gray-600' %>">
+                        <span class="text-[10px] font-black uppercase tracking-widest <%= index <= currentIndex ? 'text-white' : 'text-gray-600' %>">
                             <%= status %>
                         </span>
                     </div>
@@ -46,112 +42,218 @@
             </div>
         </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-8 space-y-4 shadow-xl">
-                <h3 class="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-4">Order Information</h3>
-                <div class="space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Order Information</h3>
+                <div class="space-y-4">
                     <div class="flex flex-col">
-                        <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">Order Date</span>
-                        <span class="text-white text-sm font-bold"><%= new Date(order.createdAt).toLocaleDateString() %></span>
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Order Date</span>
+                        <span class="text-white text-base font-bold"><%= new Date(order.createdAt).toLocaleDateString() %></span>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">Payment Method</span>
-                        <span class="text-white text-sm font-bold"><%= order.paymentMethod %></span>
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Payment Method</span>
+                        <span class="text-white text-base font-bold"><%= order.paymentMethod %></span>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">Payment Status</span>
-                        <span class="text-green-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 bg-green-500/10 rounded w-fit mt-1">
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Payment Status</span>
+                        <span class="text-green-500 text-xs font-black uppercase tracking-widest px-3 py-1.5 bg-green-500/10 rounded-lg w-fit mt-2">
                             <%= order.paymentStatus %>
                         </span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-8 space-y-4 shadow-xl">
-                <h3 class="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-4">Delivery Address</h3>
-                <div class="space-y-1">
-                    <p class="text-white font-bold text-base"><%= order.shippingAddress.fullName %></p>
-                    <p class="text-gray-400 text-xs leading-relaxed italic">
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Delivery Address</h3>
+                <div class="space-y-2">
+                    <p class="text-white font-bold text-lg"><%= order.shippingAddress.fullName %></p>
+                    <p class="text-gray-400 text-sm leading-relaxed italic">
                         <%= order.shippingAddress.streetAddress %>,<br>
                         <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>,<br>
                         <%= order.shippingAddress.country %> - <%= order.shippingAddress.pincode %>
                     </p>
-                    <p class="text-gray-500 text-[10px] font-bold mt-2 tracking-widest">PH: <%= order.shippingAddress.phone %></p>
+                    <p class="text-gray-500 text-xs font-bold mt-3 tracking-widest">PH: <%= order.shippingAddress.phone %></p>
                 </div>
             </div>
 
-            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-8 space-y-4 shadow-xl border-l-primary/30">
-                <h3 class="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-4">Order Summary</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center text-xs">
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl border-l-primary/30">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Order Summary</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Subtotal</span>
                         <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Tax (<%= order.pricing.taxPercentage %>%)</span>
                         <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
                     </div>
-                    <div class="flex justify-between items-center text-xs">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Shipping</span>
                         <span class="text-white font-bold">₹<%= order.pricing.shippingCharge %></span>
                     </div>
-
-                    <div class="flex justify-between items-center text-xs">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Discount</span>
-                        <span class="text-white font-bold">₹<%= order.pricing.discount %></span>
+                        <span class="text-white font-bold text-red-400">- ₹<%= order.pricing.discount %></span>
                     </div>
 
-                    <div class="pt-4 border-t border-white/5 flex justify-between items-end">
-                        <span class="text-primary font-black uppercase text-[10px] tracking-widest">Total</span>
-                        <span class="text-2xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
+                    <div class="pt-6 border-t border-white/10 flex justify-between items-end">
+                        <span class="text-primary font-black uppercase text-xs tracking-widest">Total</span>
+                        <span class="text-3xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
                     </div>
                 </div>
             </div>
         </div>
 
         <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
-            <div class="p-6 border-b border-white/10 bg-white/[0.03]">
-                <h2 class="text-sm font-black uppercase tracking-widest text-white">Ordered Items</h2>
+            <div class="p-8 border-b border-white/10 bg-white/[0.03]">
+                <h2 class="text-base font-black uppercase tracking-widest text-white">Ordered Items</h2>
             </div>
             <div class="divide-y divide-white/5">
                 <% order.items.forEach(item => { %>
-                <div class="p-8 flex flex-col lg:flex-row items-center gap-8">
-                    <div class="w-24 h-24 rounded-2xl bg-black border border-white/10 p-3 flex-shrink-0">
+                <div class="p-10 flex flex-col lg:flex-row items-center gap-10">
+                    <div class="w-28 h-28 rounded-2xl bg-black border border-white/10 p-4 flex-shrink-0">
                         <img src="<%= item.image %>" class="w-full h-full object-contain" alt="<%= item.productName %>">
                     </div>
                     <div class="flex-1 text-center lg:text-left">
-                        <p class="text-[9px] text-primary font-black uppercase tracking-[0.3em] mb-1">SKU: <%= item.sku %></p>
-                        <h3 class="text-white font-bold text-lg"><%= item.productName %></h3>
-                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 mt-2">
-                            <p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Size: <span class="text-white"><%= item.size %></span></p>
-                            <p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Qty: <span class="text-white"><%= item.quantity %></span></p>
-                            <span class="text-green-500 bg-green-500/10 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest"><%= item.status %></span>
+                        <p class="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-2">SKU: <%= item.sku %></p>
+                        <h3 class="text-white font-bold text-xl"><%= item.productName %></h3>
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-6 mt-3">
+                            <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Size: <span class="text-white"><%= item.size %></span></p>
+                            <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Qty: <span class="text-white"><%= item.quantity %></span></p>
+                            
+                            <span class="<%= item.status === 'Cancelled' ? 'text-red-500 bg-red-500/10' : 'text-green-500 bg-green-500/10' %> px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">
+                                <%= item.status %>
+                            </span>
                         </div>
                     </div>
-                    <div class="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-                        <div class="text-center sm:text-right min-w-[100px]">
-                            <p class="text-white font-black text-xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
-                            <p class="text-[10px] text-gray-500 font-bold uppercase">₹<%= item.price.toLocaleString() %> / unit</p>
+                    <div class="flex flex-col sm:flex-row items-center gap-8 w-full lg:w-auto">
+                        <div class="text-center sm:text-right min-w-[120px]">
+                            <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
+                            <p class="text-xs text-gray-500 font-bold uppercase mt-1">₹<%= item.price.toLocaleString() %> / unit</p>
                         </div>
                         
-                        <button class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
-                            <%= item.status === 'Delivered' ? 'Return Item' : 'Cancel Item' %>
-                        </button>
+                        <% if (item.status !== 'Cancelled') { %>
+                            <button 
+                                onclick="openCancelModal('<%= order.orderId %>', '<%= item._id %>')"
+                                class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                <%= item.status === 'Delivered' ? 'Return Item' : 'Cancel Item' %>
+                            </button>
+                        <% } else { %>
+                            <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
+                                Order Cancelled
+                            </span>
+                        <% } %>
                     </div>
                 </div>
                 <% }) %>
             </div>
         </section>
 
-        <div class="flex flex-col sm:flex-row justify-end gap-4 pt-4 pb-10">
-            <button class="w-full sm:w-auto px-10 py-5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl transition-all">
-                <%= order.orderStatus === 'Delivered' ? 'Return Entire Order' : 'Cancel Entire Order' %>
-            </button>
-            <button class="w-full sm:w-auto px-10 py-5 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
-                <span class="material-symbols-outlined text-sm">download</span>
+        <div class="flex flex-col sm:flex-row justify-end gap-6 pt-4 pb-12">
+            <% if(order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered') { %>
+                <button class="w-full sm:w-auto px-12 py-6 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all">
+                    Cancel Entire Order
+                </button>
+            <% } %>
+            <button class="w-full sm:w-auto px-12 py-6 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-base">download</span>
                 Download Invoice
             </button>
         </div>
+    </div>
 
+    <div id="cancelModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeCancelModal()"></div>
+        <div class="bg-[#12141a] border border-white/10 w-full max-w-md rounded-[2rem] relative z-10 overflow-hidden shadow-2xl">
+            <div class="p-10 space-y-8 text-center">
+                <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+                    <span class="material-symbols-outlined text-red-500 text-4xl">cancel</span>
+                </div>
+                <h3 class="text-white text-2xl font-black uppercase tracking-tight">Cancel Item</h3>
+                <div class="space-y-5">
+                    <select id="cancelReasonSelect" class="w-full bg-black border border-white/10 rounded-xl px-5 py-5 text-gray-200 text-sm font-bold uppercase tracking-wider focus:border-primary transition-all outline-none">
+                        <option value="">-- Select a Reason --</option>
+                        <option value="Changed my mind">Changed my mind</option>
+                        <option value="Found a better price">Found a better price</option>
+                        <option value="Delayed shipping">Delayed shipping</option>
+                        <option value="Other">Other (Please specify)</option>
+                    </select>
+                    <textarea id="cancelReasonText" rows="4" class="w-full bg-black border border-white/10 rounded-xl px-5 py-5 text-gray-200 text-base focus:border-primary transition-all outline-none resize-none" placeholder="Details..."></textarea>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                    <button onclick="closeCancelModal()" class="flex-1 px-6 py-5 bg-white/5 text-gray-400 font-black uppercase tracking-widest text-xs rounded-2xl">Go Back</button>
+                    <button id="submitCancelBtn" class="flex-1 px-6 py-5 bg-red-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-red-900/20">Confirm</button>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
+
+<script>
+    let currentOrderId = null;
+    let currentItemId = null;
+    
+    function openCancelModal(orderId, itemId) {
+        currentOrderId = orderId;
+        currentItemId = itemId;
+        document.getElementById('cancelModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeCancelModal() {
+        document.getElementById('cancelModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        document.getElementById('cancelReasonSelect').value = "";
+        document.getElementById('cancelReasonText').value = "";
+    }
+    
+    document.getElementById('submitCancelBtn').addEventListener('click', async function() {
+        const selectValue = document.getElementById('cancelReasonSelect').value;
+        const textValue = document.getElementById('cancelReasonText').value.trim();
+        let finalReason = selectValue && textValue ? `${selectValue}: ${textValue}` : (selectValue || textValue);
+    
+        if (!finalReason) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Reason Required',
+                text: 'Please provide a reason.',
+                background: '#12141a', color: '#fff'
+            });
+            return;
+        }
+    
+        try {
+            this.disabled = true;
+            this.innerHTML = '<span class="animate-pulse tracking-widest">PROCESSING...</span>';
+    
+            const response = await fetch(`/orders/${currentOrderId}/items/${currentItemId}/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: finalReason })
+            });
+    
+            const result = await response.json();
+    
+            if (response.ok && result.success) {
+                document.getElementById('cancelModal').classList.add('hidden');
+                document.body.style.overflow = 'auto';
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Cancelled',
+                    text: result.message,
+                    background: '#12141a',
+                    color: '#fff',
+                    confirmButtonColor: '#4f46e5'
+                });
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Failed');
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message, background: '#12141a', color: '#fff' });
+            this.disabled = false;
+            this.innerText = 'CONFIRM';
+        }
+    });
+</script>
