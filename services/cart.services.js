@@ -27,6 +27,11 @@ export const getReconciledCart = async (userId) => {
   let hasChanges = false;
 
   for (const item of cart.items) {
+
+    const size = item.inventory?.size ?? "N/A";
+    const color = item.variant?.color ?? "N/A";
+    const productName = item.product?.name ?? "Unknown product";
+
     // Product / variant / inventory checks
     if (
       !item.product ||
@@ -39,8 +44,8 @@ export const getReconciledCart = async (userId) => {
       hasChanges = true;
       changes.push({
         type: "REMOVED",
-        productName: item.product?.name ?? "Unknown product",
-        reason: `Size UK ${item.inventory.size}, Color ${item.variant.color} is no longer available`,
+        productName: productName,
+        reason: `Size UK ${size}, Color ${color} is no longer available`,
       });
       continue;
     }
@@ -54,7 +59,7 @@ export const getReconciledCart = async (userId) => {
       hasChanges = true;
       changes.push({
         type: "REMOVED",
-        productName: item.product?.name ?? "Unknown product",
+        productName: productName,
         reason: "Product is no longer available",
       });
       continue;
@@ -66,8 +71,8 @@ export const getReconciledCart = async (userId) => {
       hasChanges = true;
       changes.push({
         type: "OUT_OF_STOCK",
-        productName: item.product.name,
-        reason: `Size UK ${item.inventory.size}, Color ${item.variant.color} is out of stock`,
+        productName: productName,
+        reason: `Size UK ${size}, Color ${color} is out of stock`,
       });
       continue;
     }
@@ -76,8 +81,8 @@ export const getReconciledCart = async (userId) => {
       hasChanges = true;
       changes.push({
         type: "QUANTITY_UPDATED",
-        productName: item.product.name,
-        reason: `Size UK ${item.inventory.size}, Color ${item.variant.color} Quantity reduced to ${item.inventory.stock}`,
+        productName: productName,
+        reason: `Size UK ${size}, Color ${color} Quantity reduced to ${item.inventory.stock}`,
       });
       item.quantity = item.inventory.stock;
     }
@@ -94,7 +99,7 @@ export const getReconciledCart = async (userId) => {
       hasChanges = true;
       changes.push({
         type: "PRICE_UPDATED",
-        productName: item.product.name,
+        productName: productName,
         reason: `Price updated from ₹${item.priceAtAdd} to ₹${currentPrice}`,
       });
       item.priceAtAdd = currentPrice;

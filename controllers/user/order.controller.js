@@ -4,7 +4,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 
 export const getOrderSuccess = async (req, res) => {
   const { orderId } = req.params;
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
 
   const order = await Order.findOne({
     orderId,
@@ -26,7 +26,7 @@ export const getOrderSuccess = async (req, res) => {
 
 export const getOrderDetails = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
 
   const order = await Order.findOne({
     orderId,
@@ -51,7 +51,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
 
 
 export const getUserOrders = asyncHandler(async (req, res) => {
-    const userId = req.user.userId;
+    const userId = req?.user?.userId;
     const { page = 1, search, status, sort = "newest" } = req.query;
   
     const limit = 5;

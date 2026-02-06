@@ -190,14 +190,9 @@ export const getCart = asyncHandler(async (req, res) => {
 
   const { cart, hasChanges, changes } = result;
 
-  // Navbar count (single source of truth)
+  // Navbar count 
   res.locals.cartCount = cart.totalItems || 0;
 
-  /**
-   * IMPORTANT:
-   * Show reconciliation changes only ONCE
-   * (after checkout redirect or direct cart visit)
-   */
   const cartChanges = req.session.cartChanges || (hasChanges ? changes : []);
 
   delete req.session.cartChanges;
@@ -252,15 +247,8 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
     product.category.isDeleted
   ) {
 
-    cart.items.splice(itemIndex, 1);
-
-    // Recalculate totals
-    cart.totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    cart.totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity,0);
-
-    await cart.save();
     return res.status(409).json({
-      message: "Item is no longer available and was removed from your cart",
+      message: "Item is no longer available.Please review your cart",
       code: "ITEM_UNAVAILABLE"
     });
   }
@@ -269,10 +257,17 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
   // Get inventory for stock check
   const inventory = await Inventory.findById(inventoryId);
   if (!inventory || !inventory.isActive) {
-    return res.status(400).json({
+    return res.status(409).json({
       message: "Product is no longer available",
       code: "ITEM_UNAVAILABLE"
     });
+  }
+
+  if(inventory.stock === 0){
+    return res.status(409).json({
+      message: `Size UK ${inventory.size} is out of stock`,
+      code: "OUT_OF_STOCK"
+    })
   }
 
   const currentQuantity = cart.items[itemIndex].quantity;

@@ -490,7 +490,7 @@
         try {
             Swal.fire({
                 title: 'Processing Order...',
-                text: 'Please do not refresh the page',
+                text: 'Please wait while we confirm availability',
                 background: '#12141a',
                 color: '#ffffff',
                 allowOutsideClick: false,
@@ -513,12 +513,36 @@
                 setTimeout(() => {
                     window.location.href = `/order-success/${result.order.orderId}`;
                 }, 2000);
-            } else {
-                showSwal("Order Failed", result.message || "Something went wrong", "error");
+                return;
+            } 
+            
+            // Cart changed / stock conflict
+            if (response.status === 409) {
+              await Swal.fire({
+                title: "Cart Updated",
+                text: result.message || "Some items in your cart have changed. Please review before placing the order.",
+                icon: "warning",
+                background: '#12141a',
+                color: '#ffffff',
+                confirmButtonText: "Review Cart"
+              });
+
+              return window.location.href = "/cart";
             }
+
+            // Validation / user error
+            await Swal.fire({
+              title: "Order Failed",
+              text: result.message || "Unable to place order. Please check your details.",
+              icon: "error",
+              background: '#12141a',
+              color: '#ffffff'
+            });
+
+
         } catch (err) {
             console.error(err);
-            showSwal("Error", "A network error occurred. Please try again.", "error");
+            showSwal("Error", "Something went wrong while placing your order. Please try again.", "error");
         }
     }
 

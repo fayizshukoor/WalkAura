@@ -306,7 +306,7 @@
     function updateQty(delta) {
         if (!selectedSize) return;
         let val = parseInt(qtyInput.value) + delta;
-        if (val >= 1 && val <= currentMaxStock) qtyInput.value = val;
+        if (val >= 1 && val <= 3) qtyInput.value = val;
     }
 
     async function handleAddToCart() {

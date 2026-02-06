@@ -1,4 +1,3 @@
-import { HTTP_STATUS } from "../../constants/httpStatus.js";
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Address from "../../models/Address.model.js";
 import Cart from "../../models/Cart.model.js";
@@ -19,10 +18,20 @@ export const getCheckoutPage = asyncHandler(async (req,res)=>{
    const result = await getReconciledCart(userId);
     // Check cart is empty
 
-    if(!result || result.cart.items.length === 0){
+    if(!result || !result.cart || result.cart.items.length === 0){
+
+      if (result?.changes?.length) {
+        req.session.cartChanges = result.changes;
+      }
+      
         // If it's an AJAX/Fetch request (from a button)
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            return res.status(409).json({ message: "Some items in your cart are no longer available and have been removed.",cartEmpty: true });
+        if (req.xhr) {
+            return res.status(409).json({
+              success: false,
+              cartEmpty: true,
+              message: "Your cart is empty. Please add items before checkout.",
+              changes: result?.changes || []
+            });
         }
 
         req.flash("error","Cart is Empty")
@@ -30,6 +39,28 @@ export const getCheckoutPage = asyncHandler(async (req,res)=>{
     }
 
     const { cart, hasChanges, changes } = result;
+
+    if(hasChanges && changes.length > 0){
+      req.session.cartChanges = changes;
+    }
+
+    if (cart.items.length === 0 && hasChanges) {
+      if (req.xhr) {
+        return res.status(409).json({
+          success: false,
+          cartEmpty: true,
+          message: "Items in your cart are no longer available.",
+          changes
+        });
+      }
+  
+      req.flash(
+        "error",
+        "Items in your cart are no longer available."
+      );
+      return res.redirect("/cart");
+    }
+    
     
     if (hasChanges) {
       if (req.xhr) {
@@ -40,7 +71,6 @@ export const getCheckoutPage = asyncHandler(async (req,res)=>{
         });
       }
   
-      req.session.cartChanges = changes;
       req.flash(
         "error",
         "Some items in your cart were updated. Please review before checkout."
@@ -148,9 +178,13 @@ export const placeOrder = asyncHandler(async (req, res) => {
       const stockUpdates = [];
   
       for (const item of cart.items) {
+
+        const size = item.inventory?.size ?? "N/A";
+        const color = item.variant?.color ?? "N/A";
+
         // Validate product
         if (!item.product || !item.product.isListed) {
-          return res.status(400).json({
+          return res.status(409).json({
             success: false,
             message: `Product "${item.product?.name || "Unknown"}" is no longer available`,
           });
@@ -162,7 +196,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
           !item.product.category.isListed ||
           item.product.category.isDeleted
         ) {
-          return res.status(400).json({
+          return res.status(409).json({
             success: false,
             message: `Product "${item.product.name}" category is no longer available`,
           });
@@ -170,24 +204,24 @@ export const placeOrder = asyncHandler(async (req, res) => {
   
         // Validate variant
         if (!item.variant || !item.variant.isActive) {
-          return res.status(400).json({
+          return res.status(409).json({
             success: false,
-            message: `Selected color for "${item.product.name}" is no longer available`,
+            message: `Color ${color} for "${item.product.name}" is no longer available`,
           });
         }
   
         // Validate inventory and stock
         if (!item.inventory || !item.inventory.isActive) {
-          return res.status(400).json({
+          return res.status(409).json({
             success: false,
-            message: `Selected size for "${item.product.name}" is no longer available`,
+            message: `Size ${size} for "${item.product.name}" is no longer available`,
           });
         }
   
         if (item.inventory.stock < item.quantity) {
-          return res.status(400).json({
+          return res.status(409).json({
             success: false,
-            message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available on ${item.variant.color} color of size ${item.inventory.size}`,
+            message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available on ${color} color of size ${size}`,
           });
         }
   
@@ -262,9 +296,17 @@ export const placeOrder = asyncHandler(async (req, res) => {
   
       // Update stock
       for (const update of stockUpdates) {
-        await Inventory.findByIdAndUpdate(update.inventoryId, {
-          $inc: { stock: -update.quantity },
-        });
+        const updated = await Inventory.findOneAndUpdate(
+          { _id: update.inventoryId, stock: { $gte: update.quantity } },
+          { $inc: { stock: -update.quantity } }
+        );
+
+        if (!updated) {
+          return res.status(409).json({
+            success: false,
+            message: "Stock changed during checkout. Please try again.",
+          });
+        }
       }
   
       // Clear cart
