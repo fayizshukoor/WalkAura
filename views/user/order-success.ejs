@@ -66,7 +66,7 @@
                         <div class="flex justify-between items-end">
                             <div>
                                 <span class="text-primary font-black uppercase text-[10px] tracking-[0.2em] block mb-1">Total Paid</span>
-                                <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">via <%= order.paymentMethod %></span>
+                                <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">via <%= order.payment.method %></span>
                             </div>
                             <span class="text-4xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
                         </div>
@@ -97,9 +97,9 @@
                         <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl">
                             <div>
                                 <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest block">Payment Status</span>
-                                <span class="text-white font-black text-xs tracking-widest"><%= order.paymentStatus %></span>
+                                <span class="text-white font-black text-xs tracking-widest"><%= order.payment.status %></span>
                             </div>
-                            <div class="w-2 h-2 rounded-full <%= order.paymentStatus === 'COMPLETED' ? 'bg-green-500' : 'bg-yellow-500' %> animate-pulse"></div>
+                            <div class="w-2 h-2 rounded-full <%= order.payment.status === 'COMPLETED' ? 'bg-green-500' : 'bg-yellow-500' %> animate-pulse"></div>
                         </div>
                     </div>
                 </div>

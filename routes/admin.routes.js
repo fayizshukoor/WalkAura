@@ -15,7 +15,7 @@ import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAd
 
 import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } from "../controllers/admin/variant.controller.js";
 
-import { getAllOrders } from "../controllers/admin/order.controller.js";
+import { approveReturn, getAllOrders, getOrderDetails, updateOrderStatus } from "../controllers/admin/order.controller.js";
 
 
 // middleware imports
@@ -68,4 +68,8 @@ router.patch("/products/variants/toggle/:variantId",toggleVariantStatus);
 
 //Orders
 router.get("/orders",getAllOrders);
+router.post("/orders/:orderId/status",updateOrderStatus);
+router.get("/orders/:orderId",getOrderDetails);
+router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn); 
+
 export default router;

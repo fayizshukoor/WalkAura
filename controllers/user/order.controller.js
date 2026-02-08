@@ -115,7 +115,7 @@ export const getUserOrders = asyncHandler(async (req, res) => {
 export const cancelItem = asyncHandler(async (req, res) => {
   const { orderId, itemId } = req.params;
   const { reason } = req.body;
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
 
   const order = await Order.findOne({
     orderId,
@@ -129,14 +129,6 @@ export const cancelItem = asyncHandler(async (req, res) => {
     });
   }
 
-  // Can only cancel items if order status is Pending
-  if (order.orderStatus !== "Pending") {
-    return res.status(400).json({
-      success: false,
-      message: `Cannot cancel items. Order status: ${order.orderStatus}`,
-    });
-  }
-
   const item = order.items.id(itemId);
 
   if (!item) {
@@ -146,7 +138,7 @@ export const cancelItem = asyncHandler(async (req, res) => {
     });
   }
 
-  if (item.status !== "Pending") {
+  if (item.status !== "PENDING") {
     return res.status(400).json({
       success: false,
       message: `Cannot cancel this item. Current status: ${item.status}`,
@@ -154,14 +146,22 @@ export const cancelItem = asyncHandler(async (req, res) => {
   }
 
   // Cancel the item
-  item.status = "Cancelled";
-  item.cancellationReason = reason || "Cancelled by user";
-  item.cancelledAt = new Date();
+  item.status = "CANCELLED";
+  item.cancellation = {
+    reason: reason || "Cancelled by user",
+    at: new Date(),
+    by: "USER"
+  }
+
+  item.statusTimeline.push({
+    status: "CANCELLED",
+    at: new Date()
+  })
 
   // Check if ALL items are now cancelled
-  const allCancelled = order.items.every(i => i.status === "Cancelled");
+  const allCancelled = order.items.every(i => i.status === "CANCELLED");
   if (allCancelled) {
-    order.orderStatus = "Cancelled";
+    order.orderStatus = "CANCELLED";
     order.cancelledAt = new Date();
   }
 
@@ -178,3 +178,209 @@ export const cancelItem = asyncHandler(async (req, res) => {
   });
 });
 
+// Cancel Entire Order
+export const cancelEntireOrder = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { reason } = req.body;
+  const userId = req?.user?.userId;
+
+  const order = await Order.findOne({
+    orderId,
+    user: userId,
+  });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  let cancelledCount = 0;
+
+  for (const item of order.items) {
+    // Only cancel items that are still cancellable
+    if (item.status === "PENDING") {
+      item.status = "CANCELLED";
+      item.cancellation = {
+        reason: reason || "Cancelled by user",
+        at: new Date(),
+        by: "USER",
+      };
+
+      // Restore stock
+      await Inventory.findByIdAndUpdate(item.inventory, {
+        $inc: { stock: item.quantity },
+      });
+
+      cancelledCount++;
+    }
+  }
+
+  if (cancelledCount === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "No items in this order can be cancelled",
+    });
+  }
+
+  // If ALL items are cancelled → cancel the order
+  const allCancelled = order.items.every(i => i.status === "CANCELLED");
+  if (allCancelled) {
+    order.orderStatus = "CANCELLED";
+    order.cancelledAt = new Date();
+  }
+
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Order cancellation processed successfully"
+  });
+});
+
+
+
+// Request Return
+export const requestReturn = asyncHandler(async (req, res) => {
+  const { orderId, itemId } = req.params;
+  const { reason } = req.body;
+  const userId = req?.user?.userId;
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Return reason is required",
+    });
+  }
+
+  const order = await Order.findOne({
+    orderId,
+    user: userId,
+  });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  const item = order.items.id(itemId);
+
+  if (!item) {
+    return res.status(404).json({
+      success: false,
+      message: "Item not found in this order",
+    });
+  }
+
+  // Eligibility checks
+  if (item.status !== "DELIVERED") {
+    return res.status(400).json({
+      success: false,
+      message: `Item cannot be returned. Current status: ${item.status}`,
+    });
+  }
+
+  // Prevent duplicate return requests
+  if (item.status === "RETURN_REQUESTED" || item.status === "RETURNED") {
+    return res.status(400).json({
+      success: false,
+      message: "Return already requested for this item",
+    });
+  }
+
+  const now = new Date();
+
+  // Mark return requested
+  item.status = "RETURN_REQUESTED";
+  item.returnInfo = {
+    reason: reason.trim(),
+    requestedAt: now,
+  };
+
+  item.statusTimeline.push({
+    status: "RETURN_REQUESTED",
+    at: now,
+  });
+
+  await order.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Return request submitted successfully"
+  });
+});
+
+
+
+export const requestReturnEntireOrder = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { reason } = req.body;
+  const userId = req?.user?.userId;
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Return reason is required",
+    });
+  }
+
+  const order = await Order.findOne({
+    orderId,
+    user: userId,
+  });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  let eligibleCount = 0;
+  const now = new Date();
+
+  for (const item of order.items) {
+    // Only delivered items can be returned
+    if (item.status !== "DELIVERED") {
+      continue;
+    }
+
+    // Prevent duplicate return requests
+    if (
+      item.status === "RETURN_REQUESTED" ||
+      item.status === "RETURNED"
+    ) {
+      continue;
+    }
+
+    item.status = "RETURN_REQUESTED";
+    item.returnInfo = {
+      reason: reason.trim(),
+      requestedAt: now,
+    };
+
+    item.statusTimeline.push({
+      status: "RETURN_REQUESTED",
+      at: now,
+    });
+
+    eligibleCount++;
+  }
+
+  if (eligibleCount === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "No items in this order are eligible for return",
+    });
+  }
+
+  await order.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Return request submitted for eligible items"
+  });
+});

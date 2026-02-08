@@ -246,7 +246,11 @@ export const placeOrder = asyncHandler(async (req, res) => {
           quantity: item.quantity,
           price: finalPrice,
           itemTotal: finalPrice * item.quantity,
-          status: "Pending",
+          status: "PENDING",
+          statusTimeline:[{
+            status: "PENDING",
+            at: new Date()
+          }]
         });
   
         stockUpdates.push({
@@ -279,9 +283,11 @@ export const placeOrder = asyncHandler(async (req, res) => {
           state: address.state,
           pincode: address.pincode,
         },
-        paymentMethod,
-        paymentStatus: "Pending",
-        orderStatus: "Pending",
+        payment:{
+          method: paymentMethod,
+          status: "PENDING"
+        },
+        orderStatus:"PENDING",
         pricing: {
           subtotal,
           tax,

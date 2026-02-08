@@ -1,0 +1,207 @@
+<main class="min-h-screen bg-black text-gray-200 p-6 lg:p-12 font-sans">
+    <div class="max-w-[1200px] mx-auto space-y-8">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-8">
+            <div>
+                <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                    <a href="/admin/orders" class="hover:text-[#5c56f6] transition-colors">Orders</a>
+                    <span>/</span>
+                    <span class="text-white">Order Details</span>
+                </nav>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white">Order #<%= order.orderId %></h1>
+                <p class="text-gray-500 text-sm mt-1">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <% 
+                    const statusColors = {
+                        'PENDING': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+                        'SHIPPED': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+                        'DELIVERED': 'bg-green-500/10 text-green-500 border-green-500/20',
+                        'CANCELLED': 'bg-red-500/10 text-red-500 border-red-500/20',
+                        'RETURNED': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+                    };
+                %>
+                <span class="px-4 py-2 rounded-full border text-xs font-black uppercase tracking-tighter <%= statusColors[order.orderStatus] || 'bg-gray-500/10 text-gray-500 border-gray-500/20' %>">
+                    <%= order.orderStatus %>
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="bg-[#111111] border border-gray-800 rounded-3xl p-8 shadow-xl">
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#5c56f6] mb-6">Order Summary</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">Payment Method</span>
+                        <span class="text-white text-sm font-bold uppercase"><%= order.payment.method %></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">Payment Status</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded <%= order.payment.status === 'PAID' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500' %>">
+                            <%= order.payment.status %>
+                        </span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-800 flex justify-between items-end">
+                        <span class="text-gray-500 text-sm">Total Amount</span>
+                        <span class="text-2xl font-black text-white">₹<%= order.pricing.totalAmount.toLocaleString('en-IN') %></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#111111] border border-gray-800 rounded-3xl p-8 shadow-xl">
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#5c56f6] mb-6">Customer</h2>
+                <div class="space-y-1">
+                    <p class="text-white font-bold text-lg"><%= order.user.name %></p>
+                    <p class="text-gray-400 text-sm"><%= order.user.email %></p>
+                    <p class="text-gray-400 text-sm"><%= order.user.phone %></p>
+                </div>
+            </div>
+
+            <div class="bg-[#111111] border border-gray-800 rounded-3xl p-8 shadow-xl">
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#5c56f6] mb-6">Shipping Address</h2>
+                <div class="text-gray-400 text-sm leading-relaxed">
+                    <p class="text-white font-bold mb-1"><%= order.shippingAddress.fullName %></p>
+                    <p><%= order.shippingAddress.streetAddress %></p>
+                    <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %></p>
+                    <p><%= order.shippingAddress.country %> - <%= order.shippingAddress.pincode %></p>
+                    <p class="mt-2 font-bold text-gray-500 italic">PH: <%= order.shippingAddress.phone %></p>
+                </div>
+            </div>
+        </div>
+
+        <section class="bg-[#111111] border border-gray-800 rounded-3xl overflow-hidden shadow-xl">
+            <div class="p-6 border-b border-gray-800 bg-white/[0.02]">
+                <h2 class="text-sm font-black uppercase tracking-widest text-white">Ordered Items</h2>
+            </div>
+            
+            <div class="divide-y divide-gray-800">
+                <% order.items.forEach(item => { %>
+                    <div class="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div class="flex items-center gap-6">
+                            <div class="w-16 h-16 bg-black rounded-xl border border-gray-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                <% if(item.image) { %>
+                                    <img src="<%= item.image %>" class="w-full h-full object-cover">
+                                <% } else { %>
+                                    <span class="material-symbols-outlined text-gray-700">inventory_2</span>
+                                <% } %>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold text-base"><%= item.productName %></h3>
+                                <div class="flex items-center gap-4 mt-1">
+                                    <p class="text-xs text-gray-500 uppercase font-bold">Size: <span class="text-gray-300"><%= item.size %></span></p>
+                                    <p class="text-xs text-gray-500 uppercase font-bold">Color: <span class="text-gray-300"><%= item.color %></span></p>
+                                    <p class="text-xs text-gray-500 uppercase font-bold">Qty: <span class="text-gray-300"><%= item.quantity %></span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col md:items-end gap-3">
+                            <div class="flex items-center gap-3">
+                                <span class="text-white font-mono font-bold">₹<%= item.price.toLocaleString('en-IN') %></span>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border 
+                                    <%= item.status === 'RETURN_REQUESTED' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 
+                                       item.status === 'CANCELLED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                       'bg-gray-800 text-gray-400 border-gray-700' %>">
+                                    <%= item.status.replace(/_/g, ' ') %>
+                                </span>
+                            </div>
+
+                            <% if (item.status === 'RETURN_REQUESTED') { %>
+                                <div class="bg-black/40 border border-orange-500/20 rounded-2xl p-4 w-full md:min-w-[300px]">
+                                    <p class="text-[10px] uppercase font-black text-orange-500 mb-1">Return Reason:</p>
+                                    <p class="text-sm text-gray-300 italic mb-4">"<%= item.returnInfo.reason %>"</p>
+                                    <div class="flex gap-2">
+                                        <button 
+                                            onclick="approveReturn('<%= order.orderId %>', '<%= item._id %>')"
+                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase py-2 rounded-lg transition-all">
+                                            Approve
+                                        </button>
+                                        <button 
+                                            onclick="rejectReturn('<%= order.orderId %>', '<%= item._id %>')"
+                                            class="flex-1 bg-red-600/10 hover:bg-red-600 border border-red-600/20 text-red-500 hover:text-white text-[10px] font-black uppercase py-2 rounded-lg transition-all">
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    async function approveReturn(orderId, itemId) {
+        const result = await Swal.fire({
+            title: 'Approve Return?',
+            text: "This will authorize the return process for this item.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#1f2937',
+            confirmButtonText: 'Yes, Approve',
+            background: '#111',
+            color: '#fff'
+        });
+
+        if (result.isConfirmed) {
+            processAction(orderId, itemId, 'approve');
+        }
+    }
+
+    async function rejectReturn(orderId, itemId) {
+        const { value: reason } = await Swal.fire({
+            title: 'Reject Return?',
+            input: 'text',
+            inputLabel: 'Reason for rejection',
+            inputPlaceholder: 'Enter reason...',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            background: '#111',
+            color: '#fff',
+            inputValidator: (value) => {
+                if (!value) return 'You need to provide a reason for rejection!'
+            }
+        });
+
+        if (reason) {
+            processAction(orderId, itemId, 'reject', reason);
+        }
+    }
+
+    async function processAction(orderId, itemId, action, reason = '') {
+        try {
+            const response = await fetch(`/admin/orders/${orderId}/items/${itemId}/return-${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    background: '#111',
+                    color: '#fff'
+                }).then(() => window.location.reload());
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Something went wrong',
+                background: '#111',
+                color: '#fff'
+            });
+        }
+    }
+</script>

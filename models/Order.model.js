@@ -51,13 +51,26 @@ const orderItemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned"],
-    default: "Pending",
+    enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURN_REQUESTED", "RETURNED"],
+    default: "PENDING",
   },
-  cancellationReason: String,
-  cancelledAt: Date,     
-  returnReason: String,
-  returnedAt: Date
+  statusTimeline: [{
+    status: String,
+    at: Date
+  }],
+
+  cancellation: {
+  reason: String,
+  at: Date,
+  by: { type: String, enum: ["USER", "ADMIN"] }
+},
+
+returnInfo: {
+  reason: String,
+  requestedAt: Date,
+  approvedAt: Date,
+  receivedAt: Date
+}
 });
 
 const orderSchema = new mongoose.Schema(
@@ -84,20 +97,26 @@ const orderSchema = new mongoose.Schema(
       pincode: { type: String, required: true },
       country: { type: String, required: true, default: "India" }
     },
-    paymentMethod: {
-      type: String,
-      enum: ["COD", "Online", "Wallet"],
-      required: true,
+
+    payment: {
+      method: {
+        type: String,
+        enum: ["COD", "RAZORPAY", "WALLET"],
+        required: true
+      },
+      status: {
+        type: String,
+        enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+        default: "PENDING"
+      },
+      transactionId: String,
+      refundedAmount: { type: Number, default: 0 }
     },
-    paymentStatus: {
-      type: String,
-      enum: ["Pending", "Completed", "Failed", "Refunded"],
-      default: "Pending",
-    },
+
     orderStatus: {
       type: String,
-      enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
+      default: "PENDING",
     },
     pricing: {
       subtotal: { type: Number, required: true },

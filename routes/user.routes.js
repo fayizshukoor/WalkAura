@@ -21,7 +21,7 @@ import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity }
 
 import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
 
-import { cancelItem, getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
+import { cancelEntireOrder, cancelItem, getOrderDetails, getOrderSuccess, getUserOrders, requestReturn, requestReturnEntireOrder } from "../controllers/user/order.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -130,4 +130,7 @@ router.get("/orders",getUserOrders);
 
 // Cancel and Returns
 router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
+router.post("/orders/:orderId/cancel",cancelEntireOrder);
+router.post("/orders/:orderId/items/:itemId/return",requestReturn);
+router.post("/orders/:orderId/return",requestReturnEntireOrder);
 export default router;

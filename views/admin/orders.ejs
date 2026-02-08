@@ -1,110 +1,149 @@
-<main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    input:focus { border-color: #5c56f6 !important; }
+    select:focus { border-color: #5c56f6 !important; }
+    
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+</style>
+
+<main class="flex-grow pt-8 pb-20 px-4 sm:px-6 lg:px-8 bg-black min-h-screen text-gray-200 antialiased">
     <div class="max-w-[1250px] mx-auto space-y-8">
         
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <h1 class="text-4xl font-black tracking-tighter uppercase text-white">Order Management</h1>
-                <p class="text-gray-500 font-bold text-sm tracking-widest uppercase mt-1">
-                    Total Volume: <span class="text-primary"><%= pagination.totalOrders %> Orders</span>
+                <h1 class="text-3xl font-bold tracking-tight text-white">Order Management</h1>
+                <p class="text-gray-500 text-sm mt-1">Manage and track customer orders, payments, and fulfillment status.</p>
+            </div>
+            <div class="text-right">
+                <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest">
+                    Total Volume: <span class="text-[#5c56f6] ml-2"><%= pagination.totalOrders %> Orders</span>
                 </p>
             </div>
         </div>
 
-        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] p-6 shadow-xl">
+        <section class="bg-[#111111] border border-gray-800 rounded-2xl p-6 shadow-xl">
             <form action="/admin/orders" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="md:col-span-2 relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">search</span>
-                    <input 
-                        type="text" 
-                        name="search" 
-                        placeholder="Search by Order ID..." 
-                        value="<%= filters.search %>"
-                        class="w-full bg-black border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none"
-                    >
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xl">search</span>
+                    <input type="text" name="search" placeholder="Search Order ID, Name, Phone or Email..." value="<%= filters.search %>"
+                        class="w-full bg-black border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none transition-colors">
                 </div>
 
-                <select name="status" onchange="this.form.submit()" class="bg-black border border-white/10 rounded-xl py-3 px-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none cursor-pointer">
+                <select name="status" onchange="this.form.submit()" class="bg-black border border-gray-800 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none cursor-pointer transition-colors">
                     <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Status</option>
-                    <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                    <option value="Out for Delivery" <%= filters.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                    <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                    <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    <option value="PENDING" <%= filters.status === 'PENDING' ? 'selected' : '' %>>Pending</option>
+                    <option value="SHIPPED" <%= filters.status === 'SHIPPED' ? 'selected' : '' %>>Shipped</option>
+                    <option value="DELIVERED" <%= filters.status === 'DELIVERED' ? 'selected' : '' %>>Delivered</option>
+                    <option value="CANCELLED" <%= filters.status === 'CANCELLED' ? 'selected' : '' %>>Cancelled</option>
                 </select>
 
-                <select name="sort" onchange="this.form.submit()" class="bg-black border border-white/10 rounded-xl py-3 px-4 text-white text-xs font-bold uppercase tracking-widest focus:border-primary transition-all outline-none cursor-pointer">
+                <select name="sort" onchange="this.form.submit()" class="bg-black border border-gray-800 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none cursor-pointer transition-colors">
                     <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
                     <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
                     <option value="amount_high" <%= filters.sort === 'amount_high' ? 'selected' : '' %>>Price: High</option>
                     <option value="amount_low" <%= filters.sort === 'amount_low' ? 'selected' : '' %>>Price: Low</option>
                 </select>
-
-                <% if (filters.search || filters.status !== 'all' || filters.sort !== 'newest') { %>
-                    <a href="/admin/orders" class="md:col-span-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors">
-                        [ Clear All Filters ]
-                    </a>
-                <% } %>
             </form>
         </section>
 
-        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+        <section class="bg-[#111111] border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-white/5 bg-white/[0.02]">
-                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Order Info</th>
-                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Customer</th>
-                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Amount</th>
-                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Status</th>
-                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Action</th>
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead class="text-gray-500 border-b border-gray-800 bg-white/[0.01]">
+                        <tr>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Order ID</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Date</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider">Customer</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-right">Total Price</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Payment</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Status Control</th>
+                            <th class="p-5 font-semibold uppercase text-[10px] tracking-wider text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/5">
+                    <tbody class="divide-y divide-gray-900">
                         <% if (orders.length === 0) { %>
-                            <tr>
-                                <td colspan="5" class="px-8 py-20 text-center">
-                                    <span class="material-symbols-outlined text-4xl text-white/10 mb-2">inbox</span>
-                                    <p class="text-gray-500 font-black uppercase tracking-widest text-xs">No orders found</p>
-                                </td>
-                            </tr>
+                            <tr><td colspan="7" class="p-20 text-center text-gray-500 font-medium">No orders found</td></tr>
                         <% } else { %>
                             <% orders.forEach(order => { %>
-                                <tr class="group hover:bg-white/[0.02] transition-all">
-                                    <td class="px-8 py-6">
+                                <tr class="hover:bg-white/[0.02] transition-colors">
+                                    <td class="p-5">
+                                        <span class="text-white font-semibold">#<%= order.orderId %></span>
+                                    </td>
+                                    <td class="p-5">
                                         <div class="flex flex-col">
-                                            <span class="text-white font-black tracking-tight text-sm">#<%= order.orderId %></span>
-                                            <span class="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                                            <span class="text-white text-sm font-medium">
                                                 <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                                            </span>
+                                            <span class="text-[12px] text-gray-400">
+                                                <%= new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6">
+                                    <td class="p-5">
                                         <div class="flex flex-col">
-                                            <span class="text-white font-bold text-xs"><%= order.user.name %></span>
-                                            <span class="text-[9px] text-gray-500 font-medium truncate max-w-[150px]"><%= order.user.email %></span>
+                                            <span class="text-white font-medium"><%= order.user.name %></span>
+                                            <span class="text-[12px] text-gray-400"><%= order.user.email %></span>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6">
-                                        <div class="flex flex-col">
-                                            <span class="text-white font-black text-sm tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
-                                            <span class="text-[9px] text-primary font-black uppercase tracking-widest"><%= order.items.length %> Items</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6">
-                                        <% 
-                                            let statusColor = "text-yellow-500 bg-yellow-500/10";
-                                            if (order.orderStatus === 'Delivered') statusColor = "text-green-500 bg-green-500/10";
-                                            if (order.orderStatus === 'Cancelled') statusColor = "text-red-500 bg-red-500/10";
-                                            if (order.orderStatus === 'Shipped') statusColor = "text-primary bg-primary/10";
-                                        %>
-                                        <span class="<%= statusColor %> px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-current/20">
-                                            <%= order.orderStatus %>
+                                    <td class="p-5 text-right">
+                                        <span class="bg-[#5c56f6]/10 text-white border border-[#5c56f6]/20 px-3 py-1.5 rounded-lg font-mono font-bold text-sm tracking-tight shadow-[0_0_15px_rgba(92,86,246,0.1)]">
+                                            ₹<%= order.pricing.totalAmount.toLocaleString('en-IN') %>
                                         </span>
+                                    </td>   
+                                    <td class="p-5 text-center">
+                                        <% 
+                                            const method = (order.payment.method || '').toUpperCase();
+                                            const mClass = method === 'RAZORPAY' ? 'text-blue-400 bg-blue-400/10 border-blue-400/20' : 
+                                                           method === 'WALLET' ? 'text-purple-400 bg-purple-400/10 border-purple-400/20' : 
+                                                           method === 'COD' ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 
+                                                           'text-gray-400 bg-gray-400/10 border-gray-400/20';
+                                        %>
+                                        <span class="<%= mClass %> px-2.5 py-1 rounded text-[10px] font-bold tracking-wider border"><%= method %></span>
                                     </td>
-                                    <td class="px-8 py-6 text-right">
-                                        <a href="/admin/orders/<%= order.orderId %>" class="inline-flex items-center gap-2 bg-white/5 hover:bg-primary text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">
-                                            View Details
-                                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                    <td class="p-5 text-center">
+                                        <% 
+                                            const status = order.orderStatus;
+                                            const sColors = {
+                                                'PENDING': 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5',
+                                                'SHIPPED': 'border-blue-500/30 text-blue-500 bg-blue-500/5',
+                                                'OUT_FOR_DELIVERY': 'border-indigo-500/30 text-indigo-500 bg-indigo-500/5',
+                                                'DELIVERED': 'border-green-500/30 text-green-500 bg-green-500/5',
+                                                'CANCELLED': 'border-red-500/30 text-red-500 bg-red-500/5'
+                                            };
+                                            const allowedSteps = {
+                                                'PENDING': ['SHIPPED', 'CANCELLED'],
+                                                'SHIPPED': ['OUT_FOR_DELIVERY'],
+                                                'OUT_FOR_DELIVERY': ['DELIVERED'],
+                                                'DELIVERED': [], 'CANCELLED': []
+                                            };
+                                            const options = allowedSteps[status] || [];
+                                        %>
+
+                                        <% if (options.length > 0) { %>
+                                            <select 
+                                                onchange="handleStatusChange('<%= order.orderId %>', this.value, '<%= status %>')"
+                                                class="bg-black border <%= sColors[status] %> rounded-lg py-1.5 px-3 text-[11px] font-bold uppercase tracking-wider outline-none cursor-pointer hover:bg-white/10 transition-all"
+                                            >
+                                                <option value="" selected disabled><%= status %></option>
+                                                <% options.forEach(opt => { %>
+                                                    <option value="<%= opt %>" class="bg-[#111] text-white"><%= opt %></option>
+                                                <% }) %>
+                                            </select>
+                                        <% } else { %>
+                                            <span class="<%= sColors[status] %> border px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider">
+                                                <%= status %>
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td class="p-5 text-center">
+                                        <a href="/admin/orders/<%= order.orderId %>" class="text-gray-400 hover:text-[#5c56f6] transition-colors" title="View Details">
+                                            <span class="material-symbols-outlined text-[22px]">visibility</span>
                                         </a>
                                     </td>
                                 </tr>
@@ -113,29 +152,89 @@
                     </tbody>
                 </table>
             </div>
-        </section>
 
-        <% if (pagination.totalPages > 1) { %>
-            <div class="flex items-center justify-between pt-4">
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    Page <%= pagination.currentPage %> of <%= pagination.totalPages %>
-                </p>
-                <div class="flex gap-2">
-                    <% if (pagination.currentPage > 1) { %>
-                        <a href="?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
-                           class="px-6 py-3 bg-[#12141a] border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all">
-                            Prev
+            <div class="p-5 border-t border-gray-800 flex justify-center items-center gap-2 bg-white/[0.01]">
+                <% if (pagination.totalPages > 1) { %>
+                    <a href="?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                       class="text-gray-500 hover:text-white px-3 text-sm <%= pagination.currentPage === 1 ? 'pointer-events-none opacity-20' : '' %>">
+                        Prev
+                    </a>
+                    <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                        <a href="?page=<%= i %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                           class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors <%= i === pagination.currentPage ? 'bg-[#5c56f6] text-white' : 'text-gray-500 hover:bg-white/5' %>">
+                            <%= i %>
                         </a>
                     <% } %>
-                    <% if (pagination.currentPage < pagination.totalPages) { %>
-                        <a href="?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
-                           class="px-6 py-3 bg-[#12141a] border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary transition-all">
-                            Next
-                        </a>
-                    <% } %>
-                </div>
+                    <a href="?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                       class="text-gray-500 hover:text-white px-3 text-sm <%= pagination.currentPage === pagination.totalPages ? 'pointer-events-none opacity-20' : '' %>">
+                        Next
+                    </a>
+                <% } %>
             </div>
-        <% } %>
-
+        </section>
     </div>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+async function handleStatusChange(orderId, newStatus, currentStatus) {
+    const result = await Swal.fire({
+        title: 'Update Status?',
+        text: `Move Order #${orderId} from ${currentStatus} to ${newStatus}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#5c56f6',
+        cancelButtonColor: '#1f2937',
+        confirmButtonText: 'Confirm Update',
+        background: '#111',
+        color: '#fff'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            Swal.fire({
+                title: 'Processing...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); },
+                background: '#111',
+                color: '#fff'
+            });
+
+            const response = await fetch(`/admin/orders/${orderId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#111',
+                    color: '#fff'
+                });
+                window.location.reload();
+            } else {
+                throw new Error(data.message || 'Something went wrong');
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: error.message,
+                background: '#111',
+                color: '#fff'
+            }).then(() => {
+                window.location.reload(); 
+            });
+        }
+    } else {
+        window.location.reload();
+    }
+}
+</script>
