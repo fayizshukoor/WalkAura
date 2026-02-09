@@ -43,7 +43,7 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   const sortQuery = sortOptions[sort] || { createdAt: -1 };
 
   // Fetch orders
-  const [orders, totalOrders] = await Promise.all([
+  const [rawOrders, totalOrders] = await Promise.all([
     Order.find(query)
       .populate({
         path: "user",
@@ -59,10 +59,19 @@ export const getAllOrders = asyncHandler(async (req, res) => {
         orderStatus
         createdAt
         pricing.totalAmount
-      `),
+        items.status
+      `).lean(),
 
     Order.countDocuments(query),
   ]);
+
+  // Deriving flag for return requested items
+  const orders = rawOrders.map(order => ({
+    ...order,
+    hasReturnRequest: order.items?.some(
+      item => item.status === "RETURN_REQUESTED"
+    ),
+  }));
 
   res.render("admin/orders", {
     layout: "layouts/admin",
@@ -80,6 +89,8 @@ export const getAllOrders = asyncHandler(async (req, res) => {
     },
   });
 });
+
+
 
 
 // Allowed admin status transitions
@@ -227,7 +238,7 @@ export const approveReturn = asyncHandler(async (req, res) => {
     });
   }
 
-  // 🔐 Validate return eligibility
+  //  Validate return eligibility
   if (item.status !== "RETURN_REQUESTED") {
     return res.status(400).json({
       success: false,
@@ -237,7 +248,7 @@ export const approveReturn = asyncHandler(async (req, res) => {
 
   const now = new Date();
 
-  // ✅ Mark item as returned
+  // Mark item as returned
   item.status = "RETURNED";
   item.returnInfo.approvedAt = now;
   item.returnInfo.receivedAt = now; // simplified flow
@@ -247,19 +258,82 @@ export const approveReturn = asyncHandler(async (req, res) => {
     at: now,
   });
 
-  // 📦 Restore stock
+  // Restore stock
   await Inventory.findByIdAndUpdate(item.inventory, {
     $inc: { stock: item.quantity },
   });
 
-  // ⚠️ Do NOT force order status
-  // Order status remains derived from items
 
   await order.save();
 
   return res.status(200).json({
     success: true,
     message: "Return approved successfully",
+    data: {
+      orderId: order.orderId,
+      itemId: item._id,
+      itemStatus: item.status,
+    },
+  });
+});
+
+
+// Return reject
+export const rejectReturn = asyncHandler(async (req, res) => {
+  const { orderId, itemId } = req.params;
+  const { reason } = req.body;
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Rejection reason is required",
+    });
+  }
+
+  const order = await Order.findOne({ orderId });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  const item = order.items.id(itemId);
+
+  if (!item) {
+    return res.status(404).json({
+      success: false,
+      message: "Item not found",
+    });
+  }
+
+  //  Validate return request state
+  if (item.status !== "RETURN_REQUESTED") {
+    return res.status(400).json({
+      success: false,
+      message: `Return cannot be rejected. Current status: ${item.status}`,
+    });
+  }
+
+  const now = new Date();
+
+  //  Reject return permenantly
+  item.status = "RETURN_REJECTED";
+
+  item.returnInfo.rejectedAt = now;
+  item.returnInfo.rejectionReason = reason.trim();
+
+  item.statusTimeline.push({
+    status: "RETURN_REJECTED",
+    at: now,
+  });
+
+  await order.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Return request rejected",
     data: {
       orderId: order.orderId,
       itemId: item._id,

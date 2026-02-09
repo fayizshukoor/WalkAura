@@ -23,6 +23,8 @@ import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.contro
 
 import { cancelEntireOrder, cancelItem, getOrderDetails, getOrderSuccess, getUserOrders, requestReturn, requestReturnEntireOrder } from "../controllers/user/order.controller.js";
 
+import { downloadInvoice } from "../controllers/user/invoice.controller.js";
+
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
@@ -133,4 +135,7 @@ router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
 router.post("/orders/:orderId/cancel",cancelEntireOrder);
 router.post("/orders/:orderId/items/:itemId/return",requestReturn);
 router.post("/orders/:orderId/return",requestReturnEntireOrder);
+
+// Invoice download
+router.get("/orders/:orderId/invoice",downloadInvoice);
 export default router;

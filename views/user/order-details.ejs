@@ -13,10 +13,20 @@
         background-color: #12141a !important;
         color: #fff !important;
     }
+    /* Subtle pulse for pending states */
+    .status-pulse {
+        animation: pulse-opacity 2s infinite;
+    }
+    @keyframes pulse-opacity {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
 </style>
 
-<main class="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-base">
+<main class="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-base bg-black min-h-screen">
     <div class="max-w-[1250px] mx-auto space-y-10">
+        
         <div class="space-y-6">
             <nav class="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em]">
                 <a href="/orders" class="text-gray-500 hover:text-primary transition-colors">Orders</a>
@@ -119,14 +129,6 @@
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Subtotal</span>
                         <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
                     </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-500 font-bold uppercase tracking-widest">Tax (<%= order.pricing.taxPercentage %>%)</span>
-                        <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-500 font-bold uppercase tracking-widest">Shipping Charge</span>
-                        <span class="text-white font-bold">₹<%= order.pricing.shippingCharge %></span>
-                    </div>
                     <div class="flex justify-between items-center text-sm text-red-400">
                         <span class="font-bold uppercase tracking-widest">Discount</span>
                         <span class="font-bold">- ₹<%= order.pricing.discount %></span>
@@ -138,6 +140,13 @@
                 </div>
             </div>
         </div>
+
+        <% if (order.orderStatus === 'RETURN_REQUESTED') { %>
+            <div class="bg-orange-500/10 border border-orange-500/30 p-6 rounded-2xl flex items-center gap-4">
+                <span class="material-symbols-outlined text-orange-500">info</span>
+                <p class="text-orange-500 text-sm font-bold uppercase tracking-widest">Return request for the entire order is currently under review.</p>
+            </div>
+        <% } %>
 
         <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
             <div class="p-8 border-b border-white/10 bg-white/[0.03]">
@@ -152,46 +161,66 @@
                     <div class="flex-1 text-center lg:text-left">
                         <p class="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-2">SKU: <%= item.sku %></p>
                         <h3 class="text-white font-bold text-xl"><%= item.productName %></h3>
+                        
                         <div class="flex flex-wrap justify-center lg:justify-start gap-6 mt-3">
                             <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Size: <span class="text-white"><%= item.size %></span></p>
                             <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Qty: <span class="text-white"><%= item.quantity %></span></p>
                             
                             <% 
-                                let statusClass = 'text-green-500 bg-green-500/10';
-                                if(item.status === 'CANCELLED' || item.status === 'RETURNED') statusClass = 'text-red-500 bg-red-500/10';
-                                if(item.status === 'RETURN_REQUESTED') statusClass = 'text-yellow-500 bg-yellow-500/10';
+                                let statusColors = {
+                                    'CANCELLED': 'text-red-500 bg-red-500/10 border-red-500/20',
+                                    'RETURNED': 'text-green-500 bg-green-500/10 border-green-500/20',
+                                    'RETURN_REQUESTED': 'text-orange-500 bg-orange-500/10 border-orange-500/20 status-pulse',
+                                    'RETURN_REJECTED': 'text-red-400 bg-red-400/5 border-red-400/20'
+                                };
+                                let currentStatusClass = statusColors[item.status] || 'text-gray-400 bg-white/5 border-white/10';
                             %>
-                            <span class="<%= statusClass %> px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">
+                            <span class="<%= currentStatusClass %> px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest">
                                 <%= item.status.replace(/_/g, ' ') %>
                             </span>
                         </div>
+
+                        <% if (item.status === 'RETURN_REJECTED' && item.returnInfo?.rejectionReason) { %>
+                            <div class="mt-4 p-4 bg-red-500/5 border border-red-500/10 rounded-xl max-w-xl">
+                                <p class="text-[10px] text-red-400 font-black uppercase tracking-widest mb-1">Return Rejected Reason:</p>
+                                <p class="text-sm text-gray-400 italic">"<%= item.returnInfo.rejectionReason %>"</p>
+                            </div>
+                        <% } %>
                     </div>
+
                     <div class="flex flex-col sm:flex-row items-center gap-8 w-full lg:w-auto">
                         <div class="text-center sm:text-right min-w-[120px]">
                             <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
                             <p class="text-xs text-gray-500 font-bold uppercase mt-1">₹<%= item.price.toLocaleString() %> / unit</p>
                         </div>
                         
-                        <div class="w-full sm:w-auto">
-                            <% if (item.status === 'DELIVERED') { %>
+                        <div class="w-full sm:w-auto min-w-[200px] flex justify-center">
+                            <% if (item.status === 'DELIVERED' && order.orderStatus !== 'RETURN_REQUESTED') { %>
                                 <button 
                                     onclick="handleReturnItem('<%= order.orderId %>', '<%= item._id %>', '<%= item.productName %>')"
                                     class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
                                     Return Item
                                 </button>
                             <% } else if (item.status === 'RETURN_REQUESTED') { %>
-                                <span class="text-yellow-500 font-black uppercase text-[10px] tracking-widest border border-yellow-500/20 px-6 py-4 rounded-xl bg-yellow-500/5">
-                                    Return Pending
-                                </span>
+                                <div class="flex flex-col items-center gap-1 opacity-80">
+                                    <span class="material-symbols-outlined text-orange-500">pending_actions</span>
+                                    <span class="text-orange-500 font-black uppercase text-[9px] tracking-widest">Awaiting Approval</span>
+                                </div>
                             <% } else if (item.status === 'RETURNED') { %>
-                                <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
-                                    Item Returned
-                                </span>
+                                <div class="flex flex-col items-center gap-1 text-green-500">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                    <span class="font-black uppercase text-[9px] tracking-widest">Return Completed</span>
+                                </div>
+                            <% } else if (item.status === 'RETURN_REJECTED') { %>
+                                <div class="flex flex-col items-center gap-1 text-red-400 opacity-60">
+                                    <span class="material-symbols-outlined">block</span>
+                                    <span class="font-black uppercase text-[9px] tracking-widest">Return Rejected</span>
+                                </div>
                             <% } else if (item.status === 'CANCELLED') { %>
                                 <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
                                     Item Cancelled
                                 </span>
-                            <% } else { %>
+                            <% } else if (item.status === 'PENDING' || item.status === 'SHIPPED') { %>
                                 <button 
                                     onclick="handleCancelItem('<%= order.orderId %>', '<%= item._id %>', '<%= item.productName %>')"
                                     class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
@@ -206,11 +235,13 @@
         </section>
 
         <div class="flex flex-col sm:flex-row justify-end gap-6 pt-4 pb-12">
-            <% 
-                const allItemsProcessed = order.items.every(item => ['CANCELLED', 'RETURNED', 'RETURN_REQUESTED'].includes(item.status));
-                const canCancelOrder = order.orderStatus === 'PENDING' && !allItemsProcessed;
-                const canReturnOrder = order.orderStatus === 'DELIVERED' && !allItemsProcessed;
-                const canDownloadInvoice = order.orderStatus === 'DELIVERED' && order.payment.status === 'Paid';
+            <%
+                const terminalItemStatuses = ['CANCELLED', 'RETURNED', 'RETURN_REJECTED'];
+                const allItemsFinalized = order.items.every(item => terminalItemStatuses.includes(item.status));
+                
+                const canCancelOrder = order.orderStatus === 'PENDING' && !allItemsFinalized;
+                const canReturnOrder = order.orderStatus === 'DELIVERED' && !allItemsFinalized;
+                const canDownloadInvoice = order.payment.status === 'PAID';
             %>
 
             <% if(canCancelOrder) { %>
@@ -230,9 +261,12 @@
             <% } %>
 
             <% if(canDownloadInvoice) { %>
-                <button class="w-full sm:w-auto px-12 py-6 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
-                    <span class="material-symbols-outlined text-base">download</span>
-                    Download Invoice
+                <button 
+                    id="downloadBtn"
+                    onclick="handleDownloadInvoice('<%= order.orderId %>')"
+                    class="w-full sm:w-auto px-12 py-6 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
+                    <span id="downloadIcon" class="material-symbols-outlined text-base">download</span>
+                    <span id="downloadText">Download Invoice</span>
                 </button>
             <% } %>
         </div>
@@ -240,7 +274,6 @@
 </main>
 
 <script>
-    // Config & Options
     const cancellationReasons = {
         'Changed my mind': 'Changed my mind',
         'Found a better price': 'Found a better price',
@@ -266,7 +299,62 @@
         customClass: { input: 'swal-custom-input' }
     };
 
-    // --- Return Entire Order ---
+    // --- Invoice Download Functionality ---
+    async function handleDownloadInvoice(orderId) {
+        const btn = document.getElementById('downloadBtn');
+        const icon = document.getElementById('downloadIcon');
+        const text = document.getElementById('downloadText');
+
+        try {
+            // UI Loading State
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            text.innerText = "Generating PDF...";
+            icon.innerText = "hourglass_empty";
+
+            const response = await fetch(`/orders/${orderId}/invoice`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to download invoice');
+            }
+
+            // Detect filename from header if possible
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `invoice-${orderId}.pdf`;
+            if (contentDisposition && contentDisposition.includes('filename=')) {
+                filename = contentDisposition.split('filename=')[1].split(';')[0];
+            }
+
+            // Create blob and download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            Swal.fire({
+                ...swalConfig,
+                icon: 'error',
+                title: 'Download Failed',
+                text: error.message
+            });
+        } finally {
+            // Reset Button State
+            btn.disabled = false;
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            text.innerText = "Download Invoice";
+            icon.innerText = "download";
+        }
+    }
+
+    // --- Action Handlers ---
+    
     async function handleReturnEntireOrder(orderId) {
         const { value: reason } = await Swal.fire({
             ...swalConfig,
@@ -281,28 +369,9 @@
             inputValidator: (v) => !v && 'Please select a reason'
         });
 
-        if (reason) {
-            try {
-                // Ensure this endpoint exists in your backend
-                const response = await fetch(`/orders/${orderId}/return`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    await Swal.fire({ ...swalConfig, icon: 'success', title: 'RETURN REQUESTED', text: result.message });
-                    window.location.reload();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
-            }
-        }
+        if (reason) executeAction(`/orders/${orderId}/return`, { reason }, 'RETURN REQUESTED');
     }
 
-    // --- Individual Return ---
     async function handleReturnItem(orderId, itemId, productName) {
         const { value: reason } = await Swal.fire({
             ...swalConfig,
@@ -317,27 +386,9 @@
             inputValidator: (v) => !v && 'Please select a reason'
         });
 
-        if (reason) {
-            try {
-                const response = await fetch(`/orders/${orderId}/items/${itemId}/return`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    await Swal.fire({ ...swalConfig, icon: 'success', title: 'REQUEST SUBMITTED', text: result.message });
-                    window.location.reload();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
-            }
-        }
+        if (reason) executeAction(`/orders/${orderId}/items/${itemId}/return`, { reason }, 'REQUEST SUBMITTED');
     }
 
-    // --- Individual Cancellation ---
     async function handleCancelItem(orderId, itemId, productName) {
         const { value: reason } = await Swal.fire({
             ...swalConfig,
@@ -353,27 +404,9 @@
             inputValidator: (v) => !v && 'Please select a reason'
         });
 
-        if (reason) {
-            try {
-                const response = await fetch(`/orders/${orderId}/items/${itemId}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    await Swal.fire({ ...swalConfig, icon: 'success', title: 'ITEM CANCELLED', text: result.message });
-                    window.location.reload();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
-            }
-        }
+        if (reason) executeAction(`/orders/${orderId}/items/${itemId}/cancel`, { reason }, 'ITEM CANCELLED');
     }
 
-    // --- Entire Order Cancellation ---
     async function handleCancelEntireOrder(orderId) {
         const { value: reason } = await Swal.fire({
             ...swalConfig,
@@ -389,23 +422,25 @@
             inputValidator: (v) => !v && 'Please select a reason'
         });
 
-        if (reason) {
-            try {
-                const response = await fetch(`/orders/${orderId}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reason })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    await Swal.fire({ ...swalConfig, icon: 'success', title: 'ORDER CANCELLED', text: result.message });
-                    window.location.reload();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
+        if (reason) executeAction(`/orders/${orderId}/cancel`, { reason }, 'ORDER CANCELLED');
+    }
+
+    async function executeAction(url, body, successTitle) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (result.success) {
+                await Swal.fire({ ...swalConfig, icon: 'success', title: successTitle, text: result.message });
+                window.location.reload();
+            } else {
+                throw new Error(result.message);
             }
+        } catch (error) {
+            Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
         }
     }
 </script>

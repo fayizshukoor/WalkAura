@@ -10,6 +10,16 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
+    /* Pulse animation for return requests */
+    @keyframes pulse-red {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .return-pulse {
+        animation: pulse-red 2s infinite;
+    }
 </style>
 
 <main class="flex-grow pt-8 pb-20 px-4 sm:px-6 lg:px-8 bg-black min-h-screen text-gray-200 antialiased">
@@ -73,7 +83,12 @@
                             <% orders.forEach(order => { %>
                                 <tr class="hover:bg-white/[0.02] transition-colors">
                                     <td class="p-5">
-                                        <span class="text-white font-semibold">#<%= order.orderId %></span>
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-white font-semibold">#<%= order.orderId %></span>
+                                            <% if (order.hasReturnRequest) { %>
+                                                <span class="flex h-2 w-2 rounded-full bg-red-500 return-pulse" title="Return Requested"></span>
+                                            <% } %>
+                                        </div>
                                     </td>
                                     <td class="p-5">
                                         <div class="flex flex-col">
@@ -114,13 +129,14 @@
                                                 'SHIPPED': 'border-blue-500/30 text-blue-500 bg-blue-500/5',
                                                 'OUT_FOR_DELIVERY': 'border-indigo-500/30 text-indigo-500 bg-indigo-500/5',
                                                 'DELIVERED': 'border-green-500/30 text-green-500 bg-green-500/5',
-                                                'CANCELLED': 'border-red-500/30 text-red-500 bg-red-500/5'
+                                                'CANCELLED': 'border-red-500/30 text-red-500 bg-red-500/5',
+                                                'RETURNED': 'border-purple-500/30 text-purple-500 bg-purple-500/5'
                                             };
                                             const allowedSteps = {
                                                 'PENDING': ['SHIPPED', 'CANCELLED'],
                                                 'SHIPPED': ['OUT_FOR_DELIVERY'],
                                                 'OUT_FOR_DELIVERY': ['DELIVERED'],
-                                                'DELIVERED': [], 'CANCELLED': []
+                                                'DELIVERED': [], 'CANCELLED': [], 'RETURNED': []
                                             };
                                             const options = allowedSteps[status] || [];
                                         %>
@@ -142,8 +158,18 @@
                                         <% } %>
                                     </td>
                                     <td class="p-5 text-center">
-                                        <a href="/admin/orders/<%= order.orderId %>" class="text-gray-400 hover:text-[#5c56f6] transition-colors" title="View Details">
-                                            <span class="material-symbols-outlined text-[22px]">visibility</span>
+                                        <a href="/admin/orders/<%= order.orderId %>" 
+                                           class="relative group flex items-center justify-center transition-all" 
+                                           title="<%= order.hasReturnRequest ? 'Action Required: Return Request' : 'View Details' %>">
+                                            
+                                            <% if (order.hasReturnRequest) { %>
+                                                <div class="flex items-center gap-1 bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2 py-1 rounded-md hover:bg-orange-500 hover:text-white transition-all">
+                                                    <span class="material-symbols-outlined text-[18px]">assignment_return</span>
+                                                    <span class="text-[10px] font-black uppercase">Review</span>
+                                                </div>
+                                            <% } else { %>
+                                                <span class="material-symbols-outlined text-[22px] text-gray-400 group-hover:text-[#5c56f6]">visibility</span>
+                                            <% } %>
                                         </a>
                                     </td>
                                 </tr>

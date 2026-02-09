@@ -51,7 +51,7 @@ const orderItemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURN_REQUESTED", "RETURNED"],
+    enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURN_REQUESTED", "RETURNED", "RETURN_REJECTED"],
     default: "PENDING",
   },
   statusTimeline: [{
@@ -69,6 +69,8 @@ returnInfo: {
   reason: String,
   requestedAt: Date,
   approvedAt: Date,
+  rejectedAt: Date,
+  rejectionReason:String,
   receivedAt: Date
 }
 });

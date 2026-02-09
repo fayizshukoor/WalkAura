@@ -276,10 +276,10 @@ export const requestReturn = asyncHandler(async (req, res) => {
   }
 
   // Eligibility checks
-  if (item.status !== "DELIVERED") {
+  if (item.status !== "DELIVERED" || item.returnInfo?.rejectedAt) {
     return res.status(400).json({
       success: false,
-      message: `Item cannot be returned. Current status: ${item.status}`,
+      message: `Return request is not allowed for this item`,
     });
   }
 
@@ -344,7 +344,7 @@ export const requestReturnEntireOrder = asyncHandler(async (req, res) => {
 
   for (const item of order.items) {
     // Only delivered items can be returned
-    if (item.status !== "DELIVERED") {
+    if (item.status !== "DELIVERED" || item.returnInfo?.rejectedAt) {
       continue;
     }
 
