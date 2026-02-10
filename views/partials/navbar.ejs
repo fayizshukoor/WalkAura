@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <nav class="w-full h-20 bg-black/80 backdrop-blur-md border-b border-gray-800 flex items-center justify-between px-6 md:px-12 fixed top-0 left-0 z-50">
 
   <a class="flex items-center gap-3" href="/">
@@ -42,10 +44,10 @@
             <span class="material-symbols-outlined text-[20px]">description</span>
             My Orders
           </a>
-          <a href="/logout" data-logout-btn class="flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition rounded-b-xl">
+          <button type="button" id="logoutBtn" class="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-white/5 transition rounded-b-xl border-none outline-none bg-transparent cursor-pointer text-left">
             <span class="material-symbols-outlined text-[20px]">logout</span>
             Logout
-          </a>
+          </button>
         </div>
       </div>
 
@@ -103,6 +105,34 @@
           !e.target.closest("#profileMenu")) {
         profile.classList.add("hidden");
       }
+    });
+
+
+    // Logout functionality
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    const result = await Swal.fire({
+    title: 'Confirm Logout',
+    text: "Are you sure you want to log out?",
+    icon: 'warning',
+    showCancelButton: true,
+    background: '#12141a',
+    color: '#fff',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#374151',
+    confirmButtonText: 'Yes, Logout',
+    customClass: {
+    popup: 'rounded-[2rem] border border-white/10'
+    }
+    });
+
+    if (result.isConfirmed) {
+    // Create and submit a POST form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/logout';
+    document.body.appendChild(form);
+    form.submit();
+    }
     });
 
     window.addEventListener('cartUpdated', (e) => {

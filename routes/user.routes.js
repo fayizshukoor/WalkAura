@@ -21,7 +21,11 @@ import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity }
 
 import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
 
-import { cancelEntireOrder, cancelItem, getOrderDetails, getOrderSuccess, getUserOrders, requestReturn, requestReturnEntireOrder } from "../controllers/user/order.controller.js";
+import { getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
+
+import { cancelEntireOrder, cancelItem } from "../controllers/user/orderCancel.controller.js";
+
+import { requestReturn, requestReturnEntireOrder } from "../controllers/user/orderReturn.controller.js";
 
 import { downloadInvoice } from "../controllers/user/invoice.controller.js";
 
@@ -53,7 +57,7 @@ router
 
 router.post("/resend-otp", resendOTP);
 
-router.get("/logout", noCache, logout);
+router.post("/logout", noCache, logout);
 
 //Forgot Password
 
@@ -117,9 +121,9 @@ router.get("/product/:slug", getProductDetails);
 // Cart
 router.get("/cart",requireAuth,getCart);
 router.post("/cart/add",addToCart);
-router.patch("/cart/update-quantity",updateCartItemQuantity);
-router.delete("/cart/remove/:inventoryId",removeCartItem);
-router.delete("/cart/clear",clearCart);
+router.patch("/cart/update-quantity",requireAuth,updateCartItemQuantity);
+router.delete("/cart/remove/:inventoryId", requireAuth, removeCartItem);
+router.delete("/cart/clear", requireAuth, clearCart);
 
 // Checkout
 router.get("/checkout",getCheckoutPage);

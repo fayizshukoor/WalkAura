@@ -19,7 +19,6 @@ export const verifyOTP = asyncHandler(async(req,res)=>{
         const email = req.session.email;
         const purpose = req.session.otpPurpose;
         
-        console.log(email,purpose);
 
         if(!email || !purpose){
             return res.redirect("/signup");

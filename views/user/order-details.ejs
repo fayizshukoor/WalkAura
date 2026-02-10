@@ -129,6 +129,12 @@
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Subtotal</span>
                         <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
                     </div>
+
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-bold uppercase tracking-widest">Tax (18%)</span>
+                        <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
+                    </div>
+
                     <div class="flex justify-between items-center text-sm text-red-400">
                         <span class="font-bold uppercase tracking-widest">Discount</span>
                         <span class="font-bold">- ₹<%= order.pricing.discount %></span>
@@ -197,10 +203,13 @@
                         <div class="w-full sm:w-auto min-w-[200px] flex justify-center">
                             <% if (item.status === 'DELIVERED' && order.orderStatus !== 'RETURN_REQUESTED') { %>
                                 <button 
-                                    onclick="handleReturnItem('<%= order.orderId %>', '<%= item._id %>', '<%= item.productName %>')"
-                                    class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                    Return Item
-                                </button>
+                                onclick="handleReturnItem(this)"
+                                data-order-id="<%= order.orderId %>"
+                                data-item-id="<%= item._id %>"
+                                data-product-name="<%= item.productName %>"
+                                class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                Return Item
+                            </button>
                             <% } else if (item.status === 'RETURN_REQUESTED') { %>
                                 <div class="flex flex-col items-center gap-1 opacity-80">
                                     <span class="material-symbols-outlined text-orange-500">pending_actions</span>
@@ -222,10 +231,13 @@
                                 </span>
                             <% } else if (item.status === 'PENDING' || item.status === 'SHIPPED') { %>
                                 <button 
-                                    onclick="handleCancelItem('<%= order.orderId %>', '<%= item._id %>', '<%= item.productName %>')"
-                                    class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                    Cancel Item
-                                </button>
+                                onclick="handleCancelItem(this)"
+                                data-order-id="<%= order.orderId %>"
+                                data-item-id="<%= item._id %>"
+                                data-product-name="<%= item.productName %>"
+                                class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                Cancel Item
+                            </button>
                             <% } %>
                         </div>
                     </div>
@@ -372,40 +384,48 @@
         if (reason) executeAction(`/orders/${orderId}/return`, { reason }, 'RETURN REQUESTED');
     }
 
-    async function handleReturnItem(orderId, itemId, productName) {
-        const { value: reason } = await Swal.fire({
-            ...swalConfig,
-            title: 'RETURN ITEM',
-            text: `Reason for returning "${productName}"?`,
-            icon: 'question',
-            input: 'select',
-            inputOptions: returnReasons,
-            inputPlaceholder: 'Select return reason',
-            showCancelButton: true,
-            confirmButtonText: 'SUBMIT REQUEST',
-            inputValidator: (v) => !v && 'Please select a reason'
-        });
+    async function handleReturnItem(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+    const itemId = btn.getAttribute('data-item-id');
+    const productName = btn.getAttribute('data-product-name');
 
-        if (reason) executeAction(`/orders/${orderId}/items/${itemId}/return`, { reason }, 'REQUEST SUBMITTED');
-    }
+    const { value: reason } = await Swal.fire({
+        ...swalConfig,
+        title: 'RETURN ITEM',
+        text: `Reason for returning "${productName}"?`,
+        icon: 'question',
+        input: 'select',
+        inputOptions: returnReasons,
+        inputPlaceholder: 'Select return reason',
+        showCancelButton: true,
+        confirmButtonText: 'SUBMIT REQUEST',
+        inputValidator: (v) => !v && 'Please select a reason'
+    });
 
-    async function handleCancelItem(orderId, itemId, productName) {
-        const { value: reason } = await Swal.fire({
-            ...swalConfig,
-            confirmButtonColor: '#dc2626',
-            title: 'CANCEL ITEM',
-            text: `Are you sure you want to cancel "${productName}"?`,
-            icon: 'warning',
-            input: 'select',
-            inputOptions: cancellationReasons,
-            inputPlaceholder: 'Select a reason',
-            showCancelButton: true,
-            confirmButtonText: 'CONFIRM CANCELLATION',
-            inputValidator: (v) => !v && 'Please select a reason'
-        });
+    if (reason) executeAction(`/orders/${orderId}/items/${itemId}/return`, { reason }, 'REQUEST SUBMITTED');
+}
 
-        if (reason) executeAction(`/orders/${orderId}/items/${itemId}/cancel`, { reason }, 'ITEM CANCELLED');
-    }
+async function handleCancelItem(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+    const itemId = btn.getAttribute('data-item-id');
+    const productName = btn.getAttribute('data-product-name');
+
+    const { value: reason } = await Swal.fire({
+        ...swalConfig,
+        confirmButtonColor: '#dc2626',
+        title: 'CANCEL ITEM',
+        text: `Are you sure you want to cancel "${productName}"?`,
+        icon: 'warning',
+        input: 'select',
+        inputOptions: cancellationReasons,
+        inputPlaceholder: 'Select a reason',
+        showCancelButton: true,
+        confirmButtonText: 'CONFIRM CANCELLATION',
+        inputValidator: (v) => !v && 'Please select a reason'
+    });
+
+    if (reason) executeAction(`/orders/${orderId}/items/${itemId}/cancel`, { reason }, 'ITEM CANCELLED');
+}
 
     async function handleCancelEntireOrder(orderId) {
         const { value: reason } = await Swal.fire({

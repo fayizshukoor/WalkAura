@@ -22,12 +22,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   const fontRegular = path.join(__dirname, "../../public/fonts/Roboto-Regular.ttf");
   const fontBold = path.join(__dirname, "../../public/fonts/Roboto-Bold.ttf");
 
-  /**
-   * CRITICAL FIX: Disable automatic page breaks.
-   * We set 'bufferPages: true' and 'bufferPages: true' 
-   * but the most important part is 'autoFirstPage: true' 
-   * combined with manual coordinate management.
-   */
+
   const doc = new PDFDocument({ 
     size: "A4", 
     margin: 0, // Set margin to 0 to stop auto-page-break triggers
@@ -45,9 +40,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   const accentColor = "#4f46e5"; 
   const rupee = "\u20B9"; 
 
-  /* =========================
-     FIXED LAYOUT COORDINATES (A4: 595 x 842)
-  ========================= */
+
   const SAFE_X = 40;
   const SAFE_WIDTH = 515;
   const PAGE_BOTTOM = 842;
@@ -55,17 +48,13 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   const SUMMARY_Y = 655;   // Starting position for totals
   const TABLE_TOP = 270;   // Adjusted for address info
 
-  /* =========================
-     HEADER
-  ========================= */
+
   doc.fillColor(accentColor).font("Roboto-Bold").fontSize(20).text("WALKAURA", SAFE_X, 50);
   doc.fillColor("#666").font("Roboto-Regular").fontSize(8).text("PREMIUM FOOTWEAR & LIFESTYLE", SAFE_X, 72);
   doc.fillColor(primaryColor).font("Roboto-Bold").fontSize(24).text("INVOICE", 350, 50, { align: "right", width: 205 });
   doc.moveTo(SAFE_X, 95).lineTo(555, 95).strokeColor("#eeeeee").stroke();
 
-  /* =========================
-     INFO SECTION
-  ========================= */
+
   const infoY = 120;
   
   // Billed To
@@ -94,9 +83,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
      .text(`Order ID: #${invoice.orderId}`, { align: "right", width: 175 })
      .text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString("en-IN")}`, { align: "right", width: 175 });
 
-  /* =========================
-     ITEMS TABLE HEADER
-  ========================= */
+
   doc.rect(SAFE_X, TABLE_TOP, SAFE_WIDTH, 20).fill("#f3f4f6");
   doc.fillColor(primaryColor).font("Roboto-Bold").fontSize(8);
   doc.text("Item Description", 50, TABLE_TOP + 6);
@@ -106,9 +93,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   doc.text("Price", 410, TABLE_TOP + 6, { width: 65, align: "right" });
   doc.text("Total", 485, TABLE_TOP + 6, { width: 65, align: "right" });
 
-  /* =========================
-     ITEMS RENDERING
-  ========================= */
+
   let itemY = TABLE_TOP + 25;
   let itemsRendered = 0;
 
@@ -135,9 +120,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
        .text(`* Showing ${itemsRendered} of ${invoice.items.length} items.`, SAFE_X, itemY + 2);
   }
 
-  /* =========================
-     SUMMARY & TOTALS
-  ========================= */
+
   // Use absolute position for the summary area
   let currentSummaryY = SUMMARY_Y;
   const summaryX = 350;
@@ -161,9 +144,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   doc.text("GRAND TOTAL", 350, totalBarY + 10);
   doc.text(`${rupee}${invoice.pricing.totalAmount.toLocaleString()}`, 475, totalBarY + 10, { width: 75, align: "right" });
 
-  /* =========================
-     FOOTER
-  ========================= */
+
   doc.fillColor("#999").font("Roboto-Regular").fontSize(7)
      .text("This is a system generated invoice. No signature required.", 0, FOOTER_Y, { align: "center", width: 595 });
 
