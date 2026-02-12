@@ -50,13 +50,13 @@ export const toggleCustomerStatus = async (req, res) => {
     user.isBlocked = !user.isBlocked;
     await user.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       isBlocked: user.isBlocked
     });
 
   } catch (error) {
     console.error("Toggle status error:", error);
-    res.status(500).json({ success: false });
+    return res.status(500).json({ success: false });
   }
 };

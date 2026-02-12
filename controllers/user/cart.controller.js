@@ -3,7 +3,6 @@ import Cart from "../../models/Cart.model.js";
 import Product from "../../models/Product.model.js";
 import ProductVariant from "../../models/ProductVariant.model.js";
 import Inventory from "../../models/Inventory.model.js";
-import Category from "../../models/Category.model.js";
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Wishlist from "../../models/Wishlist.model.js";
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
@@ -168,7 +167,7 @@ export const addToCart = asyncHandler(async (req, res) => {
   ).catch(() => {});
 
 
-  res.status(200).json({ message: "Item added to cart successfully", newCount: cart.totalItems});
+  return res.status(200).json({ message: "Item added to cart successfully", newCount: cart.totalItems});
 });
 
 
@@ -176,7 +175,9 @@ export const addToCart = asyncHandler(async (req, res) => {
 
 export const getCart = asyncHandler(async (req, res) => {
   const userId = req.user?.userId;
-  if (!userId) return res.redirect("/login");
+  if (!userId){
+    return res.redirect("/login");
+  } 
 
   const result = await getReconciledCart(userId);
 
@@ -324,7 +325,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
 
   const updatedItem = cart.items[itemIndex];
 
-  res.status(200).json({ 
+  return res.status(200).json({ 
     success: true, 
     newCount: cart.totalItems,
     cart: {
@@ -375,7 +376,7 @@ export const removeCartItem = asyncHandler(async (req, res) => {
   // Navbar count
   res.locals.cartCount = cart.totalItems;
 
-  res.status(200).json({
+  return res.status(200).json({
     message: "Item removed from cart",
     newCount: cart.totalItems
   });

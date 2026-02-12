@@ -7,7 +7,7 @@ const connectDB = async() =>{
         await mongoose.connect(process.env.MONGODB_URI);
         console.log("MongoDB Connected Succesfully");
     }catch(error){
-        console.log("MongoDB Connection Failed");
+        console.log("MongoDB Connection Failed:",error);
         process.exit(1);
     }
 
@@ -17,8 +17,8 @@ mongoose.connection.once('open', async () => {
         await mongoose.model('User').cleanIndexes(); // Removes indexes not in schema
         await mongoose.model('User').syncIndexes();  // Creates correct indexes
         console.log("Database indexes synchronized successfully.");
-    } catch (err) {
-        console.error("Error syncing indexes:", err);
+    } catch (error) {
+        console.error("Error syncing indexes:", error);
     }
 });
 }

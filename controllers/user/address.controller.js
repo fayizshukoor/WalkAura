@@ -1,10 +1,9 @@
 import Address from "../../models/Address.model.js";
-import User from "../../models/User.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 
 // Show address Page (Initial Render)
 export const showAddressManagement = asyncHandler(async (req, res) => {
-    const userId = req.user.userId;
+    const userId = req?.user?.userId;
     const page = parseInt(req.query.page) || 1;
     const limit = 5;
     const skip = (page - 1) * limit;

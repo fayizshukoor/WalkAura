@@ -31,7 +31,9 @@ export const showProducts = asyncHandler(async (req, res) => {
   const variantMap = {};
   variants.forEach((v) => {
     const key = v.product.toString();
-    if (!variantMap[key]) variantMap[key] = [];
+    if (!variantMap[key]){
+      variantMap[key] = [];
+    } 
 
     variantMap[key].push(v);
   });
@@ -109,7 +111,9 @@ export const getProductsAjax = asyncHandler(async (req, res) => {
   const variantMap = {};
   variants.forEach((v) => {
     const key = v.product.toString();
-    if (!variantMap[key]) variantMap[key] = [];
+    if (!variantMap[key]){
+      variantMap[key] = [];
+    }
     variantMap[key].push(v);
   });
 
@@ -275,9 +279,8 @@ export const addProduct = asyncHandler(async (req, res) => {
 
   await product.save();
 
-  return res
-    .status(HTTP_STATUS.CREATED)
-    .json({ message: "Product created successfully.", productId: product._id });
+  return res.status(HTTP_STATUS.CREATED).json({
+       message: "Product created successfully.", productId: product._id });
 });
 
 export const showEditProduct = asyncHandler(async (req, res) => {
@@ -297,7 +300,7 @@ export const showEditProduct = asyncHandler(async (req, res) => {
     .sort({ name: 1 })
     .lean();
 
-  res.render("admin/edit-product", {
+  return res.render("admin/edit-product", {
     layout: false,
     product,
     categories,
@@ -453,9 +456,7 @@ export const toggleProductStatus = asyncHandler(async (req, res) => {
   product.isListed = !product.isListed;
   await product.save();
 
-  res
-    .status(200)
-    .json({
+  return res.status(200).json({
       message: product.isListed ? "Product Listed" : "Product Unlisted",
     });
 });

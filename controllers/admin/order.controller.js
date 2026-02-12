@@ -205,7 +205,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     });
   }
 
-  res.render("admin/order-details", {
+  return res.render("admin/order-details", {
     layout: "layouts/admin",
     order,
   });

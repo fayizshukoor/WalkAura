@@ -107,7 +107,7 @@ export const handleLogin = asyncHandler(async (req, res) => {
 
   if (user.role === "admin") {
     req.flash("error", "Admins cannot login from User Login");
-    return redirect("/login");
+    return res.redirect("/login");
   }
 
   if (user.googleId && !user.password) {
@@ -144,7 +144,7 @@ export const handleLogin = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.redirect("/");
+  return res.redirect("/");
 });
 
 
@@ -231,7 +231,7 @@ export const showResetPassword = (req, res) => {
   if (!req.session.allowPasswordReset || !req.session.email) {
     return res.redirect("/forgot-password");
   }
-  res.render("user/reset-password");
+  return res.render("user/reset-password");
 };
 
 

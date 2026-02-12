@@ -110,7 +110,7 @@ export const addCategory = asyncHandler(async(req,res)=>{
         offerExpiry:offerExpiry || null
     });
 
-    res.status(201).json({message:"Category added successfully"});
+    return res.status(201).json({message:"Category added successfully"});
     
 });
 
@@ -166,7 +166,7 @@ export const editCategory = asyncHandler(async(req,res)=>{
         offerExpiry:offerExpiry || null
     });
 
-    res.status(HTTP_STATUS.CREATED).json({message:"Category updated successfully"});
+    return res.status(HTTP_STATUS.CREATED).json({message:"Category updated successfully"});
     
 });
 
@@ -185,7 +185,7 @@ export const toggleCategoryStatus = asyncHandler( async(req,res)=>{
     category.isListed = !category.isListed;
     await category.save();
 
-    res.status(HTTP_STATUS.OK).json({message:category.isListed ? "Category Listed":"Category Unlisted"});
+    return res.status(HTTP_STATUS.OK).json({message:category.isListed ? "Category Listed":"Category Unlisted"});
 })
 
 

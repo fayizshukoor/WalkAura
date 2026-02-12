@@ -56,7 +56,7 @@ export const verifyOTP = asyncHandler(async(req,res)=>{
         }
 
         if(purpose === "SIGNUP"){
-            let user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
+            const user = await User.findOneAndUpdate({email},{isVerified:true},{new:true});
             console.log("User verified succesfully",user);
             req.flash("success","Email verified Successfully.Please Login.");
             return res.redirect("/login");
@@ -71,6 +71,8 @@ export const verifyOTP = asyncHandler(async(req,res)=>{
 
         delete req.session.email;
         delete req.session.otpPurpose;
+
+        return res.redirect("/");
     });
 
 
@@ -84,7 +86,7 @@ export const resendOTP = async (req,res)=>{
         
 
         if(!email || !purpose){
-            return res.status(400).json({message:"Session expired.Please signup again."});
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Session expired.Please signup again."});
         }
 
         await sendOTP(email,purpose);
@@ -100,11 +102,11 @@ export const resendOTP = async (req,res)=>{
         }
 
 
-        return res.status(200).json({message});
+        return res.status(HTTP_STATUS.OK).json({message});
 
     }catch(error){
-
-        return res.status(500).json({message:"Failed to resend OTP"});
+        console.error(error);
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({message:"Failed to resend OTP"});
 
     }
 };

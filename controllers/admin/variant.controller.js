@@ -33,7 +33,9 @@ export const showManageVariants = asyncHandler(async (req, res) => {
   const inventoryMap = {};
   inventories.forEach(inv => {
     const key = inv.variant.toString();
-    if (!inventoryMap[key]) inventoryMap[key] = [];
+    if (!inventoryMap[key]){
+      inventoryMap[key] = [];
+    } 
     inventoryMap[key].push({
       size: inv.size,
       stock: inv.stock,
@@ -57,7 +59,7 @@ export const showManageVariants = asyncHandler(async (req, res) => {
   product.variants = formattedVariants;
 
 
-  res.render("admin/manage-variants", {
+  return res.render("admin/manage-variants", {
     layout: false,
     product
   });
@@ -73,7 +75,7 @@ export const addVariant = asyncHandler(async (req, res) => {
   const { color, sizes } = req.body;
 
   let variant = null;
-  let uploadedImages = [];
+  const uploadedImages = [];
 
   if (!productId || !color || !sizes) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Product, color, and sizes are required" });
@@ -319,7 +321,7 @@ export const toggleVariantStatus = asyncHandler(async (req, res) => {
   variant.isActive = !variant.isActive;
   await variant.save();
 
-  res.json({
+  return res.status(200).json({
     message: `Variant ${variant.isActive ? "enabled" : "disabled"}`
   });
 });
