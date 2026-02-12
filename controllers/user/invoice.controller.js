@@ -136,7 +136,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   drawRow("Subtotal", invoice.pricing.subtotal);
   drawRow("Shipping", invoice.pricing.shippingCharge);
   drawRow("Discount", -invoice.pricing.discount);
-  drawRow("Tax", invoice.pricing.tax);
+  drawRow("Tax (18%)", invoice.pricing.tax);
 
   const totalBarY = currentSummaryY + 5;
   doc.rect(340, totalBarY, 215, 30).fill(accentColor);
