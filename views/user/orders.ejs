@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Orders | WalkAura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        
+        /* Matching the primary color if not defined in Tailwind config */
+        :root {
+            --primary: #4f46e5; /* Adjust this hex to match your brand indigo/blue */
+        }
+        .text-primary { color: var(--primary); }
+        .bg-primary { background-color: var(--primary); }
+        .border-primary { border-color: var(--primary); }
+    </style>
+</head>
+<body class="bg-black text-white font-sans antialiased">
+
+    <div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
+        
+        <%- include("../partials/sidebar") %>
+
+        <main class="flex-1 p-6 md:p-10 lg:px-16 bg-black">
+            <div class="max-w-6xl mx-auto space-y-10">
+                
+                <div class="space-y-3">
+                    <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-4">
+                        <a href="/" class="text-gray-400 hover:text-primary transition-colors">Home</a>
+                        <span class="text-gray-600">/</span>
+                        <span class="text-primary">My Orders</span>
+                    </nav>
+                    <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight uppercase text-white">My Orders</h1>
+                    <p class="text-gray-400 text-sm font-medium tracking-wide">Manage your history and track current shipments.</p>
+                </div>
+
+                <section class="bg-[#111] border border-gray-800 rounded-[2rem] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-blue-900/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    
+                    <form action="/orders" method="GET" id="filterForm" class="flex flex-col lg:flex-row gap-5 relative z-10">
+                        <div class="relative flex-grow">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-2xl">search</span>
+                            <input type="text" name="search" value="<%= filters.search %>"
+                                placeholder="Search Order ID or Product..." 
+                                class="w-full bg-black border border-gray-800 rounded-xl py-4 pl-14 pr-12 text-white text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all placeholder:text-gray-600">
+                            
+                            <% if (filters.search) { %>
+                                <button type="button" onclick="window.location.href='/orders'" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                                    <span class="material-symbols-outlined text-xl">close</span>
+                                </button>
+                            <% } %>
+                        </div>
+
+                        <div class="w-full lg:w-56">
+                            <select name="status" onchange="this.form.submit()" 
+                                class="w-full bg-black border border-gray-800 rounded-xl py-4 px-5 text-white text-xs font-bold uppercase tracking-widest appearance-none focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-gray-700 transition-all">
+                                <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Statuses</option>
+                                <option value="Pending" <%= filters.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="w-full lg:w-56">
+                            <select name="sort" onchange="this.form.submit()" 
+                                class="w-full bg-black border border-gray-800 rounded-xl py-4 px-5 text-white text-xs font-bold uppercase tracking-widest appearance-none focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-gray-700 transition-all">
+                                <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                                <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                                <option value="amount_high" <%= filters.sort === 'amount_high' ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="amount_low" <%= filters.sort === 'amount_low' ? 'selected' : '' %>>Price: Low to High</option>
+                            </select>
+                        </div>
+                    </form>
+                </section>
+
+                <div class="space-y-6">
+                    <% if (orders && orders.length > 0) { %>
+                        <% orders.forEach(order => { %>
+                            <div class="group bg-[#111] border border-gray-800 rounded-[2rem] p-6 sm:p-8 hover:border-indigo-500/40 transition-all duration-300 shadow-xl">
+                                <div class="flex flex-col lg:flex-row lg:items-center gap-8">
+                                    
+                                    <div class="w-28 h-28 rounded-2xl bg-black border border-gray-800 p-4 flex-shrink-0 flex items-center justify-center">
+                                        <img src="<%= order.items[0].image %>" class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" alt="Product Image">
+                                    </div>
+
+                                    <div class="flex-grow space-y-4">
+                                        <div class="flex items-center gap-4 flex-wrap">
+                                            <span class="bg-indigo-500/10 text-indigo-400 font-bold text-xs px-3 py-1.5 rounded-lg uppercase tracking-wider border border-indigo-500/20">#<%= order.orderId %></span>
+                                            <span class="text-gray-500 font-semibold text-xs uppercase tracking-widest">
+                                                Ordered: <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-3 flex-wrap">
+                                                <h3 class="text-white text-2xl tracking-tight"><%= order.items[0].productName %></h3>
+                                                <% if (order.items.length > 1) { %>
+                                                    <span class="text-xs bg-white/5 text-gray-400 border border-gray-800 px-3 py-1 rounded-full font-semibold uppercase">
+                                                        +<%= order.items.length - 1 %> More Items
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">
+                                                Variant: <span class="text-gray-300"><%= order.items[0].color %></span> / Size: <span class="text-gray-300"><%= order.items[0].size %></span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between gap-6 lg:min-w-[180px]">
+                                        <div class="text-left lg:text-right">
+                                            <p class="text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">Total Amount</p>
+                                            <p class="text-white font-black text-2xl tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></p>
+                                        </div>
+
+                                        <div class="flex flex-col items-end gap-4 w-full sm:w-auto">
+                                            <% 
+                                                let statusStyles = 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+                                                if(order.orderStatus === 'Delivered') statusStyles = 'text-green-500 bg-green-500/10 border-green-500/20';
+                                                if(order.orderStatus === 'Cancelled') statusStyles = 'text-red-500 bg-red-500/10 border-red-500/20';
+                                            %>
+                                            <span class="<%= statusStyles %> px-6 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-widest border text-center w-full">
+                                                <%= order.orderStatus %>
+                                            </span>
+                                            
+                                            <a href="/orders/<%= order.orderId %>" class="w-full text-center bg-gray-800 hover:bg-indigo-600 text-white font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all shadow-lg whitespace-nowrap">
+                                                View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+
+                        <% if (pagination.totalPages > 1) { %>
+                            <nav class="flex justify-center gap-3 pt-10">
+                                <% for(let i=1; i <= pagination.totalPages; i++) { %>
+                                    <a href="/orders?page=<%= i %>&search=<%= filters.search %>&status=<%= filters.status %>&sort=<%= filters.sort %>" 
+                                       class="w-12 h-12 flex items-center justify-center rounded-xl border border-gray-800 <%= pagination.currentPage === i ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-900/40 scale-110' : 'text-gray-500 hover:border-gray-600 hover:text-white' %> text-sm font-bold transition-all">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
+                            </nav>
+                        <% } %>
+
+                    <% } else { %>
+                        <div class="text-center py-32 bg-[#111] border border-gray-800 rounded-[3rem] shadow-inner">
+                            <span class="material-symbols-outlined text-gray-800 text-7xl mb-6">inventory_2</span>
+                            <h3 class="text-white font-bold text-xl uppercase tracking-widest mb-3">No orders found</h3>
+                            <p class="text-gray-500 text-base mb-10 max-w-sm mx-auto">We couldn't find anything matching your current filters or search query.</p>
+                            <a href="/orders" class="inline-flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-xs px-12 py-5 rounded-2xl transition-all shadow-xl shadow-indigo-900/20">
+                                Clear All Filters
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

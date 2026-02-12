@@ -50,7 +50,12 @@ const addressSchema = new mongoose.Schema(
       default: "India"
     },
 
-    isDeleted:{
+    isDefault:{
+      type: Boolean,
+      default: false
+    },
+
+    isDeleted: {
       type: Boolean,
       default: false
     }

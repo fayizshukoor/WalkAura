@@ -15,6 +15,9 @@ import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAd
 
 import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } from "../controllers/admin/variant.controller.js";
 
+import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/order.controller.js";
+
+
 // middleware imports
 import { redirectIfAdminAuthenticated, requireAdmin } from "../middlewares/admin.middleware.js";
 import { noCache } from "../middlewares/cache.middleware.js";
@@ -62,4 +65,12 @@ router.get("/products/:productId/variants", showManageVariants);
 router.post("/products/:productId/variants/add",upload.array("variantImages",4),addVariant);
 router.patch("/products/variants/edit/:variantId",upload.array("variantImages",4),updateVariant);
 router.patch("/products/variants/toggle/:variantId",toggleVariantStatus);
+
+//Orders
+router.get("/orders",getAllOrders);
+router.post("/orders/:orderId/status",updateOrderStatus);
+router.get("/orders/:orderId",getOrderDetails);
+router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn); 
+router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn); 
+
 export default router;

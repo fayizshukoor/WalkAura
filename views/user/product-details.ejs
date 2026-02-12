@@ -128,7 +128,7 @@
                 <span class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-gray-500">Quantity</span>
                 <div class="flex items-center bg-surface-dark border border-white/5 rounded-xl overflow-hidden">
                     <button onclick="updateQty(-1)" class="p-3 hover:bg-white/5 transition-colors text-gray-400 select-none"><span class="material-icons-outlined">remove</span></button>
-                    <input type="number" id="qtyInput" value="1" readonly class="bg-transparent w-16 text-center font-bold text-sm focus:outline-none border rounded-md">
+                    <input type="number" id="qtyInput" value="1" readonly class="bg-transparent w-16 text-center font-bold text-sm focus:outline-none">
                     <button onclick="updateQty(1)" class="p-3 hover:bg-white/5 transition-colors text-gray-400 select-none"><span class="material-icons-outlined">add</span></button>
                 </div>
             </div>
@@ -194,7 +194,6 @@
 </main>
 
 <script>
-
     const variants = <%- JSON.stringify(variants) %>;
     let selectedVariantId = variants[0]._id;
     let selectedSize = null;
@@ -208,43 +207,23 @@
     const qtyInput = document.getElementById('qtyInput');
     const addToCartBtn = document.getElementById('addToCartBtn');
     const btnText = document.getElementById('btnText');
+    const container = document.querySelector('.zoom-container');
 
-    // --- Toast Utility Function ---
     function showToast(message, type = 'success') {
         const toast = document.createElement('div');
-        
-        // Positioned top-right (top-8 right-8)
-        // Initial state: translate-x-full (hidden to the right) and opacity-0
         toast.className = `fixed top-24 right-8 flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 transform translate-x-full opacity-0 z-[100] shadow-2xl backdrop-blur-md`;
         
         if (type === 'success') {
             toast.classList.add('bg-surface-dark/90', 'border-green-500/50', 'text-white');
-            toast.innerHTML = `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20">
-                    <span class="material-icons-outlined text-green-500 text-lg">check_circle</span>
-                </div>
-                <span class="text-sm font-bold tracking-wide">${message}</span>
-            `;
+            toast.innerHTML = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20"><span class="material-icons-outlined text-green-500 text-lg">check_circle</span></div><span class="text-sm font-bold tracking-wide">${message}</span>`;
         } else {
             toast.classList.add('bg-surface-dark/90', 'border-red-500/50', 'text-white');
-            toast.innerHTML = `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/20">
-                    <span class="material-icons-outlined text-red-500 text-lg">error_outline</span>
-                </div>
-                <span class="text-sm font-bold tracking-wide">${message}</span>
-            `;
+            toast.innerHTML = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/20"><span class="material-icons-outlined text-red-500 text-lg">error_outline</span></div><span class="text-sm font-bold tracking-wide">${message}</span>`;
         }
 
         document.body.appendChild(toast);
-
-        // Animate In: Slides in from the right
+        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 100);
         setTimeout(() => {
-            toast.classList.remove('translate-x-full', 'opacity-0');
-        }, 100);
-
-        // Remove after 3 seconds
-        setTimeout(() => {
-            // Animate Out: Slides back to the right
             toast.classList.add('translate-x-full', 'opacity-0');
             setTimeout(() => toast.remove(), 500);
         }, 3000);
@@ -261,7 +240,6 @@
         });
 
         const variant = variants.find(v => v._id === variantId);
-        
         updateMainImage(variant.images[0].url);
         imageGallery.innerHTML = variant.images.map(img => `
             <button onclick="updateMainImage('${img.url}')" class="bg-surface-dark rounded-xl overflow-hidden aspect-square border border-white/5 hover:border-primary transition-all p-2">
@@ -273,7 +251,6 @@
         renderSizes(sortedSizes);
         updateStockDisplay();
 
-        // --- NEW LOGIC: Auto-select first available size ---
         const firstAvailable = sortedSizes.find(s => s.inStock && s.stock > 0);
         if (firstAvailable) {
             selectSize(firstAvailable.size, firstAvailable.stock, firstAvailable.inventoryId);
@@ -282,13 +259,9 @@
 
     function renderSizes(sizes) {
         sizeContainer.innerHTML = sizes.map(s => `
-            <button 
-                onclick="${s.inStock ? `selectSize('${s.size}', ${s.stock}, '${s.inventoryId}')` : ''}"
-                class="size-btn w-14 h-14 flex items-center justify-center rounded-xl border-2 transition-all font-bold text-sm 
-                ${s.inStock ? 'border-border-dark hover:border-primary' : 'disabled'}"
-                data-size="${s.size}">
-                ${s.size}
-            </button>
+            <button onclick="${s.inStock ? `selectSize('${s.size}', ${s.stock}, '${s.inventoryId}')` : ''}"
+                class="size-btn w-14 h-14 flex items-center justify-center rounded-xl border-2 transition-all font-bold text-sm ${s.inStock ? 'border-border-dark hover:border-primary' : 'disabled'}"
+                data-size="${s.size}">${s.size}</button>
         `).join('');
     }
 
@@ -297,11 +270,7 @@
         currentMaxStock = stock;
         selectedInventoryId = invId; 
         qtyInput.value = 1;
-
-        document.querySelectorAll('.size-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.size == size);
-        });
-
+        document.querySelectorAll('.size-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.size == size));
         updateStockDisplay();
     }
 
@@ -337,9 +306,7 @@
     function updateQty(delta) {
         if (!selectedSize) return;
         let val = parseInt(qtyInput.value) + delta;
-        if (val >= 1 && val <= currentMaxStock) {
-            qtyInput.value = val;
-        }
+        if (val >= 1 && val <= 3) qtyInput.value = val;
     }
 
     async function handleAddToCart() {
@@ -352,33 +319,22 @@
             }, 1000);
             return;
         }
-
-        const cartData = {
-            productId: "<%= product._id %>",
-            variantId: selectedVariantId,
-            inventoryId: selectedInventoryId,
-            quantity: parseInt(qtyInput.value)
-        };
-
+        const cartData = { productId: "<%= product._id %>", variantId: selectedVariantId, inventoryId: selectedInventoryId, quantity: parseInt(qtyInput.value) };
         try {
             btnText.textContent = "Adding...";
             addToCartBtn.disabled = true;
-
-            const response = await fetch('/cart/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cartData)
-            });
-
+            const response = await fetch('/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cartData) });
             const result = await response.json();
-
             if (response.ok) {
+
+                window.dispatchEvent(new CustomEvent('cartUpdated', { 
+                detail: { count: result.newCount } 
+            }));
+            
                 showToast(result.message);
                 btnText.textContent = "Added!";
                 addToCartBtn.classList.add('bg-green-600');
-            } else {
-                throw new Error(result.message || 'Something went wrong');
-            }
+            } else throw new Error(result.message || 'Something went wrong');
         } catch (error) {
             showToast(error.message, 'error');
             btnText.textContent = "Error";
@@ -387,37 +343,31 @@
                 btnText.textContent = "Add to Cart";
                 addToCartBtn.classList.remove('bg-green-600');
                 addToCartBtn.disabled = false;
-            }, 2000);
+            }, 1000);
         }
     }
 
     function updateMainImage(url) {
         mainImage.src = url;
+        mainImage.style.transform = "scale(1)";
     }
 
-    // --- Zoom Logic ---
-    const zoomContainer = document.querySelector('.zoom-container');
-
-    zoomContainer.addEventListener('mousemove', (e) => {
-        const rect = zoomContainer.getBoundingClientRect();
-        
-        // Calculate mouse position relative to container (0 to 1)
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
-
-        // Apply scale and move transform-origin based on mouse position
-        mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-        mainImage.style.transform = 'scale(2.5)';
+    // --- ZOOM FUNCTIONALITY RESTORED ---
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        mainImage.style.transformOrigin = `${x}px ${y}px`;
+        mainImage.style.transform = "scale(2)";
     });
 
-    zoomContainer.addEventListener('mouseleave', () => {
-        mainImage.style.transform = 'scale(1)';
-        mainImage.style.transformOrigin = 'center center';
+    container.addEventListener('mouseleave', () => {
+        mainImage.style.transformOrigin = "center center";
+        mainImage.style.transform = "scale(1)";
     });
-    
+
     // Initialize
     selectVariant(selectedVariantId);
-
 </script>
 
 </body>

@@ -19,7 +19,15 @@ import { getProductDetails, getProducts } from "../controllers/user/shop.control
 
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
-import { getCheckoutPage, getOrderDetails, getOrderSuccess, placeOrder } from "../controllers/user/checkout.controller.js";
+import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
+
+import { getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
+
+import { cancelEntireOrder, cancelItem } from "../controllers/user/orderCancel.controller.js";
+
+import { requestReturn, requestReturnEntireOrder } from "../controllers/user/orderReturn.controller.js";
+
+import { downloadInvoice } from "../controllers/user/invoice.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -49,7 +57,7 @@ router
 
 router.post("/resend-otp", resendOTP);
 
-router.get("/logout", noCache, logout);
+router.post("/logout", noCache, logout);
 
 //Forgot Password
 
@@ -111,17 +119,27 @@ router.get("/shop",getProducts);
 router.get("/product/:slug", getProductDetails);
 
 // Cart
-
 router.get("/cart",requireAuth,getCart);
 router.post("/cart/add",addToCart);
-router.patch("/cart/update-quantity",updateCartItemQuantity);
-router.delete("/cart/remove/:inventoryId",removeCartItem);
-router.delete("/cart/clear",clearCart);
+router.patch("/cart/update-quantity",requireAuth,updateCartItemQuantity);
+router.delete("/cart/remove/:inventoryId", requireAuth, removeCartItem);
+router.delete("/cart/clear", requireAuth, clearCart);
 
-// Checkout Page
-
-router.get("/checkout",requireAuth,getCheckoutPage);
+// Checkout
+router.get("/checkout",getCheckoutPage);
 router.post("/place-order",placeOrder);
-router.get("/success/:orderId",getOrderSuccess);
 
+// Order 
+router.get("/order-success/:orderId",getOrderSuccess);
+router.get("/orders/:orderId",getOrderDetails);
+router.get("/orders",getUserOrders);
+
+// Cancel and Returns
+router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
+router.post("/orders/:orderId/cancel",cancelEntireOrder);
+router.post("/orders/:orderId/items/:itemId/return",upload.array("images",3),requestReturn);
+router.post("/orders/:orderId/return",requestReturnEntireOrder);
+
+// Invoice download
+router.get("/orders/:orderId/invoice",downloadInvoice);
 export default router;

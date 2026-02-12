@@ -1,0 +1,162 @@
+<main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-[1250px] mx-auto space-y-8">
+        
+        <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+            <a href="/orders" class="text-gray-500 hover:text-primary transition-colors">Orders</a>
+            <span class="text-gray-700">/</span>
+            <span class="text-primary">Order Success</span>
+        </nav>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2.5rem] p-12 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
+            
+            <div class="relative z-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 mb-8 animate-in zoom-in duration-500">
+                    <span class="material-symbols-outlined text-green-500 text-5xl">check_circle</span>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-white mb-3">Order Confirmed</h1>
+                
+                <p class="text-gray-400 font-medium text-lg mb-2">
+                    Thank you for choosing WalkAura, <span class="text-white"><%= order.shippingAddress.fullName.split(' ')[0] %></span>!
+                </p>
+                <p class="text-gray-500 text-sm mb-8 tracking-wide">Your style upgrade is officially on its way.</p>
+                
+                <div class="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <div class="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/5">
+                        <span class="material-symbols-outlined text-primary text-sm">local_shipping</span>
+                        Status: <span class="text-white ml-1"><%= order.orderStatus %></span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/5">
+                        <span class="material-symbols-outlined text-primary text-sm">event</span>
+                        Placed: <span class="text-white ml-1"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/5">
+                        <span class="material-symbols-outlined text-primary text-sm">tag</span>
+                        ID: <span class="text-white ml-1">#<%= order.orderId %></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl flex flex-col">
+                <div class="p-6 border-b border-white/10 bg-white/[0.03] flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">receipt_long</span>
+                    <h2 class="text-sm font-black uppercase tracking-widest text-white">Pricing Details</h2>
+                </div>
+                <div class="p-8 space-y-4 flex-grow">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Subtotal</span>
+                        <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Tax (<%= order.pricing.taxPercentage %>%)</span>
+                        <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Discount</span>
+                        <span class="text-green-500 font-bold">-₹<%= order.pricing.discount.toLocaleString() %></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Shipping</span>
+                        <span class="text-white font-bold"><%= order.pricing.shippingCharge > 0 ? '₹' + order.pricing.shippingCharge : 'FREE' %></span>
+                    </div>
+                    <div class="pt-6 border-t border-white/5 mt-4">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <span class="text-primary font-black uppercase text-[10px] tracking-[0.2em] block mb-1">Total Paid</span>
+                                <span class="text-gray-500 text-[9px] uppercase font-bold tracking-widest">via <%= order.payment.method %></span>
+                            </div>
+                            <span class="text-4xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl flex flex-col">
+                <div class="p-6 border-b border-white/10 bg-white/[0.03] flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">local_post_office</span>
+                    <h2 class="text-sm font-black uppercase tracking-widest text-white">Delivery Information</h2>
+                </div>
+                <div class="p-8 space-y-6 flex-grow">
+                    <div>
+                        <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest block mb-2">Recipient & Address</span>
+                        <p class="text-white font-bold text-lg"><%= order.shippingAddress.fullName %></p>
+                        <p class="text-gray-400 text-sm leading-relaxed mt-1 italic">
+                            <%= order.shippingAddress.streetAddress %>,<br>
+                            <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>,<br>
+                            <%= order.shippingAddress.country %> - <%= order.shippingAddress.pincode %>
+                        </p>
+                        <div class="flex items-center gap-2 mt-3 text-gray-400">
+                            <span class="material-symbols-outlined text-sm">call</span>
+                            <span class="text-xs font-bold tracking-widest"><%= order.shippingAddress.phone %></span>
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-white/5">
+                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl">
+                            <div>
+                                <span class="text-gray-500 font-bold text-[10px] uppercase tracking-widest block">Payment Status</span>
+                                <span class="text-white font-black text-xs tracking-widest"><%= order.payment.status %></span>
+                            </div>
+                            <div class="w-2 h-2 rounded-full <%= order.payment.status === 'COMPLETED' ? 'bg-green-500' : 'bg-yellow-500' %> animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+            <div class="p-6 border-b border-white/10 bg-white/[0.03] flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">inventory_2</span>
+                    <h2 class="text-sm font-black uppercase tracking-widest text-white">Your Selection</h2>
+                </div>
+                <span class="text-[10px] font-black text-gray-300 bg-white/5 px-3 py-1 rounded-full uppercase tracking-widest">
+                    <%= order.items.length %> <%= order.items.length > 1 ? 'Items' : 'Item' %>
+                </span>
+            </div>
+            <div class="p-8 divide-y divide-white/5">
+                <% order.items.forEach(item => { %>
+                <div class="flex flex-col lg:flex-row items-center gap-8 py-6 first:pt-0 last:pb-0">
+                    <div class="relative group">
+                        <div class="w-24 h-24 rounded-2xl bg-black border border-white/10 p-3 flex-shrink-0">
+                            <img src="<%= item.image %>" class="w-full h-full object-contain" alt="<%= item.productName %>">
+                        </div>
+            
+                    </div>
+
+                    <div class="flex-1 text-center lg:text-left">
+                        <p class="text-[9px] text-primary font-black uppercase tracking-[0.3em] mb-1">SKU: <%= item.sku %></p>
+                        <h3 class="text-white font-bold text-xl"><%= item.productName %></h3>
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 mt-2">
+                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Size: <span class="text-white"><%= item.size %></span></p>
+                            <span class="text-white/10">|</span>
+                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Color: <span class="text-white"><%= item.color %></span></p>
+                            <span class="text-white/10">|</span>
+                            <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Qty: <span class="text-white"><%= item.quantity %></span></p>
+                        </div>
+                    </div>
+
+                    <div class="text-center lg:text-right min-w-[120px]">
+                        <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
+                        <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">₹<%= item.price.toLocaleString() %> / unit</p>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        </section>
+
+        <div class="flex flex-col sm:flex-row gap-4 pt-4 pb-10">
+            <a href="/orders/<%= order.orderId %>" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] py-5 rounded-2xl transition-all flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-sm">package_2</span>
+                View Order Details
+            </a>
+            <a href="/shop" class="flex-1 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-[10px] py-5 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 active:scale-[0.98]">
+                <span class="material-symbols-outlined text-sm">shopping_bag</span>
+                Continue Shopping
+            </a>
+        </div>
+
+    </div>
+</main>

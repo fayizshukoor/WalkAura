@@ -290,6 +290,7 @@ export const getProductDetails = asyncHandler(async (req, res) => {
       $match: {
         _id: { $ne: product._id },
         category: product.category._id,
+        gender: product.gender,
         isListed: true
       }
     },

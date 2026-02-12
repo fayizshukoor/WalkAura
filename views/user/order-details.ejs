@@ -1,0 +1,581 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    .swal-custom-input {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        font-size: 14px !important;
+    }
+    .swal-custom-input option {
+        background-color: #12141a !important;
+        color: #fff !important;
+    }
+    /* Subtle pulse for pending states */
+    .status-pulse {
+        animation: pulse-opacity 2s infinite;
+    }
+    @keyframes pulse-opacity {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+</style>
+
+<main class="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-base bg-black min-h-screen">
+    <div class="max-w-[1250px] mx-auto space-y-10">
+        
+        <div class="space-y-6">
+            <nav class="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em]">
+                <a href="/orders" class="text-gray-500 hover:text-primary transition-colors">Orders</a>
+                <span class="text-gray-700">/</span>
+                <span class="text-primary">Order Details</span>
+            </nav>
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-5xl font-black tracking-tighter uppercase text-white">Order Details</h1>
+                    <p class="text-gray-400 font-bold text-base tracking-widest uppercase mt-2">
+                        Order ID: <span class="text-primary">#<%= order.orderId %></span>
+                    </p>
+                </div>
+                <div class="bg-primary/10 border border-primary/20 px-6 py-3 rounded-full hidden sm:block">
+                    <span class="text-primary text-xs font-black uppercase tracking-widest"><%= order.orderStatus %></span>
+                </div>
+            </div>
+        </div>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2.5rem] p-12 shadow-xl overflow-x-auto">
+            <div class="min-w-[800px] flex justify-between relative px-4">
+                <div class="absolute top-6 left-0 w-full h-[3px] bg-white/5 z-0"></div>
+                
+                <% 
+                    const statuses = ['PENDING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+                    const isCancelled = order.orderStatus === 'CANCELLED';
+                    const isReturned = order.orderStatus === 'RETURNED';
+                    const currentIndex = (isCancelled || isReturned) ? -1 : statuses.indexOf(order.orderStatus);
+                    const progressWidth = currentIndex >= 0 ? (currentIndex / (statuses.length - 1)) * 100 : 0;
+                %>
+                
+                <% if (!isCancelled && !isReturned) { %>
+                    <div class="absolute top-6 left-0 h-[3px] bg-primary z-0 transition-all duration-1000" style="width: <%= progressWidth %>%"></div>
+                <% } %>
+
+                <% if (isCancelled || isReturned) { %>
+                    <div class="relative z-10 flex flex-col items-center gap-4 w-full">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center border-2 <%= isCancelled ? 'bg-red-500 border-red-500' : 'bg-orange-500 border-orange-500' %> text-white shadow-xl">
+                            <span class="material-symbols-outlined text-base"><%= isCancelled ? 'close' : 'keyboard_return' %></span>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest <%= isCancelled ? 'text-red-500' : 'text-orange-500' %>">
+                            ORDER <%= isCancelled ? 'CANCELLED' : 'RETURNED' %>
+                        </span>
+                    </div>
+                <% } else { %>
+                    <% statuses.forEach((status, index) => { %>
+                        <div class="relative z-10 flex flex-col items-center gap-4">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 <%= index <= currentIndex ? 'bg-primary border-primary text-white shadow-[0_0_20px_rgba(92,86,246,0.6)]' : 'bg-black border-white/10 text-gray-600' %>">
+                                <span class="material-symbols-outlined text-base">
+                                    <%= index < currentIndex ? 'check' : (index === currentIndex ? 'radio_button_checked' : 'circle') %>
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-widest <%= index <= currentIndex ? 'text-white' : 'text-gray-600' %>">
+                                <%= status %>
+                            </span>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Order Information</h3>
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Order Date</span>
+                        <span class="text-white text-base font-bold"><%= new Date(order.createdAt).toLocaleDateString() %></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Payment Method</span>
+                        <span class="text-white text-base font-bold"><%= order.payment.method %></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Payment Status</span>
+                        <span class="<%= order.payment.status === 'PAID' ? 'text-green-500 bg-green-500/10' : 'text-yellow-500 bg-yellow-500/10' %> text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg w-fit mt-2">
+                            <%= order.payment.status %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Delivery Address</h3>
+                <div class="space-y-2">
+                    <p class="text-white font-bold text-lg"><%= order.shippingAddress.fullName %></p>
+                    <p class="text-gray-400 text-lg leading-relaxed italic">
+                        <%= order.shippingAddress.streetAddress %>,<br>
+                        <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>,<br>
+                        <%= order.shippingAddress.country %> - <%= order.shippingAddress.pincode %>
+                    </p>
+                    <p class="text-gray-400 text-sm font-bold mt-3 tracking-widest">PH: <%= order.shippingAddress.phone %></p>
+                </div>
+            </div>
+
+            <div class="bg-[#12141a] border border-white/10 rounded-[2rem] p-10 space-y-6 shadow-xl border-l-primary/30">
+                <h3 class="text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">Order Summary</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-bold uppercase tracking-widest">Subtotal</span>
+                        <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-bold uppercase tracking-widest">Tax (18%)</span>
+                        <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-sm text-red-400">
+                        <span class="font-bold uppercase tracking-widest">Discount</span>
+                        <span class="font-bold">- ₹<%= order.pricing.discount %></span>
+                    </div>
+                    <div class="pt-6 border-t border-white/10 flex justify-between items-end">
+                        <span class="text-primary font-black uppercase text-xs tracking-widest">Total</span>
+                        <span class="text-3xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% if (order.orderStatus === 'RETURN_REQUESTED') { %>
+            <div class="bg-orange-500/10 border border-orange-500/30 p-6 rounded-2xl flex items-center gap-4">
+                <span class="material-symbols-outlined text-orange-500">info</span>
+                <p class="text-orange-500 text-sm font-bold uppercase tracking-widest">Return request for the entire order is currently under review.</p>
+            </div>
+        <% } %>
+
+        <section class="bg-[#12141a] border border-white/10 rounded-[2rem] overflow-hidden shadow-xl">
+            <div class="p-8 border-b border-white/10 bg-white/[0.03]">
+                <h2 class="text-base font-black uppercase tracking-widest text-white">Ordered Items</h2>
+            </div>
+            <div class="divide-y divide-white/5">
+                <% order.items.forEach(item => { %>
+                <div class="p-10 flex flex-col lg:flex-row items-center gap-10">
+                    <div class="w-28 h-28 rounded-2xl bg-black border border-white/10 p-4 flex-shrink-0">
+                        <img src="<%= item.image %>" class="w-full h-full object-contain" alt="<%= item.productName %>">
+                    </div>
+                    <div class="flex-1 text-center lg:text-left">
+                        <p class="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-2">SKU: <%= item.sku %></p>
+                        <h3 class="text-white font-bold text-xl"><%= item.productName %></h3>
+                        
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-6 mt-3">
+                            <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Size: <span class="text-white"><%= item.size %></span></p>
+                            <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Qty: <span class="text-white"><%= item.quantity %></span></p>
+                            
+                            <% 
+                                let statusColors = {
+                                    'CANCELLED': 'text-red-500 bg-red-500/10 border-red-500/20',
+                                    'RETURNED': 'text-green-500 bg-green-500/10 border-green-500/20',
+                                    'RETURN_REQUESTED': 'text-orange-500 bg-orange-500/10 border-orange-500/20 status-pulse',
+                                    'RETURN_REJECTED': 'text-red-400 bg-red-400/5 border-red-400/20'
+                                };
+                                let currentStatusClass = statusColors[item.status] || 'text-gray-400 bg-white/5 border-white/10';
+                            %>
+                            <span class="<%= currentStatusClass %> px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest">
+                                <%= item.status.replace(/_/g, ' ') %>
+                            </span>
+                        </div>
+
+                        <% if (item.status === 'RETURN_REJECTED' && item.returnInfo?.rejectionReason) { %>
+                            <div class="mt-4 p-4 bg-red-500/5 border border-red-500/10 rounded-xl max-w-xl">
+                                <p class="text-[10px] text-red-400 font-black uppercase tracking-widest mb-1">Return Rejected Reason:</p>
+                                <p class="text-sm text-gray-400 italic">"<%= item.returnInfo.rejectionReason %>"</p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-8 w-full lg:w-auto">
+                        <div class="text-center sm:text-right min-w-[120px]">
+                            <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
+                            <p class="text-xs text-gray-500 font-bold uppercase mt-1">₹<%= item.price.toLocaleString() %> / unit</p>
+                        </div>
+                        
+                        <div class="w-full sm:w-auto min-w-[200px] flex justify-center">
+                            <% if (item.status === 'DELIVERED' && order.orderStatus !== 'RETURN_REQUESTED') { %>
+                                <button 
+                                onclick="handleReturnItem(this)"
+                                data-order-id="<%= order.orderId %>"
+                                data-item-id="<%= item._id %>"
+                                data-product-name="<%= item.productName %>"
+                                class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                Return Item
+                            </button>
+                            <% } else if (item.status === 'RETURN_REQUESTED') { %>
+                                <div class="flex flex-col items-center gap-1 opacity-80">
+                                    <span class="material-symbols-outlined text-orange-500">pending_actions</span>
+                                    <span class="text-orange-500 font-black uppercase text-[9px] tracking-widest">Awaiting Approval</span>
+                                </div>
+                            <% } else if (item.status === 'RETURNED') { %>
+                                <div class="flex flex-col items-center gap-1 text-green-500">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                    <span class="font-black uppercase text-[9px] tracking-widest">Return Completed</span>
+                                </div>
+                            <% } else if (item.status === 'RETURN_REJECTED') { %>
+                                <div class="flex flex-col items-center gap-1 text-red-400 opacity-60">
+                                    <span class="material-symbols-outlined">block</span>
+                                    <span class="font-black uppercase text-[9px] tracking-widest">Return Rejected</span>
+                                </div>
+                            <% } else if (item.status === 'CANCELLED') { %>
+                                <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
+                                    Item Cancelled
+                                </span>
+                            <% } else if (item.status === 'PENDING') { %>
+                                <button 
+                                onclick="handleCancelItem(this)"
+                                data-order-id="<%= order.orderId %>"
+                                data-item-id="<%= item._id %>"
+                                data-product-name="<%= item.productName %>"
+                                class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                Cancel Item
+                            </button>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+            </div>
+        </section>
+
+        <div class="flex flex-col sm:flex-row justify-end gap-6 pt-4 pb-12">
+            <%
+                const terminalItemStatuses = ['CANCELLED', 'RETURNED', 'RETURN_REJECTED'];
+                const allItemsFinalized = order.items.every(item => terminalItemStatuses.includes(item.status));
+                
+                const canCancelOrder = order.orderStatus === 'PENDING' && !allItemsFinalized;
+                const canReturnOrder = order.orderStatus === 'DELIVERED' && !allItemsFinalized;
+                const canDownloadInvoice = order.payment.status === 'PAID';
+            %>
+
+            <% if(canCancelOrder) { %>
+                <button 
+                    onclick="handleCancelEntireOrder('<%= order.orderId %>')"
+                    class="w-full sm:w-auto px-12 py-6 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all">
+                    Cancel Entire Order
+                </button>
+            <% } %>
+
+            <% if(canReturnOrder) { %>
+                <button 
+                    onclick="handleReturnEntireOrder('<%= order.orderId %>')"
+                    class="w-full sm:w-auto px-12 py-6 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all">
+                    Return Entire Order
+                </button>
+            <% } %>
+
+            <% if(canDownloadInvoice) { %>
+                <button 
+                    id="downloadBtn"
+                    onclick="handleDownloadInvoice('<%= order.orderId %>')"
+                    class="w-full sm:w-auto px-12 py-6 bg-primary hover:bg-indigo-600 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl shadow-primary/30 flex items-center justify-center gap-3">
+                    <span id="downloadIcon" class="material-symbols-outlined text-base">download</span>
+                    <span id="downloadText">Download Invoice</span>
+                </button>
+            <% } %>
+        </div>
+    </div>
+</main>
+
+<script>
+    const cancellationReasons = {
+        'Changed my mind': 'Changed my mind',
+        'Found a better price': 'Found a better price',
+        'Delayed shipping': 'Delayed shipping',
+        'Incorrect item ordered': 'Incorrect item ordered',
+        'Other': 'Other'
+    };
+
+    const returnReasons = {
+        'Size issue': 'Size issue',
+        'Defective product': 'Defective product',
+        'Product not as described': 'Product not as described',
+        'Wrong item received': 'Wrong item received',
+        'Quality not up to mark': 'Quality not up to mark',
+        'Other': 'Other'
+    };
+
+    const swalConfig = {
+        background: '#12141a',
+        color: '#fff',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#374151',
+        customClass: { input: 'swal-custom-input' }
+    };
+
+    // --- Invoice Download Functionality ---
+    async function handleDownloadInvoice(orderId) {
+        const btn = document.getElementById('downloadBtn');
+        const icon = document.getElementById('downloadIcon');
+        const text = document.getElementById('downloadText');
+
+        try {
+            // UI Loading State
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            text.innerText = "Generating PDF...";
+            icon.innerText = "hourglass_empty";
+
+            const response = await fetch(`/orders/${orderId}/invoice`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to download invoice');
+            }
+
+            // Detect filename from header if possible
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `invoice-${orderId}.pdf`;
+            if (contentDisposition && contentDisposition.includes('filename=')) {
+                filename = contentDisposition.split('filename=')[1].split(';')[0];
+            }
+
+            // Create blob and download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            Swal.fire({
+                ...swalConfig,
+                icon: 'error',
+                title: 'Download Failed',
+                text: error.message
+            });
+        } finally {
+            // Reset Button State
+            btn.disabled = false;
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            text.innerText = "Download Invoice";
+            icon.innerText = "download";
+        }
+    }
+
+    // --- Action Handlers ---
+    const PHOTO_REQUIRED_REASONS = ["Defective product", "Wrong item received"];
+
+    async function handleReturnEntireOrder(orderId) {
+        const { value: reason } = await Swal.fire({
+            ...swalConfig,
+            title: 'RETURN ENTIRE ORDER',
+            text: "Request return for all eligible delivered items?",
+            icon: 'question',
+            input: 'select',
+            inputOptions: returnReasons,
+            inputPlaceholder: 'Select return reason',
+            showCancelButton: true,
+            confirmButtonText: 'SUBMIT GLOBAL RETURN',
+            inputValidator: (v) => !v && 'Please select a reason'
+        });
+
+        if (reason) executeAction(`/orders/${orderId}/return`, { reason }, 'RETURN REQUESTED');
+    }
+
+    async function handleReturnItem(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+    const itemId = btn.getAttribute('data-item-id');
+    const productName = btn.getAttribute('data-product-name');
+
+    const { value: formValues } = await Swal.fire({
+        ...swalConfig,
+        title: 'RETURN REQUEST',
+        html: `
+            <div class="text-left space-y-4">
+                <div>
+                    <label class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2 block">Reason for Return</label>
+                    <select id="swal-reason" class="swal2-select swal-custom-input w-full m-0">
+                        <option value="" disabled selected>Select a reason</option>
+                        ${Object.entries(returnReasons).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2 block">Upload Image Proof</label>
+                    <input type="file" id="swal-file" class="swal2-file swal-custom-input w-full m-0" accept="image/*">
+                    
+                    <div id="image-preview-container" class="mt-4 hidden border border-white/10 rounded-xl overflow-hidden bg-black flex justify-center items-center p-2">
+                        <img id="preview-img" src="#" alt="Preview" class="max-h-[200px] w-auto rounded-lg object-contain">
+                    </div>
+
+                    <p id="photo-warning" class="text-[9px] text-red-500 mt-2 hidden uppercase font-bold tracking-tighter">
+                        * This reason requires photo proof
+                    </p>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'SUBMIT REQUEST',
+        didOpen: () => {
+            const reasonSelect = document.getElementById('swal-reason');
+            const fileInput = document.getElementById('swal-file');
+            const warning = document.getElementById('photo-warning');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('preview-img');
+
+            // Handle Reason Change
+            reasonSelect.addEventListener('change', (e) => {
+                warning.classList.toggle('hidden', !PHOTO_REQUIRED_REASONS.includes(e.target.value));
+            });
+
+            // Handle Image Preview & Validation
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Check if it's an image
+                    if (!file.type.startsWith('image/')) {
+                        Swal.showValidationMessage('Please select a valid image file');
+                        fileInput.value = '';
+                        previewContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    // Show Preview
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewImg.src = event.target.result;
+                        previewContainer.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+            });
+        },
+        preConfirm: () => {
+            const reason = document.getElementById('swal-reason').value;
+            const fileInput = document.getElementById('swal-file');
+            const file = fileInput.files[0];
+
+            if (!reason) {
+                Swal.showValidationMessage('Please select a reason');
+                return false;
+            }
+
+            if (PHOTO_REQUIRED_REASONS.includes(reason) && !file) {
+                Swal.showValidationMessage('Photo proof is required for this reason');
+                return false;
+            }
+
+            // Client-side image validation
+            if (file && !file.type.startsWith('image/')) {
+                Swal.showValidationMessage('The selected file must be an image');
+                return false;
+            }
+
+            return { reason, file };
+        }
+    });
+
+    if (formValues) {
+        const formData = new FormData();
+        formData.append('reason', formValues.reason);
+        if (formValues.file) {
+            // Field name 'images' must match what your middleware expects
+            formData.append('images', formValues.file); 
+        }
+
+        executeMultipartAction(`/orders/${orderId}/items/${itemId}/return`, formData, 'REQUEST SUBMITTED');
+    }
+}
+
+
+async function handleCancelItem(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+    const itemId = btn.getAttribute('data-item-id');
+    const productName = btn.getAttribute('data-product-name');
+
+    const { value: reason } = await Swal.fire({
+        ...swalConfig,
+        confirmButtonColor: '#dc2626',
+        title: 'CANCEL ITEM',
+        text: `Are you sure you want to cancel "${productName}"?`,
+        icon: 'warning',
+        input: 'select',
+        inputOptions: cancellationReasons,
+        inputPlaceholder: 'Select a reason',
+        showCancelButton: true,
+        confirmButtonText: 'CONFIRM CANCELLATION',
+        inputValidator: (v) => !v && 'Please select a reason'
+    });
+
+    if (reason) executeAction(`/orders/${orderId}/items/${itemId}/cancel`, { reason }, 'ITEM CANCELLED');
+}
+
+    async function handleCancelEntireOrder(orderId) {
+        const { value: reason } = await Swal.fire({
+            ...swalConfig,
+            confirmButtonColor: '#dc2626',
+            title: 'CANCEL ENTIRE ORDER',
+            text: "This will cancel all pending items in this order.",
+            icon: 'warning',
+            input: 'select',
+            inputOptions: cancellationReasons,
+            inputPlaceholder: 'Select a reason',
+            showCancelButton: true,
+            confirmButtonText: 'YES, CANCEL ALL',
+            inputValidator: (v) => !v && 'Please select a reason'
+        });
+
+        if (reason) executeAction(`/orders/${orderId}/cancel`, { reason }, 'ORDER CANCELLED');
+    }
+
+    async function executeAction(url, body, successTitle) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (result.success) {
+                await Swal.fire({ ...swalConfig, icon: 'success', title: successTitle, text: result.message });
+                window.location.reload();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
+        }
+    }
+
+    // Separate Executor - Keep this! It's better for architecture.
+async function executeMultipartAction(url, formData, successTitle) {
+    try {
+        Swal.fire({
+            ...swalConfig,
+            title: 'Processing...',
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData // Browser automatically sets Content-Type to multipart/form-data
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            await Swal.fire({ ...swalConfig, icon: 'success', title: successTitle, text: result.message });
+            window.location.reload();
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
+    }
+}
+</script>

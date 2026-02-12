@@ -37,7 +37,7 @@ const cartItemSchema = new mongoose.Schema(
     offerPercentAtAdd: {
       type: Number,
       default: 0,
-    },
+    }
   },
   { timestamps: true }
 );
@@ -49,7 +49,7 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true, 
-      index: true,
+      index: true
     },
     
     items: [cartItemSchema],
@@ -68,6 +68,5 @@ const cartSchema = new mongoose.Schema(
 );
 
 // Compound index to prevent duplicate items 
-cartItemSchema.index({ inventory: 1 }, { unique: true, sparse: true });
-
+cartSchema.index({ user: 1, "items.inventory": 1 },{ unique: true });
 export default mongoose.model("Cart", cartSchema);

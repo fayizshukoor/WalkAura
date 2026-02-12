@@ -51,11 +51,34 @@ const orderItemSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned"],
-    default: "Pending",
+    enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURN_REQUESTED", "RETURNED", "RETURN_REJECTED"],
+    default: "PENDING",
   },
-  cancellationReason: String,
-  returnReason: String,
+  statusTimeline: [{
+    status: String,
+    at: Date
+  }],
+
+  cancellation: {
+  reason: String,
+  at: Date,
+  by: { type: String, enum: ["USER", "ADMIN"] }
+},
+
+returnInfo: {
+  reason: String,
+  images: [
+    {
+    url: String,
+    publicId: String
+  }
+],
+  requestedAt: Date,
+  approvedAt: Date,
+  rejectedAt: Date,
+  rejectionReason:String,
+  receivedAt: Date
+}
 });
 
 const orderSchema = new mongoose.Schema(
@@ -63,14 +86,19 @@ const orderSchema = new mongoose.Schema(
     orderId: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
+
+    customerSnapshot: {
+      name: {type: String, required: true},
+      email: {type: String, required: true}
+    },
+
     items: [orderItemSchema],
     shippingAddress: {
       fullName: { type: String, required: true },
@@ -79,22 +107,28 @@ const orderSchema = new mongoose.Schema(
       city: { type: String, required: true },
       state: { type: String, required: true },
       pincode: { type: String, required: true },
-      country: { type: String, required: true, default: "India" },
+      country: { type: String, required: true, default: "India" }
     },
-    paymentMethod: {
-      type: String,
-      enum: ["COD", "Online", "Wallet"],
-      required: true,
+
+    payment: {
+      method: {
+        type: String,
+        enum: ["COD", "RAZORPAY", "WALLET"],
+        required: true
+      },
+      status: {
+        type: String,
+        enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+        default: "PENDING"
+      },
+      transactionId: String,
+      refundedAmount: { type: Number, default: 0 }
     },
-    paymentStatus: {
-      type: String,
-      enum: ["Pending", "Completed", "Failed", "Refunded"],
-      default: "Pending",
-    },
+
     orderStatus: {
       type: String,
-      enum: ["Pending", "Shipped", "Out for Delivery", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
+      default: "PENDING",
     },
     pricing: {
       subtotal: { type: Number, required: true },
@@ -112,5 +146,14 @@ const orderSchema = new mongoose.Schema(
 
 // Index for faster queries
 orderSchema.index({ user: 1, createdAt: -1 });
+
+orderSchema.index({ orderStatus: 1});
+
+orderSchema.index({ createdAt: -1});
+
+orderSchema.index({ "customerSnapshot.name": 1});
+orderSchema.index({ "customerSnapshot.email": 1});
+
+
 
 export default mongoose.model("Order", orderSchema);
