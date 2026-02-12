@@ -51,9 +51,8 @@
             <div class="bg-[#111111] border border-gray-800 rounded-3xl p-8 shadow-xl">
                 <h2 class="text-xs font-black uppercase tracking-[0.2em] text-[#5c56f6] mb-6">Customer</h2>
                 <div class="space-y-1">
-                    <p class="text-white font-bold text-lg"><%= order.user.name %></p>
-                    <p class="text-gray-400 text-sm"><%= order.user.email %></p>
-                    <p class="text-gray-400 text-sm"><%= order.user.phone %></p>
+                    <p class="text-white font-bold text-lg"><%= order.customerSnapshot.name %></p>
+                    <p class="text-gray-400 text-sm"><%= order.customerSnapshot.email %></p>
                 </div>
             </div>
 
@@ -112,18 +111,35 @@
                             </div>
 
                             <% if (item.status === 'RETURN_REQUESTED') { %>
-                                <div class="bg-black/40 border border-orange-500/20 rounded-2xl p-4 w-full md:max-w-[320px]">
+                                <div class="bg-black/40 border border-orange-500/20 rounded-2xl p-5 w-full md:max-w-[350px]">
                                     <p class="text-[10px] uppercase font-black text-orange-500 mb-1">Return Reason:</p>
                                     <p class="text-sm text-gray-300 italic mb-4 leading-relaxed break-words">"<%= item.returnInfo.reason %>"</p>
+                                    
+                                    <% if (item.returnInfo.images && item.returnInfo.images.length > 0) { %>
+                                        <p class="text-[10px] uppercase font-black text-gray-500 mb-2">Attached Proof:</p>
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <% item.returnInfo.images.forEach(img => { %>
+                                                <div 
+                                                    onclick="viewProofImage('<%= img.url %>')"
+                                                    class="group relative w-14 h-14 border border-gray-700 rounded-lg overflow-hidden cursor-zoom-in hover:border-orange-500 transition-colors">
+                                                    <img src="<%= img.url %>" class="w-full h-full object-cover">
+                                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                        <span class="material-symbols-outlined text-white text-sm">visibility</span>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                    <% } %>
+
                                     <div class="flex gap-2">
                                         <button 
                                             onclick="approveReturn('<%= order.orderId %>', '<%= item._id %>')"
-                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase py-2 rounded-lg transition-all">
+                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase py-2.5 rounded-lg transition-all">
                                             Approve
                                         </button>
                                         <button 
                                             onclick="rejectReturn('<%= order.orderId %>', '<%= item._id %>')"
-                                            class="flex-1 bg-red-600/10 hover:bg-red-600 border border-red-600/20 text-red-500 hover:text-white text-[10px] font-black uppercase py-2 rounded-lg transition-all">
+                                            class="flex-1 bg-red-600/10 hover:bg-red-600 border border-red-600/20 text-red-500 hover:text-white text-[10px] font-black uppercase py-2.5 rounded-lg transition-all">
                                             Reject
                                         </button>
                                     </div>
@@ -148,6 +164,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Full Screen Preview for Proof Images
+    function viewProofImage(url) {
+        Swal.fire({
+            imageUrl: url,
+            imageAlt: 'Return Proof Image',
+            showConfirmButton: false,
+            background: 'transparent',
+            backdrop: 'rgba(0,0,0,0.9)',
+            width: 'auto',
+            customClass: {
+                image: 'rounded-xl shadow-2xl border border-white/10 max-h-[85vh]'
+            }
+        });
+    }
+
     async function approveReturn(orderId, itemId) {
         const result = await Swal.fire({
             title: 'Approve Return?',
@@ -169,7 +200,7 @@
     async function rejectReturn(orderId, itemId) {
         const { value: reason } = await Swal.fire({
             title: 'Reject Return?',
-            input: 'textarea', // Changed to textarea for easier long-form typing
+            input: 'textarea',
             inputLabel: 'Reason for rejection',
             inputPlaceholder: 'e.g., Item shows signs of wear or tags are missing...',
             showCancelButton: true,
@@ -188,6 +219,15 @@
 
     async function processAction(orderId, itemId, action, reason = '') {
         try {
+            // Show loading state
+            Swal.fire({
+                title: 'Processing...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); },
+                background: '#111',
+                color: '#fff'
+            });
+
             const response = await fetch(`/admin/orders/${orderId}/items/${itemId}/return-${action}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -1,6 +1,12 @@
 import asyncHandler from "../../utils/asyncHandler.js";
 import Order from "../../models/Order.model.js";
+import { isItemEligibleForReturn } from "../../utils/returnEligibility.util.js";
+import { uploadToCloudinary } from "../../utils/cloudinaryUpload.util.js";
 
+const PHOTO_REQUIRED_REASONS = [
+  "Defective product",
+  "Wrong item received"
+]
 // Request Return
 export const requestReturn = asyncHandler(async (req, res) => {
   const { orderId, itemId } = req.params;
@@ -27,28 +33,42 @@ export const requestReturn = asyncHandler(async (req, res) => {
   }
 
   const item = order.items.id(itemId);
+  const eligibility = isItemEligibleForReturn(item);
 
-  if (!item) {
-    return res.status(404).json({
-      success: false,
-      message: "Item not found in this order",
-    });
-  }
-
-  // Eligibility checks
-  if (item.status !== "DELIVERED" || item.returnInfo?.rejectedAt) {
+  if(!eligibility.eligible){
     return res.status(400).json({
       success: false,
-      message: `Return request is not allowed for this item`,
-    });
+      message: eligibility.message
+    })
   }
 
-  // Prevent duplicate return requests
-  if (item.status === "RETURN_REQUESTED" || item.status === "RETURNED") {
+  const requiresPhoto = PHOTO_REQUIRED_REASONS.includes(reason.trim());
+
+  if(requiresPhoto && (!req.files || req.files.length === 0)){
     return res.status(400).json({
       success: false,
-      message: "Return already requested for this item",
-    });
+      message: "Photo proof is required for this Return reason"
+    })
+  }
+
+  // Upload images
+  let uploadedImages = [];
+
+  if(req.files && req.files.length > 0){
+    for(const file of req.files){
+      const result =  await uploadToCloudinary(file.buffer,{
+        folder: "walkaura/returns",
+        width: 800,
+        height: 800,
+        crop: "fill"
+      });
+
+      uploadedImages.push({
+        url: result.secure_url,
+        publicId: result.public_id
+      });
+
+    }
   }
 
   const now = new Date();
@@ -57,6 +77,7 @@ export const requestReturn = asyncHandler(async (req, res) => {
   item.status = "RETURN_REQUESTED";
   item.returnInfo = {
     reason: reason.trim(),
+    images: uploadedImages,
     requestedAt: now,
   };
 

@@ -67,6 +67,12 @@ const orderItemSchema = new mongoose.Schema({
 
 returnInfo: {
   reason: String,
+  images: [
+    {
+    url: String,
+    publicId: String
+  }
+],
   requestedAt: Date,
   approvedAt: Date,
   rejectedAt: Date,
@@ -81,14 +87,18 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
+
+    customerSnapshot: {
+      name: {type: String, required: true},
+      email: {type: String, required: true}
+    },
+
     items: [orderItemSchema],
     shippingAddress: {
       fullName: { type: String, required: true },
@@ -136,5 +146,14 @@ const orderSchema = new mongoose.Schema(
 
 // Index for faster queries
 orderSchema.index({ user: 1, createdAt: -1 });
+
+orderSchema.index({ orderStatus: 1});
+
+orderSchema.index({ createdAt: -1});
+
+orderSchema.index({ "customerSnapshot.name": 1});
+orderSchema.index({ "customerSnapshot.email": 1});
+
+
 
 export default mongoose.model("Order", orderSchema);

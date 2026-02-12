@@ -1,10 +1,12 @@
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
+import User from "../../models/User.model.js"
 import Address from "../../models/Address.model.js";
 import Cart from "../../models/Cart.model.js";
 import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
 import { getReconciledCart } from "../../services/cart.services.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+import { generateOrderId } from "../../utils/generateOrderId.util.js";
 
 
 const TAX_PERCENTAGE = 18;
@@ -134,6 +136,15 @@ export const placeOrder = asyncHandler(async (req, res) => {
         });
       }
   
+      // User name and email for snapshot
+      const user = await User.findById(userId).select("name email")
+
+      if(!user){
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        })
+      }
       // Validate address
       const address = await Address.findOne({
         _id: addressId,
@@ -224,6 +235,19 @@ export const placeOrder = asyncHandler(async (req, res) => {
             message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available on ${color} color of size ${size}`,
           });
         }
+
+        // Update stock
+        const updated = await Inventory.findOneAndUpdate(
+          { _id: item.inventory._id, stock: { $gte: item.quantity } },
+          { $inc: { stock: -item.quantity } }
+        );
+    
+        if (!updated) {
+          return res.status(409).json({
+            success: false,
+            message: "Stock changed during checkout. Please try again.",
+          });
+        }
   
         // Calculate final price
         const finalPrice = calculateFinalPrice({
@@ -252,11 +276,6 @@ export const placeOrder = asyncHandler(async (req, res) => {
             at: new Date()
           }]
         });
-  
-        stockUpdates.push({
-          inventoryId: item.inventory._id,
-          quantity: item.quantity,
-        });
       }
   
       // Calculate totals
@@ -267,13 +286,16 @@ export const placeOrder = asyncHandler(async (req, res) => {
       const totalAmount = subtotal + tax + shippingCharge - discount;
   
       // Generate unique order ID
-      const orderCount = await Order.countDocuments();
-      const orderId = `ORD${Date.now()}${String(orderCount + 1).padStart(4, "0")}`;
+      const orderId = generateOrderId();
   
       // Create order
       const order = new Order({
         orderId,
         user: userId,
+        customerSnapshot:{
+          name: user.name,
+          email: user.email
+        },
         items: orderItems,
         shippingAddress: {
           fullName: address.fullName,
@@ -285,13 +307,14 @@ export const placeOrder = asyncHandler(async (req, res) => {
         },
         payment:{
           method: paymentMethod,
-          status: "PENDING"
+          status: "PENDING",
+          refundedAmount: 0
         },
         orderStatus:"PENDING",
         pricing: {
           subtotal,
           tax,
-          taxPercentage: TAX_PERCENTAGE,
+          taxPercentage: TAX_PERCENTAGE,  
           shippingCharge,
           discount,
           totalAmount,
@@ -300,20 +323,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
   
       await order.save();
   
-      // Update stock
-      for (const update of stockUpdates) {
-        const updated = await Inventory.findOneAndUpdate(
-          { _id: update.inventoryId, stock: { $gte: update.quantity } },
-          { $inc: { stock: -update.quantity } }
-        );
 
-        if (!updated) {
-          return res.status(409).json({
-            success: false,
-            message: "Stock changed during checkout. Please try again.",
-          });
-        }
-      }
   
       // Clear cart
       cart.items = [];

@@ -1,4 +1,3 @@
-import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 

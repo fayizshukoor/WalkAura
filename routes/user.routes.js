@@ -137,7 +137,7 @@ router.get("/orders",getUserOrders);
 // Cancel and Returns
 router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
 router.post("/orders/:orderId/cancel",cancelEntireOrder);
-router.post("/orders/:orderId/items/:itemId/return",requestReturn);
+router.post("/orders/:orderId/items/:itemId/return",upload.array("images",3),requestReturn);
 router.post("/orders/:orderId/return",requestReturnEntireOrder);
 
 // Invoice download

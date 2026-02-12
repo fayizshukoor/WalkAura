@@ -22,6 +22,8 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 
     query.$or = [
       { orderId: regex },
+      {"customerSnapshot.name": regex },
+      {"customerSnapshot.email": regex},
       { "shippingAddress.fullName": regex },
       { "shippingAddress.phone": regex },
     ];
@@ -45,16 +47,12 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   // Fetch orders
   const [rawOrders, totalOrders] = await Promise.all([
     Order.find(query)
-      .populate({
-        path: "user",
-        select: "name email",
-      })
       .sort(sortQuery)
       .skip(skip)
       .limit(limit)
       .select(`
         orderId
-        user
+        customerSnapshot
         payment.method
         orderStatus
         createdAt

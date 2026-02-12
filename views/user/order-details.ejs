@@ -229,7 +229,7 @@
                                 <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
                                     Item Cancelled
                                 </span>
-                            <% } else if (item.status === 'PENDING' || item.status === 'SHIPPED') { %>
+                            <% } else if (item.status === 'PENDING') { %>
                                 <button 
                                 onclick="handleCancelItem(this)"
                                 data-order-id="<%= order.orderId %>"
@@ -366,7 +366,8 @@
     }
 
     // --- Action Handlers ---
-    
+    const PHOTO_REQUIRED_REASONS = ["Defective product", "Wrong item received"];
+
     async function handleReturnEntireOrder(orderId) {
         const { value: reason } = await Swal.fire({
             ...swalConfig,
@@ -389,21 +390,108 @@
     const itemId = btn.getAttribute('data-item-id');
     const productName = btn.getAttribute('data-product-name');
 
-    const { value: reason } = await Swal.fire({
+    const { value: formValues } = await Swal.fire({
         ...swalConfig,
-        title: 'RETURN ITEM',
-        text: `Reason for returning "${productName}"?`,
-        icon: 'question',
-        input: 'select',
-        inputOptions: returnReasons,
-        inputPlaceholder: 'Select return reason',
+        title: 'RETURN REQUEST',
+        html: `
+            <div class="text-left space-y-4">
+                <div>
+                    <label class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2 block">Reason for Return</label>
+                    <select id="swal-reason" class="swal2-select swal-custom-input w-full m-0">
+                        <option value="" disabled selected>Select a reason</option>
+                        ${Object.entries(returnReasons).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2 block">Upload Image Proof</label>
+                    <input type="file" id="swal-file" class="swal2-file swal-custom-input w-full m-0" accept="image/*">
+                    
+                    <div id="image-preview-container" class="mt-4 hidden border border-white/10 rounded-xl overflow-hidden bg-black flex justify-center items-center p-2">
+                        <img id="preview-img" src="#" alt="Preview" class="max-h-[200px] w-auto rounded-lg object-contain">
+                    </div>
+
+                    <p id="photo-warning" class="text-[9px] text-red-500 mt-2 hidden uppercase font-bold tracking-tighter">
+                        * This reason requires photo proof
+                    </p>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'SUBMIT REQUEST',
-        inputValidator: (v) => !v && 'Please select a reason'
+        didOpen: () => {
+            const reasonSelect = document.getElementById('swal-reason');
+            const fileInput = document.getElementById('swal-file');
+            const warning = document.getElementById('photo-warning');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('preview-img');
+
+            // Handle Reason Change
+            reasonSelect.addEventListener('change', (e) => {
+                warning.classList.toggle('hidden', !PHOTO_REQUIRED_REASONS.includes(e.target.value));
+            });
+
+            // Handle Image Preview & Validation
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Check if it's an image
+                    if (!file.type.startsWith('image/')) {
+                        Swal.showValidationMessage('Please select a valid image file');
+                        fileInput.value = '';
+                        previewContainer.classList.add('hidden');
+                        return;
+                    }
+
+                    // Show Preview
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewImg.src = event.target.result;
+                        previewContainer.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+            });
+        },
+        preConfirm: () => {
+            const reason = document.getElementById('swal-reason').value;
+            const fileInput = document.getElementById('swal-file');
+            const file = fileInput.files[0];
+
+            if (!reason) {
+                Swal.showValidationMessage('Please select a reason');
+                return false;
+            }
+
+            if (PHOTO_REQUIRED_REASONS.includes(reason) && !file) {
+                Swal.showValidationMessage('Photo proof is required for this reason');
+                return false;
+            }
+
+            // Client-side image validation
+            if (file && !file.type.startsWith('image/')) {
+                Swal.showValidationMessage('The selected file must be an image');
+                return false;
+            }
+
+            return { reason, file };
+        }
     });
 
-    if (reason) executeAction(`/orders/${orderId}/items/${itemId}/return`, { reason }, 'REQUEST SUBMITTED');
+    if (formValues) {
+        const formData = new FormData();
+        formData.append('reason', formValues.reason);
+        if (formValues.file) {
+            // Field name 'images' must match what your middleware expects
+            formData.append('images', formValues.file); 
+        }
+
+        executeMultipartAction(`/orders/${orderId}/items/${itemId}/return`, formData, 'REQUEST SUBMITTED');
+    }
 }
+
 
 async function handleCancelItem(btn) {
     const orderId = btn.getAttribute('data-order-id');
@@ -463,4 +551,31 @@ async function handleCancelItem(btn) {
             Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
         }
     }
+
+    // Separate Executor - Keep this! It's better for architecture.
+async function executeMultipartAction(url, formData, successTitle) {
+    try {
+        Swal.fire({
+            ...swalConfig,
+            title: 'Processing...',
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData // Browser automatically sets Content-Type to multipart/form-data
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            await Swal.fire({ ...swalConfig, icon: 'success', title: successTitle, text: result.message });
+            window.location.reload();
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        Swal.fire({ ...swalConfig, icon: 'error', title: 'Error', text: error.message });
+    }
+}
 </script>
