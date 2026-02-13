@@ -272,7 +272,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
   }
 
   const currentQuantity = cart.items[itemIndex].quantity;
-  let newQuantity = currentQuantity;
+  let newQuantity;
 
   if (action === "increment") {
     newQuantity = currentQuantity + 1;
@@ -402,7 +402,7 @@ export const clearCart = asyncHandler(async (req, res) => {
 
   res.locals.cartCount = 0;
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Cart cleared successfully",
     newCount: 0

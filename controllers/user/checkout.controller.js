@@ -186,7 +186,6 @@ export const placeOrder = asyncHandler(async (req, res) => {
       }
   
       const orderItems = [];
-      const stockUpdates = [];
   
       for (const item of cart.items) {
 
@@ -331,7 +330,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
       cart.totalAmount = 0;
       await cart.save();
   
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Order placed successfully",
         order: {

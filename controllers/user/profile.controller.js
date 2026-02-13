@@ -84,7 +84,7 @@ export const uploadProfilePhoto = asyncHandler(async (req, res) => {
     await user.save();
 
     req.flash("success", "Profile photo updated");
-    res.redirect("/profile");
+    return res.redirect("/profile");
 
 });
 
@@ -107,6 +107,6 @@ export const removeProfilePhoto = asyncHandler(async (req, res) => {
     await user.save();
 
     req.flash("success", "Profile photo removed");
-    res.redirect("/profile");
+    return res.redirect("/profile");
 
 });

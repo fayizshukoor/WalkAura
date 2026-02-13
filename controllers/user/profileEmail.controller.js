@@ -170,7 +170,7 @@ export const resendEmailChangeOTP = async (req, res) => {
     return res.status(200).json({ message: "New OTP sent to confirm your email change" });
 
   } catch (error) {
-    
+      console.log("Error in resend OTP:",error);
       return res.status(429).json({ message: "Failed to send OTP" });
     
   }

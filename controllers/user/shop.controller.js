@@ -372,7 +372,7 @@ export const getProductDetails = asyncHandler(async (req, res) => {
   }));
 
   // Render the page
-  res.render("user/product-details", {
+  return res.render("user/product-details", {
     product,
     variants: variantsWithSizes,
     totalStock,

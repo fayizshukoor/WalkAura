@@ -20,7 +20,9 @@ export const getReconciledCart = async (userId) => {
       select: "size stock sku isActive",
     });
 
-  if (!cart) return null;
+  if (!cart){
+    return null;
+  } 
 
   const validItems = [];
   const changes = [];
