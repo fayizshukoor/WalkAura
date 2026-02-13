@@ -7,7 +7,7 @@ import Category from "../../models/Category.model.js";
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Wishlist from "../../models/Wishlist.model.js";
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
-import { getReconciledCart } from "../../services/cart.services.js";
+import { getReconciledCart } from "../../services/cart.service.js";
 
 const MAX_QUANTITY_PER_ITEM = 3;
 const MAX_CART_QUANTITY = 10;
@@ -24,11 +24,9 @@ export const addToCart = asyncHandler(async (req, res) => {
 
   // Validate quantity
   if (quantity < 1 || quantity > MAX_QUANTITY_PER_ITEM) {
-    return res
-      .status(400)
-      .json({
-        message: `Quantity must be between 1 and ${MAX_QUANTITY_PER_ITEM}`,
-      });
+    return res.status(400).json({
+      message: `Quantity must be between 1 and ${MAX_QUANTITY_PER_ITEM}`,
+    });
   }
 
   // Check product, variant, inventory with all validations
@@ -114,11 +112,9 @@ export const addToCart = asyncHandler(async (req, res) => {
     const newQuantity = cart.items[existingItemIndex].quantity + quantity;
 
     if (newQuantity > MAX_QUANTITY_PER_ITEM) {
-      return res
-        .status(400)
-        .json({
-          message: `Maximum ${MAX_QUANTITY_PER_ITEM} items of the same product.Already ${cart.items[existingItemIndex].quantity} added`,
-        });
+      return res.status(400).json({
+        message: `Maximum ${MAX_QUANTITY_PER_ITEM} items of the same product.Already ${cart.items[existingItemIndex].quantity} added`,
+      });
     }
 
     if (newQuantity > inventory.stock) {
@@ -127,8 +123,12 @@ export const addToCart = asyncHandler(async (req, res) => {
         .json({ message: `Only ${inventory.stock} items available in stock` });
     }
 
-    const currentTotal = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    const newTotal = currentTotal - cart.items[existingItemIndex].quantity + newQuantity;
+    const currentTotal = cart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const newTotal =
+      currentTotal - cart.items[existingItemIndex].quantity + newQuantity;
 
     if (newTotal > MAX_CART_QUANTITY) {
       return res.status(400).json({
@@ -167,12 +167,13 @@ export const addToCart = asyncHandler(async (req, res) => {
     { $pull: { items: { product: productId, variant: variantId } } },
   ).catch(() => {});
 
-
-  res.status(200).json({ message: "Item added to cart successfully", newCount: cart.totalItems});
+  res
+    .status(200)
+    .json({
+      message: "Item added to cart successfully",
+      newCount: cart.totalItems,
+    });
 });
-
-
-
 
 export const getCart = asyncHandler(async (req, res) => {
   const userId = req.user?.userId;
@@ -190,7 +191,7 @@ export const getCart = asyncHandler(async (req, res) => {
 
   const { cart, hasChanges, changes } = result;
 
-  // Navbar count 
+  // Navbar count
   res.locals.cartCount = cart.totalItems || 0;
 
   const cartChanges = req.session.cartChanges || (hasChanges ? changes : []);
@@ -202,8 +203,6 @@ export const getCart = asyncHandler(async (req, res) => {
     changes: cartChanges,
   });
 });
-
-
 
 // Update cart quantity
 export const updateCartItemQuantity = asyncHandler(async (req, res) => {
@@ -236,7 +235,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
   if (!product || !product.isListed) {
     return res.status(409).json({
       message: "Product is no longer available",
-      code: "ITEM_UNAVAILABLE"
+      code: "ITEM_UNAVAILABLE",
     });
   }
 
@@ -246,28 +245,26 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
     !product.category.isListed ||
     product.category.isDeleted
   ) {
-
     return res.status(409).json({
       message: "Item is no longer available.Please review your cart",
-      code: "ITEM_UNAVAILABLE"
+      code: "ITEM_UNAVAILABLE",
     });
   }
-
 
   // Get inventory for stock check
   const inventory = await Inventory.findById(inventoryId);
   if (!inventory || !inventory.isActive) {
     return res.status(409).json({
       message: "Product is no longer available",
-      code: "ITEM_UNAVAILABLE"
+      code: "ITEM_UNAVAILABLE",
     });
   }
 
-  if(inventory.stock === 0){
+  if (inventory.stock === 0) {
     return res.status(409).json({
       message: `Size UK ${inventory.size} is out of stock`,
-      code: "OUT_OF_STOCK"
-    })
+      code: "OUT_OF_STOCK",
+    });
   }
 
   const currentQuantity = cart.items[itemIndex].quantity;
@@ -290,8 +287,12 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
       });
     }
 
-    const currentTotal = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    const newTotal = currentTotal - cart.items[itemIndex].quantity + newQuantity;
+    const currentTotal = cart.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const newTotal =
+      currentTotal - cart.items[itemIndex].quantity + newQuantity;
 
     if (newTotal > MAX_CART_QUANTITY) {
       return res.status(400).json({
@@ -318,25 +319,28 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
 
   // Update cart totals
   cart.totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  cart.totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0);
+  cart.totalAmount = cart.items.reduce(
+    (sum, item) => sum + item.priceAtAdd * item.quantity,
+    0,
+  );
 
   await cart.save();
 
   const updatedItem = cart.items[itemIndex];
 
-  res.status(200).json({ 
-    success: true, 
+  res.status(200).json({
+    success: true,
     newCount: cart.totalItems,
     cart: {
       totalItems: cart.totalItems,
-      totalAmount: cart.totalAmount
+      totalAmount: cart.totalAmount,
     },
-    updatedItem:{
+    updatedItem: {
       inventoryId: updatedItem.inventory,
       quantity: updatedItem.quantity,
       priceAtAdd: updatedItem.priceAtAdd,
-      itemTotal: updatedItem.priceAtAdd * updatedItem.quantity
-    }
+      itemTotal: updatedItem.priceAtAdd * updatedItem.quantity,
+    },
   });
 });
 
@@ -368,7 +372,10 @@ export const removeCartItem = asyncHandler(async (req, res) => {
 
   // Update cart totals
   cart.totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  cart.totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0);
+  cart.totalAmount = cart.items.reduce(
+    (sum, item) => sum + item.priceAtAdd * item.quantity,
+    0,
+  );
 
   await cart.save();
 
@@ -377,7 +384,7 @@ export const removeCartItem = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     message: "Item removed from cart",
-    newCount: cart.totalItems
+    newCount: cart.totalItems,
   });
 });
 
@@ -404,6 +411,6 @@ export const clearCart = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Cart cleared successfully",
-    newCount: 0
+    newCount: 0,
   });
 });
