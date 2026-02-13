@@ -3,6 +3,12 @@ import mongoose from "mongoose";
 
 const couponSchema = new mongoose.Schema(
   {
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
     code: {
       type: String,
       required: true,
@@ -41,12 +47,7 @@ const couponSchema = new mongoose.Schema(
       default: 1,
     },
 
-    validFrom: {
-      type: Date,
-      required: true,
-    },
-
-    validUntil: {
+    expiryDate: {
       type: Date,
       required: true,
     },
@@ -59,8 +60,7 @@ const couponSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-couponSchema.index({ code: 1 });
-couponSchema.index({ validUntil: 1 });
+couponSchema.index({ expiryDate: 1 });
 couponSchema.index({ isActive: 1 });
 
 export default mongoose.model("Coupon", couponSchema);

@@ -8,7 +8,6 @@ import { showAdminDashboard } from "../controllers/admin/dashboard.controller.js
 
 import { showCustomers,toggleCustomerStatus } from "../controllers/admin/customers.controller.js";
 
-
 import { addCategory, editCategory, getCategoriesAjax, showCategories, softDeleteCategory, toggleCategoryStatus } from "../controllers/admin/categories.controller.js";
 
 import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAddProduct, showEditProduct, showProducts, toggleProductStatus } from "../controllers/admin/product.controller.js";
@@ -16,6 +15,8 @@ import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAd
 import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } from "../controllers/admin/variant.controller.js";
 
 import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/order.controller.js";
+
+import { addCoupon, getCouponsPage } from "../controllers/admin/coupon.controller.js";
 
 
 // middleware imports
@@ -71,6 +72,10 @@ router.get("/orders",getAllOrders);
 router.post("/orders/:orderId/status",updateOrderStatus);
 router.get("/orders/:orderId",getOrderDetails);
 router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn); 
-router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn); 
+router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn);
+
+//Coupons
+router.get("/coupons",getCouponsPage);
+router.post("/coupons/add",addCoupon);
 
 export default router;

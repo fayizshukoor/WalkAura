@@ -130,6 +130,17 @@ const orderSchema = new mongoose.Schema(
       enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
       default: "PENDING",
     },
+
+    appliedCoupon: {
+      coupon: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon"
+      },
+      code: String,
+      discountPercentage: Number,
+      discountAmount: Number
+    },
+
     pricing: {
       subtotal: { type: Number, required: true },
       tax: { type: Number, required: true },
