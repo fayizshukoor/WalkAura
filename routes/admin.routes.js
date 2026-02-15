@@ -16,7 +16,7 @@ import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } fr
 
 import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/order.controller.js";
 
-import { addCoupon, getCouponsPage } from "../controllers/admin/coupon.controller.js";
+import { addCoupon, editCoupon, getCouponsPage, getCouponsPageAjax, softDeleteCoupon, toggleCouponStatus } from "../controllers/admin/coupon.controller.js";
 
 
 // middleware imports
@@ -76,6 +76,10 @@ router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn);
 
 //Coupons
 router.get("/coupons",getCouponsPage);
+router.get("/coupons/data",getCouponsPageAjax);
 router.post("/coupons/add",addCoupon);
+router.put("/coupons/edit/:couponId",editCoupon);
+router.patch("/coupons/toggle-status/:couponId",toggleCouponStatus);
+router.delete("/coupons/delete/:couponId",softDeleteCoupon);
 
 export default router;
