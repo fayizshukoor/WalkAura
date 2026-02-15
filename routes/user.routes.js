@@ -13,13 +13,13 @@ import { requestEmailChange, resendEmailChangeOTP, showChangeEmail, showVerifyEm
 
 import { handleAuthForgotPassword, handleChangePassword, showChangePassword } from "../controllers/user/profilePassword.controller.js";
 
-import { addAddress, deleteAddress, showAddressManagement, updateAddress} from "../controllers/user/address.controller.js";
+import { addAddress, deleteAddress, getPincodeDetails, showAddressManagement, updateAddress} from "../controllers/user/address.controller.js";
 
 import { getProductDetails, getProducts } from "../controllers/user/shop.controller.js";
 
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
-import { getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
+import { applyCoupon, getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
 
 import { getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
 
@@ -108,10 +108,9 @@ router.get("/forgot-password/authenticated", handleAuthForgotPassword);
 
 router.get("/addresses", noCache, requireAuth, showAddressManagement);
 router.post("/addresses/add", requireAuth, addAddress);
-
 router.put("/addresses/:addressId", requireAuth, updateAddress);
-
 router.delete("/addresses/:addressId", requireAuth, deleteAddress);
+router.get("/pincode/:code",getPincodeDetails);
 
 // Product Listing page
 
@@ -127,6 +126,8 @@ router.delete("/cart/clear", requireAuth, clearCart);
 
 // Checkout
 router.get("/checkout",getCheckoutPage);
+router.post("/apply-coupon",applyCoupon);
+
 router.post("/place-order",placeOrder);
 
 // Order 

@@ -7,6 +7,7 @@ import Order from "../../models/Order.model.js";
 import { getReconciledCart } from "../../services/cart.service.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import { generateOrderId } from "../../utils/generateOrderId.util.js";
+import { applyCouponService, getAvailableCouponsForCheckoutService } from "../../services/coupon.service.js";
 
 const TAX_PERCENTAGE = 18;
 
@@ -85,8 +86,36 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
   );
   const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
   const shippingCharge = 0;
-  const discount = 0;
+
+  let discount = 0;
+  let appliedCoupon = null;
+
+  // Revalidate Applied Coupon From Session
+  if (req.session.appliedCoupon?.code) {
+    try {
+      const couponResult = await applyCouponService({
+        userId,
+        couponCode: req.session.appliedCoupon.code,
+      });
+      
+
+      discount = couponResult.pricing.discount;
+      appliedCoupon = couponResult.coupon;
+
+    } catch (err) {
+      // Coupon no longer valid
+      req.session.appliedCoupon = null;
+    }
+  }
+
   const totalAmount = subtotal + tax + shippingCharge - discount;
+
+  // Fetch available coupons
+
+  const availableCoupons = await getAvailableCouponsForCheckoutService({
+    userId,
+    cartSubtotal: subtotal
+  });
 
   return res.render("user/checkout", {
     checkout: {
@@ -106,13 +135,42 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
       pricing: {
         subtotal,
         tax,
-        shippingCharge: 0,
-        discount: 0,
+        shippingCharge,
+        discount,
         totalAmount,
       },
-    },
+      availableCoupons
+    }
   });
 });
+
+
+
+export const applyCoupon = asyncHandler(async (req, res)=>{
+    const userId = req?.user?.userId;
+    const {couponCode} = req.body;
+
+
+    const result = await applyCouponService({userId, couponCode});
+
+    console.log(result);
+
+    req.session.appliedCoupon = {
+      couponId: result.coupon._id,
+      code: result.coupon.code
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Coupon applied successfully",
+      data: result
+    });
+})
+
+
+
+
+
 
 export const placeOrder = asyncHandler(async (req, res) => {
   const { addressId, paymentMethod = "COD" } = req.body;

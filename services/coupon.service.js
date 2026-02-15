@@ -1,5 +1,7 @@
 import Coupon from "../models/Coupon.model.js";
+import Order from "../models/Order.model.js";
 import AppError from "../utils/appError.js";
+import { getReconciledCart } from "./cart.service.js";
 
 
 export const getCouponsService = async ({
@@ -56,19 +58,32 @@ export const createCouponService = async (data) => {
   } = data;
 
   //  Basic required validations
-  if (!name || !code || !discountPercentage || !expiryDate) {
-    throw new AppError("Name, Code, discount and expiry Date are required",400);
+  if (!name || !code || !expiryDate) {
+    throw new AppError("Name, Code and expiry Date are required",400);
   }
 
   //  Validate percentage range (extra safety)
-  if (discountPercentage < 1 || discountPercentage > 90) {
-    throw new AppError("Discount percentage must be between 1 and 90",400);
+  const discount = Number(discountPercentage);
+
+  if (isNaN(discount) || discount < 1 || discount > 90) {
+    throw new AppError(
+      "Discount percentage must be between 1 and 90",
+      400
+    );
   }
 
-  if(usageLimit!== undefined && usageLimit <= 0){
-    throw new AppError("Usage Limit should be greater than Zero",400);
-  }
+  let parsedUsageLimit;
 
+  if (usageLimit !== undefined && usageLimit !== "") {
+    parsedUsageLimit = Number(usageLimit);
+
+    if (isNaN(parsedUsageLimit) || parsedUsageLimit <= 0) {
+      throw new AppError(
+        "Usage limit must be greater than 0",
+        400
+      );
+    }
+  }
   //  Validate expiry date
   const now = new Date();
 
@@ -93,12 +108,12 @@ export const createCouponService = async (data) => {
 
   let parsedMaxDiscount;
 
-  if (maxDiscountAmount !== undefined) {
+  if (maxDiscountAmount !== undefined && maxDiscountAmount !== "") {
     parsedMaxDiscount = Number(maxDiscountAmount);
 
     if (isNaN(parsedMaxDiscount) || parsedMaxDiscount < 0) {
       throw new AppError(
-        "Max discount amount must be greater than 0",
+        "Max discount amount must be >= 0",
         400
       );
     }
@@ -106,11 +121,18 @@ export const createCouponService = async (data) => {
 
   if (
     parsedMaxDiscount !== undefined &&
-    parsedMaxDiscount > parsedMinCart &&
-    parsedMinCart > 0
+    parsedMinCart > 0 &&
+    parsedMaxDiscount > parsedMinCart
   ) {
     throw new AppError(
       "Max discount cannot exceed minimum cart value",
+      400
+    );
+  }
+
+  if (discount > 50 && parsedMaxDiscount === undefined) {
+    throw new AppError(
+      "Max discount amount is required for high discount coupons",
       400
     );
   }
@@ -144,10 +166,10 @@ export const createCouponService = async (data) => {
   const coupon = await Coupon.create({
     name,
     code: normalizedCode,
-    discountPercentage,
-    minCartValue,
-    maxDiscountAmount,
-    usageLimit,
+    discountPercentage: discount,
+    minCartValue: parsedMinCart,
+    maxDiscountAmount: parsedMaxDiscount,
+    usageLimit: parsedUsageLimit,
     expiryDate: parsedExpiry,
   });
 
@@ -199,21 +221,21 @@ export const editCouponService = async (couponId, data) => {
   }
 
   // Usage Limit
-  if (usageLimit !== undefined) {
-    const limit = Number(usageLimit);
+  if (usageLimit !== undefined && usageLimit !== "") {
+    const parsedUsageLimit = Number(usageLimit);
   
-    if (isNaN(limit) || limit <= 0) {
+    if (isNaN(parsedUsageLimit) || parsedUsageLimit <= 0) {
       throw new AppError("Usage limit must be greater than 0", 400);
     }
   
-    if (limit < coupon.usedCount) {
+    if (parsedUsageLimit < coupon.usedCount) {
       throw new AppError(
         "Usage limit cannot be less than already used count",
         400
       );
     }
   
-    coupon.usageLimit = limit;
+    coupon.usageLimit = parsedUsageLimit;
   }
 
   // Expiry
@@ -235,7 +257,7 @@ export const editCouponService = async (couponId, data) => {
   if (minCartValue !== undefined) {
     const parsedMinCart = Number(minCartValue);
 
-    if (isNaN(parsedMinCart) || parsedMinCart <= 0) {
+    if (isNaN(parsedMinCart) || parsedMinCart < 0) {
       throw new AppError(
         "Minimum cart value must be greater than 0",
         400
@@ -246,10 +268,10 @@ export const editCouponService = async (couponId, data) => {
   }
 
   // Max Discount
-  if (maxDiscountAmount !== undefined) {
+  if (maxDiscountAmount !== undefined && maxDiscountAmount !== "") {
     const parsedMaxDiscount = Number(maxDiscountAmount);
 
-    if (isNaN(parsedMaxDiscount) || parsedMaxDiscount <= 0) {
+    if (isNaN(parsedMaxDiscount) || parsedMaxDiscount < 0) {
       throw new AppError(
         "Max discount amount must be greater than 0",
         400
@@ -268,6 +290,17 @@ export const editCouponService = async (couponId, data) => {
   ) {
     throw new AppError(
       "Max discount cannot exceed minimum cart value",
+      400
+    );
+  }
+
+  // safeguard for high discount
+  if (
+    coupon.discountPercentage > 50 &&
+    coupon.maxDiscountAmount === undefined
+  ) {
+    throw new AppError(
+      "Max discount amount is required for high discount coupons",
       400
     );
   }
@@ -310,4 +343,166 @@ export const softDeleteCouponService = async (couponId) => {
   await coupon.save();
 
   return coupon;
+};
+
+
+
+// User Side Services
+
+export const getAvailableCouponsForCheckoutService = async ({
+  userId,
+  cartSubtotal
+}) => {
+  const now = new Date();
+
+  // Fetch globally valid coupons
+  const coupons = await Coupon.find({
+    isActive: true,
+    isDeleted: false,
+    expiryDate: { $gt: now },
+    $or: [
+      { usageLimit: { $exists: false } }, // unlimited
+      { $expr: { $lt: ["$usedCount", "$usageLimit"] } }
+    ],
+    minCartValue: { $lte: cartSubtotal }
+  })
+    .select(
+      "code name discountPercentage minCartValue maxDiscountAmount usageLimit perUserLimit expiryDate"
+    )
+    .lean();
+
+  if (!coupons.length) return [];
+
+  // Get user's previous usage
+  const userOrders = await Order.aggregate([
+    {
+      $match: {
+        user: userId,
+        "appliedCoupon.coupon": { $exists: true },
+        orderStatus: { $ne: "CANCELLED" }
+      }
+    },
+    {
+      $group: {
+        _id: "$appliedCoupon.coupon",
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const userUsageMap = {};
+  userOrders.forEach(order => {
+    userUsageMap[order._id.toString()] = order.count;
+  });
+
+  // Filter per-user limit
+  const eligibleCoupons = coupons.filter(coupon => {
+    const usageCount = userUsageMap[coupon._id?.toString()] || 0;
+
+    if (coupon.perUserLimit !== undefined) {
+      return usageCount < coupon.perUserLimit;
+    }
+
+    return true;
+  });
+
+  return eligibleCoupons;
+};
+
+
+export const applyCouponService = async ({
+  userId,
+  couponCode
+}) => {
+
+
+  // Reconcile Cart
+  const result = await getReconciledCart(userId);
+
+
+  if (!result || !result.cart || result.cart.items.length === 0) {
+    throw new AppError("Cart is empty", 400);
+  }
+
+  const { cart } = result;
+
+  const subtotal = cart.items.reduce(
+    (sum, item) => sum + item.priceAtAdd * item.quantity,
+    0
+  );
+
+  // Fetch Coupon
+  const coupon = await Coupon.findOne({
+    code: couponCode.trim().toUpperCase(),
+    isActive: true,
+    isDeleted: false
+  });
+
+  if (!coupon) {
+    throw new AppError("Invalid or inactive coupon", 400);
+  }
+
+  // Expiry Validation
+  if (coupon.expiryDate <= new Date()) {
+    throw new AppError("Coupon has expired", 400);
+  }
+
+  //  Minimum Cart Validation
+  if (subtotal < coupon.minCartValue) {
+    throw new AppError(
+      `Minimum cart value of ₹${coupon.minCartValue} required`,
+      400
+    );
+  }
+
+  // Global Usage Limit Check
+  if (
+    coupon.usageLimit !== undefined &&
+    coupon.usedCount >= coupon.usageLimit
+  ) {
+    throw new AppError("Coupon usage limit exceeded", 400);
+  }
+
+  // Per User Limit Check
+  const userUsageCount = await Order.countDocuments({
+    user: userId,
+    "appliedCoupon.coupon": coupon._id,
+    orderStatus: { $ne: "CANCELLED" }
+  });
+
+  if (
+    coupon.perUserLimit !== undefined &&
+    userUsageCount >= coupon.perUserLimit
+  ) {
+    throw new AppError("You have already used this coupon", 400);
+  }
+
+  // Calculate Discount
+  let discount =
+    Math.floor((subtotal * coupon.discountPercentage) / 100);
+
+  if (
+    coupon.maxDiscountAmount !== undefined &&
+    discount > coupon.maxDiscountAmount
+  ) {
+    discount = coupon.maxDiscountAmount;
+  }
+
+  if (discount > subtotal) {
+    discount = subtotal;
+  }
+
+  //  Return Pricing
+  return {
+    coupon: {
+      _id: coupon._id,
+      code: coupon.code,
+      discountPercentage: coupon.discountPercentage
+    },
+    pricing: {
+      subtotal,
+      discount,
+      finalSubtotal: subtotal - discount
+    }
+  };
 };

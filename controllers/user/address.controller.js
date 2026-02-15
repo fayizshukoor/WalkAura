@@ -1,6 +1,6 @@
 import Address from "../../models/Address.model.js";
-import User from "../../models/User.model.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+import pincodeLookup from "india-pincode-lookup";
 
 // Show address Page (Initial Render)
 export const showAddressManagement = asyncHandler(async (req, res) => {
@@ -36,6 +36,14 @@ export const addAddress = asyncHandler(async (req, res) => {
         return res.status(400).json({ success: false, message: "Invalid 6-digit pincode" });
     }
 
+    if(isDefault === true){
+        const defaultAddress = await Address.findOne({isDefault: true});
+
+        if(defaultAddress){
+            defaultAddress.isDefault = false;
+            await defaultAddress.save();
+        }
+    }
     const address = await Address.create({
         userId: req.user.userId,
         fullName,
@@ -78,7 +86,6 @@ export const updateAddress = asyncHandler(async (req, res) => {
     // Remove existing default address
     const defaultAddress = await Address.findOne({isDefault: true});
 
-    console.log(defaultAddress);
 
     if(defaultAddress){
         defaultAddress.isDefault = false;
@@ -113,3 +120,26 @@ export const deleteAddress = asyncHandler(async (req, res) => {
         message: "Address deleted successfully" 
     });
 });
+
+
+export const getPincodeDetails = asyncHandler(async (req, res)=>{
+    const {code} = req.params;
+
+    if (!/^\d{6}$/.test(code)) {
+        return res.status(400).json({ success: false, message: "Invalid pincode format" });
+    }
+    const results = pincodeLookup.lookup(code);
+
+        if (results && results.length > 0) {
+            // Helper to title-case names (e.g., "BANGALORE" -> "Bangalore")
+            const formatName = (str) => str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+
+            return res.json({
+                success: true,
+                city: formatName(results[0].districtName),
+                state: formatName(results[0].stateName)
+            });
+        }
+
+        return res.status(404).json({ success: false, message: "Pincode not found" });
+})

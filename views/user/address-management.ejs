@@ -234,7 +234,11 @@
                 const form = modal.querySelector('form');
                 if (form && modalId === 'addAddressModal') {
                     form.reset();
-                    // Ensure checkbox is unchecked by default on reset
+                    // Reset readOnly state on new modal open
+                    document.getElementById('add_city').readOnly = true;
+                    document.getElementById('add_state').readOnly = true;
+                    document.getElementById('add_city').classList.add('input-readonly');
+                    document.getElementById('add_state').classList.add('input-readonly');
                     if(form.isDefault) form.isDefault.checked = false;
                 }
                 modal.querySelectorAll('.error-message').forEach(m => m.style.display = 'none');
@@ -254,25 +258,44 @@
             if (pincode.length < 6) {
                 cityInp.value = "";
                 stateInp.value = "";
+                cityInp.readOnly = true;
+                stateInp.readOnly = true;
+                cityInp.classList.add('input-readonly');
+                stateInp.classList.add('input-readonly');
                 statusEl.classList.add('hidden');
                 return;
             }
 
-            statusEl.classList.remove('hidden');
-            try {
-                const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-                const data = await response.json();
-                statusEl.classList.add('hidden');
-                
-                if (data[0].Status === "Success") {
-                    cityInp.value = data[0].PostOffice[0].District;
-                    stateInp.value = data[0].PostOffice[0].State;
-                } else {
+            if (pincode.length === 6) {
+                statusEl.classList.remove('hidden');
+                try {
+                    // Using your new local internal API
+                    const response = await fetch(`/pincode/${pincode}`);
+                    const data = await response.json();
+                    statusEl.classList.add('hidden');
+                    
+                    if (data.success) {
+                        cityInp.value = data.city;
+                        stateInp.value = data.state;
+                        // Successfully found: keep locked
+                        cityInp.readOnly = true;
+                        stateInp.readOnly = true;
+                        cityInp.classList.add('input-readonly');
+                        stateInp.classList.add('input-readonly');
+                    } else {
+                        throw new Error("Pincode Not Found");
+                    }
+                } catch (err) { 
+                    statusEl.classList.add('hidden');
+                    // Fail-safe: Allow manual entry if API fails or code not found
                     cityInp.value = "";
                     stateInp.value = "";
+                    cityInp.readOnly = false;
+                    stateInp.readOnly = false;
+                    cityInp.classList.remove('input-readonly');
+                    stateInp.classList.remove('input-readonly');
+                    cityInp.focus();
                 }
-            } catch (err) { 
-                statusEl.classList.add('hidden'); 
             }
         }
 
@@ -292,7 +315,6 @@
             const btn = document.getElementById('addSubmitBtn');
             btn.disabled = true;
             
-            // Explicitly capture checkbox value
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
             data.isDefault = this.isDefault.checked; 
@@ -335,6 +357,12 @@
             document.getElementById('edit_city').value = address.city;
             document.getElementById('edit_state').value = address.state;
             document.getElementById('edit_isDefault').checked = address.isDefault || false;
+            
+            // On edit, always start as readonly
+            document.getElementById('edit_city').readOnly = true;
+            document.getElementById('edit_state').readOnly = true;
+            document.getElementById('edit_city').classList.add('input-readonly');
+            document.getElementById('edit_state').classList.add('input-readonly');
         }
 
         document.getElementById('editAddressForm').addEventListener('submit', async function(e) {

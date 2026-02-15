@@ -46,10 +46,10 @@
                             </td>
                             <td class="p-5 text-center">
                                 <div class="text-white font-bold text-lg"><%= coupon.discountPercentage %>% OFF</div>
-                                <div class="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wide">Max Disc: <span class="text-green-500">₹<%= coupon.maxDiscountAmount %></span></div>
+                                <div class="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wide">Max Disc: <span class="text-green-500"><%= coupon.maxDiscountAmount ? '₹' + coupon.maxDiscountAmount : "Unlimited" %></span></div>
                             </td>
                             <td class="p-5 text-center">
-                                <div class="text-gray-300 font-medium">Usage: <%= coupon.usedCount || 0 %> / <span class="text-white"><%= coupon.usageLimit %></span></div>
+                                <div class="text-gray-300 font-medium">Usage: <%= coupon.usedCount || 0 %> / <span class="text-white"><%= coupon.usageLimit ? coupon.usageLimit : "∞" %></span></div>
                                 <div class="text-[11px] text-gray-400 font-semibold mt-1 uppercase tracking-wide">Min Spend: <span class="text-[#5c56f6]">₹<%= coupon.minCartValue %></span></div>
                             </td>
                             <td class="p-5 text-center text-gray-400">
@@ -297,10 +297,10 @@
                     </td>
                     <td class="p-5 text-center">
                         <div class="text-white font-bold text-lg">${coupon.discountPercentage}% OFF</div>
-                        <div class="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wide">Max Disc: <span class="text-green-500">₹${coupon.maxDiscountAmount}</span></div>
+                        <div class="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wide">Max Disc: <span class="text-green-500">${coupon.maxDiscountAmount || "Unlimited"}</span></div>
                     </td>
                     <td class="p-5 text-center">
-                        <div class="text-gray-300 font-medium">Usage: ${coupon.usedCount || 0} / <span class="text-white">${coupon.usageLimit}</span></div>
+                        <div class="text-gray-300 font-medium">Usage: ${coupon.usedCount || 0} / <span class="text-white">${coupon.usageLimit || "∞" }</span></div>
                         <div class="text-[11px] text-gray-400 font-semibold mt-1 uppercase tracking-wide">Min Spend: <span class="text-[#5c56f6]">₹${coupon.minCartValue}</span></div>
                     </td>
                     <td class="p-5 text-center text-gray-400"><div class="text-white font-medium">${formattedDate}</div></td>
