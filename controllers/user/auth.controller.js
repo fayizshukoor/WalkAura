@@ -107,7 +107,7 @@ export const handleLogin = asyncHandler(async (req, res) => {
 
   if (user.role === "admin") {
     req.flash("error", "Admins cannot login from User Login");
-    return redirect("/login");
+    return res.redirect("/login");
   }
 
   if (user.googleId && !user.password) {

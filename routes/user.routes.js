@@ -19,7 +19,7 @@ import { getProductDetails, getProducts } from "../controllers/user/shop.control
 
 import { addToCart, clearCart, getCart, removeCartItem, updateCartItemQuantity } from "../controllers/user/cart.controller.js";
 
-import { applyCoupon, getCheckoutPage, placeOrder } from "../controllers/user/checkout.controller.js";
+import { applyCoupon, getCheckoutPage, placeOrder, removeCoupon } from "../controllers/user/checkout.controller.js";
 
 import { getOrderDetails, getOrderSuccess, getUserOrders } from "../controllers/user/order.controller.js";
 
@@ -127,7 +127,7 @@ router.delete("/cart/clear", requireAuth, clearCart);
 // Checkout
 router.get("/checkout",getCheckoutPage);
 router.post("/apply-coupon",applyCoupon);
-
+router.post('/remove-coupon',removeCoupon);
 router.post("/place-order",placeOrder);
 
 // Order 

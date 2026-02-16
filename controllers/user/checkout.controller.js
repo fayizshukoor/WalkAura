@@ -7,7 +7,9 @@ import Order from "../../models/Order.model.js";
 import { getReconciledCart } from "../../services/cart.service.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 import { generateOrderId } from "../../utils/generateOrderId.util.js";
-import { applyCouponService, getAvailableCouponsForCheckoutService } from "../../services/coupon.service.js";
+import { applyCouponService, getAvailableCouponsForCheckoutService, validateCouponForSubtotal } from "../../services/coupon.service.js";
+import { calculateShipping } from "../../helpers/shipping.helper.js";
+import Coupon from "../../models/Coupon.model.js";
 
 const TAX_PERCENTAGE = 18;
 
@@ -85,7 +87,7 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
     0,
   );
   const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
-  const shippingCharge = 0;
+  const shippingCharge = calculateShipping(subtotal);
 
   let discount = 0;
   let appliedCoupon = null;
@@ -98,6 +100,7 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
         couponCode: req.session.appliedCoupon.code,
       });
       
+      console.log(couponResult.coupon);
 
       discount = couponResult.pricing.discount;
       appliedCoupon = couponResult.coupon;
@@ -139,7 +142,8 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
         discount,
         totalAmount,
       },
-      availableCoupons
+      availableCoupons,
+      appliedCoupon
     }
   });
 });
@@ -165,6 +169,12 @@ export const applyCoupon = asyncHandler(async (req, res)=>{
       message: "Coupon applied successfully",
       data: result
     });
+});
+
+export const removeCoupon = asyncHandler(async (req, res)=>{
+    req.session.appliedCoupon = null;
+
+    return res.status(200).json({success: true, message: "Coupon removed successfully"});
 })
 
 
@@ -174,7 +184,7 @@ export const applyCoupon = asyncHandler(async (req, res)=>{
 
 export const placeOrder = asyncHandler(async (req, res) => {
   const { addressId, paymentMethod = "COD" } = req.body;
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
 
   if (paymentMethod !== "COD") {
     return res.status(400).json({
@@ -233,7 +243,6 @@ export const placeOrder = asyncHandler(async (req, res) => {
   }
 
   const orderItems = [];
-  const stockUpdates = [];
 
   for (const item of cart.items) {
     const size = item.inventory?.size ?? "N/A";
@@ -286,6 +295,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     const updated = await Inventory.findOneAndUpdate(
       { _id: item.inventory._id, stock: { $gte: item.quantity } },
       { $inc: { stock: -item.quantity } },
+      { new: true}
     );
 
     if (!updated) {
@@ -328,9 +338,61 @@ export const placeOrder = asyncHandler(async (req, res) => {
 
   // Calculate totals
   const subtotal = orderItems.reduce((sum, item) => sum + item.itemTotal, 0);
+
+
+  // Coupon check
+  let discount = 0;
+  let appliedCouponData = null;
+
+//  Apply coupon if exists in session
+if (req.session.appliedCoupon?.code) {
+
+  try {
+
+    const { coupon, discount: calculatedDiscount } =
+      await validateCouponForSubtotal({
+        userId,
+        couponCode: req.session.appliedCoupon.code,
+        subtotal
+      });
+
+    //  Atomic increment (race condition protection)
+    const updatedCoupon = await Coupon.findOneAndUpdate(
+      {
+        _id: coupon._id,
+        $or: [
+          { usageLimit: { $exists: false } },
+          { $expr: { $lt: ["$usedCount", "$usageLimit"] } }
+        ]
+      },
+      { $inc: { usedCount: 1 } },
+      { new: true }
+    );
+
+    if (!updatedCoupon) {
+      return res.status(400).json({success: false, message: "Coupon usage limit exceeded"});
+    }
+
+    discount = calculatedDiscount;
+
+    appliedCouponData = {
+      coupon: coupon._id,
+      code: coupon.code,
+      discountPercentage: coupon.discountPercentage,
+      discountAmount: discount
+    };
+
+  } catch (err) {
+    // If coupon invalid during order
+    req.session.appliedCoupon = null;
+    throw err;
+  }
+
+  // Always clear session after processing
+  req.session.appliedCoupon = null;
+}
   const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
-  const shippingCharge = 0;
-  const discount = 0;
+  const shippingCharge = calculateShipping(subtotal);
   const totalAmount = subtotal + tax + shippingCharge - discount;
 
   // Generate unique order ID
@@ -367,6 +429,8 @@ export const placeOrder = asyncHandler(async (req, res) => {
       discount,
       totalAmount,
     },
+
+    appliedCoupon: appliedCouponData
   });
 
   await order.save();

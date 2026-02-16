@@ -409,6 +409,69 @@ export const getAvailableCouponsForCheckoutService = async ({
   return eligibleCoupons;
 };
 
+export const validateCouponForSubtotal = async ({
+  userId,
+  couponCode,
+  subtotal
+}) => {
+
+  const coupon = await Coupon.findOne({
+    code: couponCode.trim().toUpperCase(),
+    isActive: true,
+    isDeleted: false,
+    expiryDate: { $gt: new Date() }
+  });
+
+  if (!coupon) {
+    throw new AppError("Invalid or inactive coupon", 400);
+  }
+
+  if (subtotal < coupon.minCartValue) {
+    throw new AppError(
+      `Minimum cart value of ₹${coupon.minCartValue} required`,
+      400
+    );
+  }
+
+  if (
+    coupon.usageLimit !== undefined &&
+    coupon.usedCount >= coupon.usageLimit
+  ) {
+    throw new AppError("Coupon usage limit exceeded", 400);
+  }
+
+  const userUsageCount = await Order.countDocuments({
+    user: userId,
+    "appliedCoupon.coupon": coupon._id,
+    orderStatus: { $ne: "CANCELLED" }
+  });
+
+  if (
+    coupon.perUserLimit !== undefined &&
+    userUsageCount >= coupon.perUserLimit
+  ) {
+    throw new AppError("You have already used this coupon", 400);
+  }
+
+  let discount = Math.floor(
+    (subtotal * coupon.discountPercentage) / 100
+  );
+
+  if (
+    coupon.maxDiscountAmount !== undefined &&
+    discount > coupon.maxDiscountAmount
+  ) {
+    discount = coupon.maxDiscountAmount;
+  }
+
+  if (discount > subtotal) {
+    discount = subtotal;
+  }
+
+  return { coupon, discount };
+};
+
+
 
 export const applyCouponService = async ({
   userId,
@@ -431,66 +494,9 @@ export const applyCouponService = async ({
     0
   );
 
-  // Fetch Coupon
-  const coupon = await Coupon.findOne({
-    code: couponCode.trim().toUpperCase(),
-    isActive: true,
-    isDeleted: false
-  });
+  const {coupon, discount} = await validateCouponForSubtotal({userId, couponCode, subtotal});
 
-  if (!coupon) {
-    throw new AppError("Invalid or inactive coupon", 400);
-  }
-
-  // Expiry Validation
-  if (coupon.expiryDate <= new Date()) {
-    throw new AppError("Coupon has expired", 400);
-  }
-
-  //  Minimum Cart Validation
-  if (subtotal < coupon.minCartValue) {
-    throw new AppError(
-      `Minimum cart value of ₹${coupon.minCartValue} required`,
-      400
-    );
-  }
-
-  // Global Usage Limit Check
-  if (
-    coupon.usageLimit !== undefined &&
-    coupon.usedCount >= coupon.usageLimit
-  ) {
-    throw new AppError("Coupon usage limit exceeded", 400);
-  }
-
-  // Per User Limit Check
-  const userUsageCount = await Order.countDocuments({
-    user: userId,
-    "appliedCoupon.coupon": coupon._id,
-    orderStatus: { $ne: "CANCELLED" }
-  });
-
-  if (
-    coupon.perUserLimit !== undefined &&
-    userUsageCount >= coupon.perUserLimit
-  ) {
-    throw new AppError("You have already used this coupon", 400);
-  }
-
-  // Calculate Discount
-  let discount =
-    Math.floor((subtotal * coupon.discountPercentage) / 100);
-
-  if (
-    coupon.maxDiscountAmount !== undefined &&
-    discount > coupon.maxDiscountAmount
-  ) {
-    discount = coupon.maxDiscountAmount;
-  }
-
-  if (discount > subtotal) {
-    discount = subtotal;
-  }
+  console.log(coupon, `discount:${discount}`);
 
   //  Return Pricing
   return {
