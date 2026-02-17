@@ -1,19 +1,9 @@
-<aside
-  class="
-    w-full md:w-72
-    bg-black
-    border border-gray-800
-    md:border-r md:border-t-0
-    rounded-2xl md:rounded-none
-    mb-6 md:mb-0
-  "
->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<aside class="w-full md:w-72 bg-black border border-gray-800 md:border-r md:border-t-0 rounded-2xl md:rounded-none mb-6 md:mb-0">
   <div class="p-6 border-b border-gray-800/50">
     <div class="flex items-center gap-4">
-      <div
-        class="w-12 h-12 rounded-full bg-gray-800
-               flex items-center justify-center border border-gray-700 text-gray-400"
-      >
+      <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-400">
         <span class="material-symbols-outlined text-2xl">person</span>
       </div>
       <div>
@@ -25,34 +15,24 @@
 
   <nav id="sidebarNav" class="p-4 grid grid-cols-2 md:grid-cols-1 gap-2">
     <a href="/profile" class="sidebar-link">
-      <span class="material-symbols-outlined">account_circle</span>
-      Profile
+      <span class="material-symbols-outlined">account_circle</span> Profile
     </a>
-
     <a href="/orders" class="sidebar-link">
-      <span class="material-symbols-outlined">description</span>
-      Orders
+      <span class="material-symbols-outlined">description</span> Orders
     </a>
-
     <a href="/wallet" class="sidebar-link">
-      <span class="material-symbols-outlined">account_balance_wallet</span>
-      Wallet
+      <span class="material-symbols-outlined">account_balance_wallet</span> Wallet
     </a>
-
     <a href="/addresses" class="sidebar-link">
-      <span class="material-symbols-outlined">home</span>
-      Address
+      <span class="material-symbols-outlined">home</span> Address
     </a>
-
     <a href="/refer" class="sidebar-link">
-      <span class="material-symbols-outlined">redeem</span>
-      Refer
+      <span class="material-symbols-outlined">redeem</span> Refer
     </a>
 
-    <a href="/logout" data-logout-btn class="sidebar-link text-red-500 hover:bg-red-500/10">
-      <span class="material-symbols-outlined">logout</span>
-      Logout
-    </a>
+    <button type="button" class="sidebar-link logout-trigger w-full text-left bg-transparent cursor-pointer">
+      <span class="material-symbols-outlined">logout</span> Logout
+    </button>
   </nav>
 </aside>
 
@@ -67,9 +47,13 @@
     color: #9ca3af;
     transition: all 0.2s ease;
     border: 1px solid transparent;
+    text-decoration: none;
+    background: none;
+    cursor: pointer;
   }
 
-  .sidebar-link:hover, .sidebar-link.active {
+  .sidebar-link:hover,
+  .sidebar-link.active {
     background: #111;
     color: #fff;
     border-color: #1f2937;
@@ -77,20 +61,55 @@
 </style>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    // Get current URL path
-    const currentPath = window.location.pathname;
-    
-    // Select all links in the sidebar
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+  // We use a self-invoking function to avoid variable conflicts between partials
+  (function() {
+    const initSidebar = () => {
+      // 1. Highlight Active Link
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('active');
+        }
+      });
 
-    sidebarLinks.forEach(link => {
-      // Check if the link's href matches the current path
-      if (link.getAttribute('href') === currentPath) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
-  });
+      // 2. Event Delegation for Logout
+      // This catches the click even if the partial is loaded dynamically
+      document.addEventListener('click', async function(e) {
+        // Check if the clicked element (or its children) is the logout button
+        const btn = e.target.closest('.logout-trigger');
+        if (!btn) return;
+
+        e.preventDefault();
+
+        const result = await Swal.fire({
+          title: 'Confirm Logout',
+          text: "Are you sure you want to log out?",
+          icon: 'warning',
+          showCancelButton: true,
+          background: '#12141a',
+          color: '#fff',
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#374151',
+          confirmButtonText: 'Yes, Logout',
+          customClass: {
+            popup: 'rounded-[1.5rem] border border-gray-800'
+          }
+        });
+
+        if (result.isConfirmed) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/logout';
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSidebar);
+    } else {
+      initSidebar(); // DOM already loaded, run immediately
+    }
+  })();
 </script>
