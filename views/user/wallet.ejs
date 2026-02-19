@@ -1,0 +1,151 @@
+<div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
+    
+    <%- include("../partials/sidebar") %>
+
+    <main class="flex-1 p-6 md:p-10 lg:px-16 bg-black">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold mb-8 text-white">My Wallet</h1>
+
+            <div class="bg-[#111] border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden mb-6">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <p class="text-gray-400 text-xs uppercase tracking-wider font-semibold mb-1">Available Balance</p>
+                        <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+                            ₹<%= wallet.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %>
+                        </h2>
+                    </div>
+                    <div>
+                        <button class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-indigo-900/20">
+                            <span class="material-symbols-outlined">add_circle</span>
+                            Add Money
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div class="bg-[#111] border border-gray-800 p-6 rounded-2xl flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center">
+                        <span class="material-symbols-outlined">trending_up</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total Earned</p>
+                        <p class="text-xl font-bold text-white">₹<%= (wallet.totalCredited || 0).toLocaleString('en-IN') %></p>
+                    </div>
+                </div>
+                <div class="bg-[#111] border border-gray-800 p-6 rounded-2xl flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center">
+                        <span class="material-symbols-outlined">payments</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total Spent</p>
+                        <p class="text-xl font-bold text-white">₹<%= (wallet.totalDebited || 0).toLocaleString('en-IN') %></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#111] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-gray-800 bg-[#151515]">
+                    <h2 class="text-lg font-bold text-white">Recent Transactions</h2>
+                </div>
+
+                <% if (transactions && transactions.length > 0) { %>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-500 text-[10px] uppercase tracking-widest bg-black/40">
+                                    <th class="px-6 py-4 font-semibold">Type</th>
+                                    <th class="px-6 py-4 font-semibold">Description</th>
+                                    <th class="px-6 py-4 font-semibold">Date</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800/50">
+                                <% transactions.forEach(tx => { %>
+                                    <tr class="hover:bg-gray-800/20 transition-colors group">
+                                        <td class="px-6 py-5">
+                                            <% if (tx.type === 'CREDIT') { %>
+                                                <span class="flex items-center gap-2 text-green-500 text-sm font-medium">
+                                                    <span class="material-symbols-outlined text-lg">arrow_downward</span>
+                                                    Credit
+                                                </span>
+                                            <% } else { %>
+                                                <span class="flex items-center gap-2 text-red-500 text-sm font-medium">
+                                                    <span class="material-symbols-outlined text-lg">arrow_upward</span>
+                                                    Debit
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td class="px-6 py-5">
+                                            <p class="text-sm font-bold text-gray-200"><%= tx.description %></p>
+                                            <p class="text-[11px] text-gray-400"><%= tx.referenceId || 'Wallet Transaction' %></p>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm text-gray-400">
+                                            <%= new Date(tx.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                                        </td>
+                                        <td class="px-6 py-5 text-right font-bold <%= tx.type === 'CREDIT' ? 'text-green-500' : 'text-red-500' %>">
+                                            <%= tx.type === 'CREDIT' ? '+' : '-' %>₹<%= tx.amount.toLocaleString('en-IN') %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-6 border-t border-gray-800 bg-[#151515] flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p class="text-xs text-gray-500">
+                            Showing <span class="text-gray-300 font-bold"><%= ((pagination.currentPage - 1) * 5) + 1 %></span> 
+                            to <span class="text-gray-300 font-bold"><%= Math.min(pagination.currentPage * 5, pagination.total) %></span> 
+                            of <span class="text-gray-300 font-bold"><%= pagination.total %></span> transactions
+                        </p>
+                        
+                        <div class="flex items-center gap-2">
+                            <% if (pagination.currentPage > 1) { %>
+                                <a href="/wallet?page=<%= pagination.currentPage - 1 %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800">
+                                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                                </a>
+                            <% } else { %>
+                                <button class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-600 cursor-not-allowed">
+                                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                                </button>
+                            <% } %>
+                            
+                            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                                <% if (i === pagination.currentPage) { %>
+                                    <button class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-900/20">
+                                        <%= i %>
+                                    </button>
+                                <% } else { %>
+                                    <a href="/wallet?page=<%= i %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 text-xs font-bold hover:bg-gray-800 transition">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
+                            <% } %>
+                            
+                            <% if (pagination.currentPage < pagination.totalPages) { %>
+                                <a href="/wallet?page=<%= pagination.currentPage + 1 %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800">
+                                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                                </a>
+                            <% } else { %>
+                                <button class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-600 cursor-not-allowed">
+                                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+
+                <% } else { %>
+                    <div class="py-24 text-center">
+                        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-900 mb-4">
+                            <span class="material-symbols-outlined text-4xl text-gray-700">history</span>
+                        </div>
+                        <p class="text-gray-400 font-medium">No transactions found yet.</p>
+                        <p class="text-gray-600 text-sm mt-1">Your wallet activity will appear here.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+</div>

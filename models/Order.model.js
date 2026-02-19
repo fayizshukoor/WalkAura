@@ -78,7 +78,19 @@ returnInfo: {
   rejectedAt: Date,
   rejectionReason:String,
   receivedAt: Date
+},
+
+refundStatus: {
+  type: String,
+  enum: ["NONE", "PARTIAL", "REFUNDED"],
+  default: "NONE"
+},
+
+refundedAmount: {
+  type: Number,
+  default: 0
 }
+
 });
 
 const orderSchema = new mongoose.Schema(

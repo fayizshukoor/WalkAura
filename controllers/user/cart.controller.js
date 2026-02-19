@@ -1,4 +1,4 @@
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import Cart from "../../models/Cart.model.js";
 import Product from "../../models/Product.model.js";
 import ProductVariant from "../../models/ProductVariant.model.js";
@@ -167,12 +167,10 @@ export const addToCart = asyncHandler(async (req, res) => {
     { $pull: { items: { product: productId, variant: variantId } } },
   ).catch(() => {});
 
-  res
-    .status(200)
-    .json({
-      message: "Item added to cart successfully",
-      newCount: cart.totalItems,
-    });
+  res.status(200).json({
+    message: "Item added to cart successfully",
+    newCount: cart.totalItems,
+  });
 });
 
 export const getCart = asyncHandler(async (req, res) => {

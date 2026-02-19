@@ -1,6 +1,6 @@
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
 import Category from "../../models/Category.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import { expireCategoryOffers } from "../../utils/expireCategoryOffers.js";
 
 

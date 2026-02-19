@@ -29,6 +29,8 @@ import { requestReturn, requestReturnEntireOrder } from "../controllers/user/ord
 
 import { downloadInvoice } from "../controllers/user/invoice.controller.js";
 
+import { getWalletPage } from "../controllers/user/wallet.controller.js";
+
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
@@ -143,4 +145,7 @@ router.post("/orders/:orderId/return",requestReturnEntireOrder);
 
 // Invoice download
 router.get("/orders/:orderId/invoice",downloadInvoice);
+
+// Wallet
+router.get("/wallet",getWalletPage);
 export default router;

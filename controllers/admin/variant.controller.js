@@ -3,7 +3,7 @@ import ProductVariant from "../../models/ProductVariant.model.js";
 import Inventory from "../../models/Inventory.model.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../../utils/cloudinaryUpload.util.js";
 import { generateSKU } from "../../utils/skuGenerator.util.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import {HTTP_STATUS} from "../../constants/httpStatus.js";
 
 

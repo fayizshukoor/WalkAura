@@ -1,5 +1,5 @@
 import Category from "../models/Category.model.js";
-import asyncHandler from "./asyncHandler.js";
+import asyncHandler from "./asyncHandler.util.js";
 
 export const expireCategoryOffers = asyncHandler(async()=>{
     await Category.updateMany(

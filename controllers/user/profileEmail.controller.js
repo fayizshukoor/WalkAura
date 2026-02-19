@@ -1,23 +1,19 @@
 import User from "../../models/User.model.js";
 import crypto from "crypto";
 import OTP from "../../models/OTP.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 
 // Change Email
 export const showChangeEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.userId);
 
-    const user = await User.findById(req.user.userId);
-
-    if (user.googleId) {
-      req.flash("error", "Google users cannot change Email");
-      return res.redirect("/profile");
-    }
-    return res.render("user/change-email");
-
+  if (user.googleId) {
+    req.flash("error", "Google users cannot change Email");
+    return res.redirect("/profile");
+  }
+  return res.render("user/change-email");
 });
-
-
 
 export const requestEmailChange = asyncHandler(async (req, res) => {
   const { newEmail } = req.body;
@@ -42,49 +38,38 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
   }
 
   // deleting unverified user
-  if(emailExists && !emailExists.isVerified){
-    await User.deleteOne({email:emailExists.email});
+  if (emailExists && !emailExists.isVerified) {
+    await User.deleteOne({ email: emailExists.email });
     console.log("deleted unverified user");
   }
   user.pendingEmail = newEmail;
   await user.save();
 
- try {
-
-  await sendOTP(newEmail, "EMAIL_CHANGE");
-
+  try {
+    await sendOTP(newEmail, "EMAIL_CHANGE");
   } catch (error) {
-
     return res.render("user/change-email", { error: error.message });
   }
 
-
   req.flash("success", "OTP sent to your Email");
   return res.redirect("/profile/verify-email-change");
-
 });
-
-
 
 export const showVerifyEmailChangeOTP = asyncHandler(async (req, res) => {
-
   const user = await User.findById(req.user.userId);
 
-    if (!user || !user.pendingEmail) {
-      req.flash("error", "No Email Change request found");
-      return res.redirect("/profile/change-email");
-    }
+  if (!user || !user.pendingEmail) {
+    req.flash("error", "No Email Change request found");
+    return res.redirect("/profile/change-email");
+  }
 
-    return res.render("user/verify-otp", {
-      actionUrl: "/profile/verify-email-change",
-      resendUrl: "/profile/resend-email-change-otp",
-      title: "Verify Your New Email",
-      subtitle: "Enter the OTP sent to your new email address",
-    });
-
+  return res.render("user/verify-otp", {
+    actionUrl: "/profile/verify-email-change",
+    resendUrl: "/profile/resend-email-change-otp",
+    title: "Verify Your New Email",
+    subtitle: "Enter the OTP sent to your new email address",
+  });
 });
-
-
 
 export const verifyEmailChangeOTP = asyncHandler(async (req, res) => {
   const { otp } = req.body;
@@ -130,7 +115,7 @@ export const verifyEmailChangeOTP = asyncHandler(async (req, res) => {
 
     req.flash(
       "error",
-      `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`
+      `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
     );
     return res.redirect("/profile/verify-email-change");
   }
@@ -146,10 +131,7 @@ export const verifyEmailChangeOTP = asyncHandler(async (req, res) => {
 
   req.flash("success", "Email updated successfully");
   return res.redirect("/profile");
-
 });
-
-
 
 export const resendEmailChangeOTP = async (req, res) => {
   try {
@@ -167,11 +149,10 @@ export const resendEmailChangeOTP = async (req, res) => {
     // Send OTP
     await sendOTP(email, purpose);
 
-    return res.status(200).json({ message: "New OTP sent to confirm your email change" });
-
+    return res
+      .status(200)
+      .json({ message: "New OTP sent to confirm your email change" });
   } catch (error) {
-    
-      return res.status(429).json({ message: "Failed to send OTP" });
-    
+    return res.status(429).json({ message: "Failed to send OTP" });
   }
 };

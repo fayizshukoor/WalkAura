@@ -1,4 +1,4 @@
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import Product from "../../models/Product.model.js";
 import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Category from "../../models/Category.model.js";
@@ -6,16 +6,8 @@ import mongoose from "mongoose";
 import ProductVariant from "../../models/ProductVariant.model.js";
 import Inventory from "../../models/Inventory.model.js";
 
-
 export const getProducts = asyncHandler(async (req, res) => {
-  const {
-    search,
-    category,
-    gender,
-    sort,
-    priceRange,
-    page = 1
-  } = req.query;
+  const { search, category, gender, sort, priceRange, page = 1 } = req.query;
 
   const limit = 6;
   const currentPage = Number(page) || 1;
@@ -24,29 +16,35 @@ export const getProducts = asyncHandler(async (req, res) => {
   /* -------- Active Categories (used in filter + UI) -------- */
   const activeCategories = await Category.find({
     isListed: true,
-    isDeleted: false
+    isDeleted: false,
   }).select("_id name offerPercent offerExpiry");
 
-  const activeCategoryIds = activeCategories.map(c => c._id);
+  const activeCategoryIds = activeCategories.map((c) => c._id);
 
   /* -------- Base Product Filters -------- */
   const matchStage = {
     isListed: true,
-    category: { $in: activeCategoryIds }
+    category: { $in: activeCategoryIds },
   };
 
   if (search) {
     matchStage.name = { $regex: search.trim(), $options: "i" };
   }
 
-  if (category && category !== "all" && mongoose.Types.ObjectId.isValid(category)) {
-      const isActiveCategory = activeCategoryIds.some(id => id.equals(category));
+  if (
+    category &&
+    category !== "all" &&
+    mongoose.Types.ObjectId.isValid(category)
+  ) {
+    const isActiveCategory = activeCategoryIds.some((id) =>
+      id.equals(category),
+    );
 
-      if(isActiveCategory){
-        matchStage.category = new mongoose.Types.ObjectId(category);
-      }else{
-            matchStage._id = { $exists: false };
-      }
+    if (isActiveCategory) {
+      matchStage.category = new mongoose.Types.ObjectId(category);
+    } else {
+      matchStage._id = { $exists: false };
+    }
   }
 
   if (gender && gender !== "all") {
@@ -56,20 +54,19 @@ export const getProducts = asyncHandler(async (req, res) => {
   const priceRangeMap = {
     below_5000: { $lt: 5000 },
     "5000_10000": { $gte: 5000, $lte: 10000 },
-    above_10000: { $gt: 10000 }
+    above_10000: { $gt: 10000 },
   };
-  
+
   if (priceRange && priceRange !== "all" && priceRangeMap[priceRange]) {
     matchStage.price = priceRangeMap[priceRange];
   }
-  
 
   /* -------- Sorting -------- */
   const sortMap = {
     price_asc: { price: 1 },
     price_desc: { price: -1 },
     name_asc: { name: 1 },
-    name_desc: { name: -1 }
+    name_desc: { name: -1 },
   };
 
   const sortStage = sortMap[sort] || { createdAt: -1 };
@@ -85,8 +82,8 @@ export const getProducts = asyncHandler(async (req, res) => {
         from: "categories",
         localField: "category",
         foreignField: "_id",
-        as: "category"
-      }
+        as: "category",
+      },
     },
     { $unwind: "$category" },
 
@@ -101,38 +98,41 @@ export const getProducts = asyncHandler(async (req, res) => {
               $expr: {
                 $and: [
                   { $eq: ["$product", "$$productId"] },
-                  { $eq: ["$isActive", true] }
-                ]
-              }
-            }
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
           },
           {
             $project: {
               _id: 0,
-              images: 1
-            }
+              images: 1,
+            },
           },
-          { $limit: 1 }
+          { $limit: 1 },
         ],
-        as: "variant"
-      }
+        as: "variant",
+      },
     },
 
     //  Remove products with no active variants
     { $match: { "variant.0": { $exists: true } } },
 
-    // Extract thumbnail 
+    // Extract thumbnail
     {
       $addFields: {
         thumbnail: {
-          $arrayElemAt: [{
-            $arrayElemAt:["$variant.images.url", 0]
-          },0]
-        }
-      }
+          $arrayElemAt: [
+            {
+              $arrayElemAt: ["$variant.images.url", 0],
+            },
+            0,
+          ],
+        },
+      },
     },
 
-    // Final projection for UI 
+    // Final projection for UI
     {
       $project: {
         name: 1,
@@ -143,9 +143,9 @@ export const getProducts = asyncHandler(async (req, res) => {
         category: 1,
         gender: 1,
         thumbnail: 1,
-        createdAt: 1
-      }
-    }
+        createdAt: 1,
+      },
+    },
   ];
 
   // Products + Count
@@ -154,30 +154,24 @@ export const getProducts = asyncHandler(async (req, res) => {
       ...basePipeline,
       { $sort: sortStage },
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
     ]),
-    Product.aggregate([
-      ...basePipeline,
-      { $count: "count" }
-    ])
+    Product.aggregate([...basePipeline, { $count: "count" }]),
   ]);
-
 
   const totalProducts = countResult[0]?.count || 0;
 
   // Final Price Calculation
-  const processedProducts = products.map(p => ({
+  const processedProducts = products.map((p) => ({
     ...p,
     finalPrice: calculateFinalPrice({
       price: p.price,
       productOffer: p.offerPercent,
       productOfferExpiry: p.offerExpiry,
       categoryOffer: p.category.offerPercent,
-      categoryOfferExpiry: p.category.offerExpiry
-    })
+      categoryOfferExpiry: p.category.offerExpiry,
+    }),
   }));
-
-
 
   /* -------- Render -------- */
   res.render("user/shop", {
@@ -188,21 +182,14 @@ export const getProducts = asyncHandler(async (req, res) => {
       category: category || "all",
       gender: gender || "all",
       sort: sort || "",
-      priceRange: priceRange || ""
+      priceRange: priceRange || "",
     },
     pagination: {
       currentPage,
-      totalPages: Math.ceil(totalProducts / limit)
-    }
+      totalPages: Math.ceil(totalProducts / limit),
+    },
   });
 });
-
-
-
-
-
-
-
 
 export const getProductDetails = asyncHandler(async (req, res) => {
   const { slug } = req.params;
@@ -210,19 +197,24 @@ export const getProductDetails = asyncHandler(async (req, res) => {
   // Fetch product and category
   const product = await Product.findOne({
     slug,
-    isListed: true
+    isListed: true,
   })
     .populate("category", "name offerPercent offerExpiry isListed isDeleted")
     .lean();
 
-  if (!product || !product.category || !product.category.isListed || product.category.isDeleted ) {
+  if (
+    !product ||
+    !product.category ||
+    !product.category.isListed ||
+    product.category.isDeleted
+  ) {
     return res.redirect("/shop");
   }
 
   // Fetch active variants
   const variants = await ProductVariant.find({
     product: product._id,
-    isActive: true
+    isActive: true,
   })
     .select("color images")
     .lean();
@@ -232,47 +224,47 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     return res.redirect("/shop");
   }
 
-  const variantIds = variants.map(v => v._id);
+  const variantIds = variants.map((v) => v._id);
 
-  // Fetch inventory 
+  // Fetch inventory
   const inventory = await Inventory.find({
     variant: { $in: variantIds },
-    isActive: true
+    isActive: true,
   })
     .select("variant size stock")
     .lean();
 
   // Merge variants with size and stock
-  const variantsWithSizes = variants.map(variant => {
+  const variantsWithSizes = variants.map((variant) => {
     const sizes = inventory
-      .filter(i => i.variant.toString() === variant._id.toString())
-      .map(i => ({
+      .filter((i) => i.variant.toString() === variant._id.toString())
+      .map((i) => ({
         inventoryId: i._id,
         size: i.size,
         stock: i.stock,
-        inStock: i.stock > 0
+        inStock: i.stock > 0,
       }));
 
     return {
       ...variant,
       sizes,
-      totalStock: sizes.reduce((sum, s) => sum + s.stock, 0)
+      totalStock: sizes.reduce((sum, s) => sum + s.stock, 0),
     };
   });
 
   // Total Stock
   const totalStock = variantsWithSizes.reduce(
     (sum, v) => sum + v.totalStock,
-    0
+    0,
   );
 
-  // Final Price Calculation 
+  // Final Price Calculation
   const finalPrice = calculateFinalPrice({
     price: product.price,
     productOffer: product.offerPercent,
     productOfferExpiry: product.offerExpiry,
     categoryOffer: product.category.offerPercent,
-    categoryOfferExpiry: product.category.offerExpiry
+    categoryOfferExpiry: product.category.offerExpiry,
   });
 
   // Reviews (Currently not added)
@@ -291,8 +283,8 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         _id: { $ne: product._id },
         category: product.category._id,
         gender: product.gender,
-        isListed: true
-      }
+        isListed: true,
+      },
     },
 
     {
@@ -300,8 +292,8 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         from: "categories",
         localField: "category",
         foreignField: "_id",
-        as: "category"
-      }
+        as: "category",
+      },
     },
     { $unwind: "$category" },
 
@@ -315,20 +307,20 @@ export const getProductDetails = asyncHandler(async (req, res) => {
               $expr: {
                 $and: [
                   { $eq: ["$product", "$$productId"] },
-                  { $eq: ["$isActive", true] }
-                ]
-              }
-            }
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
           },
           {
             $project: {
-              images: 1
-            }
+              images: 1,
+            },
           },
-          { $limit: 1 }
+          { $limit: 1 },
         ],
-        as: "variant"
-      }
+        as: "variant",
+      },
     },
 
     { $match: { "variant.0": { $exists: true } } },
@@ -336,12 +328,9 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     {
       $addFields: {
         thumbnail: {
-          $arrayElemAt: [
-            { $arrayElemAt: ["$variant.images.url", 0] },
-            0
-          ]
-        }
-      }
+          $arrayElemAt: [{ $arrayElemAt: ["$variant.images.url", 0] }, 0],
+        },
+      },
     },
 
     { $limit: 4 },
@@ -355,20 +344,20 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         offerExpiry: 1,
         category: 1,
         gender: 1,
-        thumbnail: 1
-      }
-    }
+        thumbnail: 1,
+      },
+    },
   ]);
 
-  const processedRelatedProducts = relatedProducts.map(p => ({
+  const processedRelatedProducts = relatedProducts.map((p) => ({
     ...p,
     finalPrice: calculateFinalPrice({
       price: p.price,
       productOffer: p.offerPercent,
       productOfferExpiry: p.offerExpiry,
       categoryOffer: p.category.offerPercent,
-      categoryOfferExpiry: p.category.offerExpiry
-    })
+      categoryOfferExpiry: p.category.offerExpiry,
+    }),
   }));
 
   // Render the page
@@ -379,18 +368,6 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     finalPrice,
     averageRating,
     reviewCount,
-    relatedProducts: processedRelatedProducts
+    relatedProducts: processedRelatedProducts,
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-

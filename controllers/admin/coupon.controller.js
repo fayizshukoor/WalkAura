@@ -1,6 +1,6 @@
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
 import { createCouponService, editCouponService, getCouponsService, softDeleteCouponService, toggleCouponStatusService } from "../../services/coupon.service.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 
 
 

@@ -1,12 +1,9 @@
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import Order from "../../models/Order.model.js";
 import { isItemEligibleForReturn } from "../../utils/returnEligibility.util.js";
 import { uploadToCloudinary } from "../../utils/cloudinaryUpload.util.js";
 
-const PHOTO_REQUIRED_REASONS = [
-  "Defective product",
-  "Wrong item received"
-]
+const PHOTO_REQUIRED_REASONS = ["Defective product", "Wrong item received"];
 // Request Return
 export const requestReturn = asyncHandler(async (req, res) => {
   const { orderId, itemId } = req.params;
@@ -35,39 +32,38 @@ export const requestReturn = asyncHandler(async (req, res) => {
   const item = order.items.id(itemId);
   const eligibility = isItemEligibleForReturn(item);
 
-  if(!eligibility.eligible){
+  if (!eligibility.eligible) {
     return res.status(400).json({
       success: false,
-      message: eligibility.message
-    })
+      message: eligibility.message,
+    });
   }
 
   const requiresPhoto = PHOTO_REQUIRED_REASONS.includes(reason.trim());
 
-  if(requiresPhoto && (!req.files || req.files.length === 0)){
+  if (requiresPhoto && (!req.files || req.files.length === 0)) {
     return res.status(400).json({
       success: false,
-      message: "Photo proof is required for this Return reason"
-    })
+      message: "Photo proof is required for this Return reason",
+    });
   }
 
   // Upload images
   let uploadedImages = [];
 
-  if(req.files && req.files.length > 0){
-    for(const file of req.files){
-      const result =  await uploadToCloudinary(file.buffer,{
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const result = await uploadToCloudinary(file.buffer, {
         folder: "walkaura/returns",
         width: 800,
         height: 800,
-        crop: "fill"
+        crop: "fill",
       });
 
       uploadedImages.push({
         url: result.secure_url,
-        publicId: result.public_id
+        publicId: result.public_id,
       });
-
     }
   }
 
@@ -90,11 +86,9 @@ export const requestReturn = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "Return request submitted successfully"
+    message: "Return request submitted successfully",
   });
 });
-
-
 
 export const requestReturnEntireOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
@@ -130,10 +124,7 @@ export const requestReturnEntireOrder = asyncHandler(async (req, res) => {
     }
 
     // Prevent duplicate return requests
-    if (
-      item.status === "RETURN_REQUESTED" ||
-      item.status === "RETURNED"
-    ) {
+    if (item.status === "RETURN_REQUESTED" || item.status === "RETURNED") {
       continue;
     }
 
@@ -162,6 +153,6 @@ export const requestReturnEntireOrder = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "Return request submitted for eligible items"
+    message: "Return request submitted for eligible items",
   });
 });

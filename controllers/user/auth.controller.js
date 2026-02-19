@@ -1,11 +1,14 @@
 import User from "../../models/User.model.js";
 import bcrypt from "bcryptjs";
 import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
-import { generateAccessToken, generateRefreshToken} from "../../utils/userTokens.utils.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/userTokens.utils.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 
 export const showSignup = (req, res) => {
-    return res.render("user/signup");
+  return res.render("user/signup");
 };
 
 export const handleSignup = asyncHandler(async (req, res) => {
@@ -64,17 +67,16 @@ export const handleSignup = asyncHandler(async (req, res) => {
       password: hashedPassword,
       isVerified: false,
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 
   try {
-  await sendOTP(email, "SIGNUP");
-} catch (error) {
-  return res.render("user/signup", {
-    error: error.message
-  });
-}
-
+    await sendOTP(email, "SIGNUP");
+  } catch (error) {
+    return res.render("user/signup", {
+      error: error.message,
+    });
+  }
 
   req.session.email = email;
   req.session.otpPurpose = "SIGNUP";
@@ -85,9 +87,7 @@ export const handleSignup = asyncHandler(async (req, res) => {
 // Login Page
 
 export const showLogin = (req, res) => {
-
-    return res.render("user/login");
-
+  return res.render("user/login");
 };
 
 export const handleLogin = asyncHandler(async (req, res) => {
@@ -113,7 +113,7 @@ export const handleLogin = asyncHandler(async (req, res) => {
   if (user.googleId && !user.password) {
     req.flash(
       "error",
-      "This account uses google login.Please continue with Google"
+      "This account uses google login.Please continue with Google",
     );
     return res.redirect("/login");
   }
@@ -147,8 +147,6 @@ export const handleLogin = asyncHandler(async (req, res) => {
   res.redirect("/");
 });
 
-
-
 // Logout
 
 export const logout = (req, res) => {
@@ -163,21 +161,16 @@ export const logout = (req, res) => {
   }
 };
 
-
-
 /* ------Password Controller--------*/
 
 export const showForgotPassword = (req, res) => {
-
   //Clear any previous OTP
-    delete req.session.email;
-    delete req.session.otpPurpose;
-    delete req.session.allowPasswordReset;
+  delete req.session.email;
+  delete req.session.otpPurpose;
+  delete req.session.allowPasswordReset;
 
-    res.render("user/forgot-password");
+  res.render("user/forgot-password");
 };
-
-
 
 export const handleForgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -197,25 +190,17 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && user.isVerified && !user.isBlocked && user.password) {
-
-
-  try {
-
-  await sendOTP(email, "FORGOT_PASSWORD");
-
-} catch (error) {
-
-  return res.render("user/forgot-password", { error: error.message });
-}
-
-
-
+    try {
+      await sendOTP(email, "FORGOT_PASSWORD");
+    } catch (error) {
+      return res.render("user/forgot-password", { error: error.message });
+    }
 
     req.session.email = email;
     req.session.otpPurpose = "FORGOT_PASSWORD";
     req.flash(
       "success",
-      "If an account exists with this email,You will receive an OTP shortly"
+      "If an account exists with this email,You will receive an OTP shortly",
     );
     return res.redirect("/verify-otp");
   }
@@ -224,18 +209,12 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
   return res.redirect("/forgot-password");
 });
 
-
-
-
 export const showResetPassword = (req, res) => {
   if (!req.session.allowPasswordReset || !req.session.email) {
     return res.redirect("/forgot-password");
   }
   res.render("user/reset-password");
 };
-
-
-
 
 export const handleResetPassword = asyncHandler(async (req, res) => {
   const { password, confirmPassword } = req.body;

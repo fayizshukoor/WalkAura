@@ -1,5 +1,5 @@
 import User from "../../models/User.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 
 // show customers
 export const showCustomers = asyncHandler(async (req, res) => {

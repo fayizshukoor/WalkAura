@@ -7,21 +7,27 @@ const walletSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
+      index: true
     },
 
     balance: {
       type: Number,
       required: true,
       default: 0,
-      min: 0,
+      min: 0
     },
 
-    currency: {
-      type: String,
-      default: "INR",
-      enum: ["INR"],
+    totalCredited: {
+      type: Number,
+      default: 0,
+      min: 0
     },
+
+    totalDebited: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
   },
   { timestamps: true }
 );

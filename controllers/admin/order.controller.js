@@ -1,6 +1,8 @@
+import { calculateItemRefund } from "../../helpers/refund.helper.js";
 import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import { creditToWallet } from "../../services/wallet.service.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 
 export const getAllOrders = asyncHandler(async (req, res) => {
   const {
@@ -133,6 +135,86 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const now = new Date();
 
+  if (newStatus === "CANCELLED") {
+
+    const cancellableItems = order.items.filter(
+      (item) =>
+        item.status !== "CANCELLED" &&
+        item.status !== "RETURNED"
+    );
+
+    if (cancellableItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No items can be cancelled",
+      });
+    }
+
+    for (const item of cancellableItems) {
+      item.status = "CANCELLED";
+
+      item.cancellation = {
+        reason: "Cancelled by Admin",
+        at: now,
+        by: "ADMIN",
+      };
+
+      item.statusTimeline.push({
+        status: "CANCELLED",
+        at: now,
+      });
+
+      // Restore stock
+      await Inventory.findByIdAndUpdate(item.inventory, {
+        $inc: { stock: item.quantity },
+      });
+    }
+
+    // Refund if already paid
+    if (order.payment.status === "PAID") {
+
+      const remainingRefund =
+        order.pricing.totalAmount - order.payment.refundedAmount;
+
+      if (remainingRefund > 0) {
+        await creditToWallet({
+          userId: order.user,
+          amount: remainingRefund,
+          source: "ORDER_REFUND",
+          orderId: order._id,
+          referenceId: order.orderId,
+          description: "Refund for admin cancelled order",
+        });
+
+        order.payment.refundedAmount += remainingRefund;
+        order.payment.status = "REFUNDED";
+
+        // Mark items refunded
+        for (const item of order.items) {
+          if (item.refundStatus !== "REFUNDED") {
+            item.refundStatus = "REFUNDED";
+            item.refundedAmount = calculateItemRefund(order, item);
+          }
+        }
+      }
+    }
+
+    order.orderStatus = "CANCELLED";
+    order.cancelledAt = now;
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      data: {
+        orderId: order.orderId,
+        orderStatus: order.orderStatus,
+      },
+    });
+
+  }
+
   //  Update item-level status
   for (const item of order.items) {
     // Skip cancelled or returned items
@@ -160,9 +242,6 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     order.deliveredAt = now;
   }
 
-  if (newStatus === "CANCELLED") {
-    order.cancelledAt = now;
-  }
 
   await order.save();
 
@@ -244,6 +323,13 @@ export const approveReturn = asyncHandler(async (req, res) => {
     });
   }
 
+  if(item.refundStatus === "REFUNDED"){
+    return res.status(400).json({
+      success: false,
+      message: "Item already refunded"
+    })
+  }
+
   const now = new Date();
 
   // Mark item as returned
@@ -256,11 +342,37 @@ export const approveReturn = asyncHandler(async (req, res) => {
     at: now,
   });
 
+  if(order.payment.status === "PAID"){
+
+    const remainingRefund =order.pricing.totalAmount - order.payment.refundedAmount;
+
+    const calculatedRefund = calculateItemRefund(order, item);
+
+    const refundAmount = Math.min(calculatedRefund, remainingRefund);
+
+    await creditToWallet({
+      userId: order.user,
+      amount: refundAmount,
+      source: "ORDER_RETURN",
+      orderId: order._id,
+      referenceId: order.orderId,
+      description: "Refund for returned Item"
+    });
+
+    item.refundStatus = "REFUNDED";
+    item.refundedAmount = refundAmount;
+
+    order.payment.refundedAmount += refundAmount;
+
+    if(order.payment.refundedAmount >= order.pricing.totalAmount){
+      order.payment.status = "REFUNDED";
+    }
+  }
+
   // Restore stock
   await Inventory.findByIdAndUpdate(item.inventory, {
     $inc: { stock: item.quantity },
   });
-
 
   await order.save();
 

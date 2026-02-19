@@ -1,6 +1,8 @@
+import { calculateItemRefund } from "../../helpers/refund.helper.js";
 import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import { creditToWallet } from "../../services/wallet.service.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 
 // CANCEL SINGLE ITEM
 export const cancelItem = asyncHandler(async (req, res) => {
@@ -36,21 +38,52 @@ export const cancelItem = asyncHandler(async (req, res) => {
     });
   }
 
+  if(order.payment.status === "PAID"){
+    if(item.refundStatus === "REFUNDED"){
+      return res.status(400).json({
+        success: false,
+        message: "Item already refunded"
+      });
+    }
+  
+
+  const refundAmount = calculateItemRefund(order, item);
+
+  await creditToWallet({
+    userId,
+    amount: refundAmount,
+    source: "ORDER_REFUND",
+    orderId: order._id,
+    referenceId: orderId,
+    description: "Refund for Cancelled Item"
+  });
+
+  item.refundStatus = "REFUNDED";
+  item.refundedAmount = refundAmount;
+
+  order.payment.refundedAmount += refundAmount;
+
+  if(order.payment.refundedAmount >= order.pricing.totalAmount){
+    order.payment.status = "REFUNDED";
+  }
+}
+
+
   // Cancel the item
   item.status = "CANCELLED";
   item.cancellation = {
     reason: reason || "Cancelled by user",
     at: new Date(),
-    by: "USER"
-  }
+    by: "USER",
+  };
 
   item.statusTimeline.push({
     status: "CANCELLED",
-    at: new Date()
-  })
+    at: new Date(),
+  });
 
   // Check if ALL items are now cancelled
-  const allCancelled = order.items.every(i => i.status === "CANCELLED");
+  const allCancelled = order.items.every((i) => i.status === "CANCELLED");
   if (allCancelled) {
     order.orderStatus = "CANCELLED";
     order.cancelledAt = new Date();
@@ -86,12 +119,17 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
       message: "Order not found",
     });
   }
+  
+  const cancellableItems = order.items.filter((item) => item.status === "PENDING");
 
-  let cancelledCount = 0;
+  if (cancellableItems.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "No items in this order can be cancelled",
+    });
+  }
 
-  for (const item of order.items) {
-    // Only cancel items that are still cancellable
-    if (item.status === "PENDING") {
+  for (const item of cancellableItems) {
       item.status = "CANCELLED";
       item.cancellation = {
         reason: reason || "Cancelled by user",
@@ -99,24 +137,48 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
         by: "USER",
       };
 
+      item.statusTimeline.push({
+        status: "CANCELLED",
+        at: new Date()
+      })
+
       // Restore stock
       await Inventory.findByIdAndUpdate(item.inventory, {
         $inc: { stock: item.quantity },
       });
+    }
 
-      cancelledCount++;
+  // Refund if Paid
+  if(order.payment.status === "PAID"){
+    const remainingFund = order.pricing.totalAmount - order.payment.refundedAmount;
+
+    if(remainingFund > 0){
+      await creditToWallet({
+        userId,
+        amount: remainingFund,
+        source: "ORDER_REFUND",
+        orderId: order._id,
+        referenceId: order.orderId,
+        description: "Refund for Full order Cancellation"
+      });
+
+      order.payment.refundedAmount += remainingFund;
+      order.payment.status = "REFUNDED";
+
+      for(const item of order.items){
+        if(item.refundStatus !== "REFUNDED"){
+          item.refundStatus = "REFUNDED";
+          const refundAmount = calculateItemRefund(order, item);
+          item.refundedAmount = refundAmount;
+        }
+      }
     }
   }
 
-  if (cancelledCount === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "No items in this order can be cancelled",
-    });
-  }
+
 
   // If ALL items are cancelled → cancel the order
-  const allCancelled = order.items.every(i => i.status === "CANCELLED");
+  const allCancelled = order.items.every((i) => i.status === "CANCELLED");
   if (allCancelled) {
     order.orderStatus = "CANCELLED";
     order.cancelledAt = new Date();
@@ -126,6 +188,6 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "Order cancellation processed successfully"
+    message: "Order cancellation processed successfully",
   });
 });

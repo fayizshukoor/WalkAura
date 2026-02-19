@@ -6,48 +6,52 @@ const walletTransactionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Wallet",
       required: true,
+      index: true
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
     },
 
     type: {
       type: String,
       enum: ["CREDIT", "DEBIT"],
-      required: true,
+      required: true
+    },
+
+    source: {
+      type: String,
+      enum: [
+        "ORDER_REFUND",
+        "ORDER_PAYMENT",
+        "REFERRAL_BONUS",
+        "ORDER_RETURN"
+      ],
+      required: true
     },
 
     amount: {
       type: Number,
       required: true,
-      min: 0,
-    },
-
-    reason: {
-      type: String,
-      enum: [
-        "TOPUP",
-        "ORDER_PAYMENT",
-        "RETURN_REFUND"
-      ],
-      required: true,
+      min: 0
     },
 
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
+      default: null
     },
 
-    gatewayPaymentId: {
-      type: String,
-    },
-
-    gatewayOrderId: {
-      type: String,
+    description: {
+      type: String
     },
 
     referenceId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+      type: String 
+    }
   },
   { timestamps: true }
 );

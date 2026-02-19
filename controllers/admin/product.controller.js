@@ -2,7 +2,7 @@ import Product from "../../models/Product.model.js";
 import ProductVariant from "../../models/ProductVariant.model.js";
 import Inventory from "../../models/Inventory.model.js";
 import Category from "../../models/Category.model.js";
-import asyncHandler from "../../utils/asyncHandler.js";
+import asyncHandler from "../../utils/asyncHandler.util.js";
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
 
 export const showProducts = asyncHandler(async (req, res) => {
