@@ -348,8 +348,20 @@ export const approveReturn = asyncHandler(async (req, res) => {
 
     const calculatedRefund = calculateItemRefund(order, item);
 
-    const refundAmount = Math.min(calculatedRefund, remainingRefund);
+    // Check if this is the last refundable item
+    const remainingItems = order.items.filter(
+      (i) => i.refundStatus !== "REFUNDED"
+    );
 
+    let refundAmount;
+
+    if (remainingItems.length === 1) {
+      // Last refundable item absorbs rounding difference
+      refundAmount = remainingRefund;
+    } else {
+      refundAmount = Math.min(calculatedRefund, remainingRefund);
+    }
+    
     await creditToWallet({
       userId: order.user,
       amount: refundAmount,

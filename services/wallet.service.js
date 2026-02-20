@@ -1,5 +1,6 @@
 import Wallet from "../models/Wallet.model.js";
 import WalletTransaction from "../models/WalletTransaction.model.js";
+import AppError from "../utils/appError.js";
 
 export const getWalletSummary = async (userId) => {
   let wallet = await Wallet.findOne({ user: userId });
@@ -84,33 +85,35 @@ export const creditToWallet = async ({
     orderId = null,
     referenceId = null,
     description = "",
-    session = null
   }) => {
-    const wallet = await Wallet.findOne({ user: userId }).session(session);
+    const wallet = await Wallet.findOne({ user: userId });
   
-    if (!wallet) throw new Error("Wallet not found");
+    if (!wallet){
+      throw new AppError("Wallet not found",400);
+    } 
   
     if (wallet.balance < amount) {
-      throw new Error("Insufficient wallet balance");
-    }
+      throw new AppError("Insufficient wallet balance", 400);    }
   
-    await Wallet.updateOne(
+    const updatedWallet = await Wallet.findOneAndUpdate(
       {
-        _id: wallet._id,
-        balance: { $gte: amount }   // prevents race condition
+        user: userId,
+        balance: { $gte: amount }, // race condition protection
       },
       {
         $inc: {
           balance: -amount,
-          totalDebited: amount
-        }
+          totalDebited: amount,
+        },
       },
-      { session }
+      { new: true }
     );
   
-    await WalletTransaction.create(
-      [{
-        wallet: wallet._id,
+    if (!updatedWallet) {
+      throw new AppError("Insufficient wallet balance", 400);    }
+  
+    await WalletTransaction.create({
+        wallet: updatedWallet._id,
         user: userId,
         type: "DEBIT",
         source,
@@ -118,8 +121,6 @@ export const creditToWallet = async ({
         order: orderId,
         description,
         referenceId
-      }],
-      { session }
-    );
+      });
   };
   

@@ -14,6 +14,8 @@ import {
 } from "../../services/coupon.service.js";
 import { calculateShipping } from "../../helpers/shipping.helper.js";
 import Coupon from "../../models/Coupon.model.js";
+import { debitFromWallet } from "../../services/wallet.service.js";
+import Wallet from "../../models/Wallet.model.js";
 
 const TAX_PERCENTAGE = 18;
 
@@ -123,6 +125,10 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
     cartSubtotal: subtotal,
   });
 
+  // Wallet balance
+  const wallet = await Wallet.findOne({user: userId}).lean();
+  const walletBalance = wallet?.balance || 0;
+
   return res.render("user/checkout", {
     checkout: {
       items: cart.items.map((item) => ({
@@ -147,6 +153,7 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
       },
       availableCoupons,
       appliedCoupon,
+      userWalletBalance : walletBalance
     },
   });
 });
@@ -183,10 +190,10 @@ export const placeOrder = asyncHandler(async (req, res) => {
   const { addressId, paymentMethod = "COD" } = req.body;
   const userId = req?.user?.userId;
 
-  if (paymentMethod !== "COD") {
+  if (!["COD", "RAZORPAY", "WALLET"].includes(paymentMethod)) {
     return res.status(400).json({
       success: false,
-      message: "Only Cash on Delivery is supported currently",
+      message: "Invalid Payment Method",
     });
   }
 
@@ -288,19 +295,6 @@ export const placeOrder = asyncHandler(async (req, res) => {
       });
     }
 
-    // Update stock
-    const updated = await Inventory.findOneAndUpdate(
-      { _id: item.inventory._id, stock: { $gte: item.quantity } },
-      { $inc: { stock: -item.quantity } },
-      { new: true },
-    );
-
-    if (!updated) {
-      return res.status(409).json({
-        success: false,
-        message: "Stock changed during checkout. Please try again.",
-      });
-    }
 
     // Calculate final price
     const finalPrice = calculateFinalPrice({
@@ -391,6 +385,36 @@ export const placeOrder = asyncHandler(async (req, res) => {
   const shippingCharge = calculateShipping(discountedSubtotal);
   const totalAmount = discountedSubtotal + tax + shippingCharge;
 
+  let paymentStatus = "PENDING";
+
+  if(paymentMethod === "WALLET"){
+
+    await debitFromWallet({
+      userId,
+      amount: totalAmount,
+      source: "ORDER_PAYMENT",
+      description: "Payment via Wallet"
+    });
+    paymentStatus = "PAID"
+  }
+
+  // Update stock
+  for (const item of cart.items) {
+
+    const updated = await Inventory.findOneAndUpdate(
+      { _id: item.inventory._id, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity } },
+      { new: true }
+    );
+  
+    if (!updated) {
+      return res.status(409).json({
+        success: false,
+        message: "Stock changed during checkout. Please try again."
+      });
+    }
+  }
+
   // Generate unique order ID
   const orderId = generateOrderId();
 
@@ -413,7 +437,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     },
     payment: {
       method: paymentMethod,
-      status: "PENDING",
+      status: paymentStatus,
       refundedAmount: 0,
     },
     orderStatus: "PENDING",

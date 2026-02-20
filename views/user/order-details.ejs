@@ -129,16 +129,26 @@
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Subtotal</span>
                         <span class="text-white font-bold">₹<%= order.pricing.subtotal.toLocaleString() %></span>
                     </div>
-
+            
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-500 font-bold uppercase tracking-widest">Tax (18%)</span>
                         <span class="text-white font-bold">₹<%= order.pricing.tax.toLocaleString() %></span>
                     </div>
-
+            
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-bold uppercase tracking-widest">Shipping</span>
+                        <% if (order.pricing.shippingCharge === 0 || !order.pricing.shippingCharge) { %>
+                            <span class="text-green-500 font-black uppercase text-[10px] bg-green-500/10 px-2 py-1 rounded-md">Free</span>
+                        <% } else { %>
+                            <span class="text-white font-bold">₹<%= order.pricing.shippingCharge.toLocaleString() %></span>
+                        <% } %>
+                    </div>
+            
                     <div class="flex justify-between items-center text-sm text-red-400">
                         <span class="font-bold uppercase tracking-widest">Discount</span>
-                        <span class="font-bold">- ₹<%= order.pricing.discount %></span>
+                        <span class="font-bold">- ₹<%= order.pricing.discount.toLocaleString() %></span>
                     </div>
+                    
                     <div class="pt-6 border-t border-white/10 flex justify-between items-end">
                         <span class="text-primary font-black uppercase text-xs tracking-widest">Total</span>
                         <span class="text-3xl font-black text-white tracking-tighter">₹<%= order.pricing.totalAmount.toLocaleString() %></span>

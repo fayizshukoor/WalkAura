@@ -98,40 +98,40 @@
                         <p class="text-xs text-gray-500">
                             Showing <span class="text-gray-300 font-bold"><%= ((pagination.currentPage - 1) * 5) + 1 %></span> 
                             to <span class="text-gray-300 font-bold"><%= Math.min(pagination.currentPage * 5, pagination.total) %></span> 
-                            of <span class="text-gray-300 font-bold"><%= pagination.total %></span> transactions
+                            of <span class="text-gray-300 font-bold"><%= pagination.total %></span>
                         </p>
                         
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-4">
                             <% if (pagination.currentPage > 1) { %>
-                                <a href="/wallet?page=<%= pagination.currentPage - 1 %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800">
-                                    <span class="material-symbols-outlined text-lg">chevron_left</span>
+                                <a href="/wallet?page=<%= pagination.currentPage - 1 %>" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800 hover:text-white">
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest">Prev</span>
                                 </a>
                             <% } else { %>
-                                <button class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-600 cursor-not-allowed">
-                                    <span class="material-symbols-outlined text-lg">chevron_left</span>
-                                </button>
+                                <div class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-900 text-gray-700 cursor-not-allowed">
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest">Prev</span>
+                                </div>
                             <% } %>
-                            
-                            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
-                                <% if (i === pagination.currentPage) { %>
-                                    <button class="w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-900/20">
-                                        <%= i %>
-                                    </button>
-                                <% } else { %>
-                                    <a href="/wallet?page=<%= i %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 text-xs font-bold hover:bg-gray-800 transition">
-                                        <%= i %>
-                                    </a>
-                                <% } %>
-                            <% } %>
-                            
+                    
+                            <div class="px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-xl">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    Page <span class="text-indigo-500"><%= pagination.currentPage %></span> 
+                                    <span class="mx-1 opacity-30">/</span> 
+                                    <%= pagination.totalPages %>
+                                </p>
+                            </div>
+                    
                             <% if (pagination.currentPage < pagination.totalPages) { %>
-                                <a href="/wallet?page=<%= pagination.currentPage + 1 %>" class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800">
-                                    <span class="material-symbols-outlined text-lg">chevron_right</span>
+                                <a href="/wallet?page=<%= pagination.currentPage + 1 %>" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-800 text-gray-400 transition hover:bg-gray-800 hover:text-white">
+                                    <span class="text-[10px] font-black uppercase tracking-widest">Next</span>
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
                                 </a>
                             <% } else { %>
-                                <button class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-800 text-gray-600 cursor-not-allowed">
-                                    <span class="material-symbols-outlined text-lg">chevron_right</span>
-                                </button>
+                                <div class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-900 text-gray-700 cursor-not-allowed">
+                                    <span class="text-[10px] font-black uppercase tracking-widest">Next</span>
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                </div>
                             <% } %>
                         </div>
                     </div>

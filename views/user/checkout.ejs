@@ -229,7 +229,7 @@
                 
                 <div class="grid grid-cols-1 gap-3">
                     <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
-                      <input type="radio" name="paymentMethod" value="razorpay" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30" checked>
+                      <input type="radio" name="paymentMethod" value="RAZORPAY" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30" checked>
                       <div class="ml-4 flex items-center gap-3">
                           <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">bolt</span>
                           <span class="text-sm font-bold text-white">RazorPay</span>
@@ -237,15 +237,32 @@
                     </label>
   
                     <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
-                      <input type="radio" name="paymentMethod" value="wallet" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
-                      <div class="ml-4 flex flex-col">
-                          <div class="flex items-center gap-3">
+                        <input type="radio" name="paymentMethod" value="WALLET" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
+                        
+                        <div class="ml-4 flex items-center justify-between flex-grow">
+                          <div class="flex flex-col">
+                            <div class="flex items-center gap-3">
                               <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">account_balance_wallet</span>
-                              <span class="text-sm font-bold text-white">Digital Wallet</span>
+                              <span class="text-sm font-bold text-white tracking-tight">Digital Wallet</span>
+                            </div>
+                            <span class="text-[9px] text-primary font-black uppercase mt-0.5 tracking-widest ml-9 opacity-100">
+                              <%= checkout.userWalletBalance < checkout.pricing.totalAmount ? 'Insufficient Funds' : 'Instant & Secure' %>
+                            </span>
                           </div>
-                          <span class="text-[9px] text-primary font-black uppercase mt-1 tracking-widest ml-9">Instant & Secure</span>
-                      </div>
-                    </label>
+                      
+                          <div class="flex flex-col items-end border-l border-white/10 pl-4">
+                            <span class="text-[9px] text-gray-500 font-black uppercase tracking-[0.1em]">Your Balance</span>
+                            <div class="flex items-center gap-1">
+                              <span class="text-sm font-black <%= checkout.userWalletBalance < checkout.pricing.totalAmount ? 'text-red-500' : 'text-green-500' %>">
+                                ₹<%= checkout.userWalletBalance.toLocaleString() %>
+                              </span>
+                              <% if (checkout.userWalletBalance < checkout.pricing.totalAmount) { %>
+                                <span class="material-symbols-outlined text-red-500 text-[14px]">error_outline</span>
+                              <% } %>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
   
                     <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
                       <input type="radio" name="paymentMethod" value="COD" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
@@ -583,7 +600,10 @@
 
             const response = await fetch('/place-order', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({
                     addressId: selectedAddress,
                     paymentMethod: paymentMethod
@@ -688,6 +708,7 @@
             }
 
             showSwal("Applied", result.message || "Coupon applied successfully!", "success");
+            setTimeout(()=> window.location.reload(),2000)
         } else {
             showSwal("Failed", result.message || "Invalid coupon code", "error");
             applyBtn.disabled = false;
