@@ -5,6 +5,7 @@ import Category from "../../models/Category.model.js";
 import mongoose from "mongoose";
 import ProductVariant from "../../models/ProductVariant.model.js";
 import Inventory from "../../models/Inventory.model.js";
+import Wishlist from "../../models/Wishlist.model.js";
 
 export const getProducts = asyncHandler(async (req, res) => {
   const { search, category, gender, sort, priceRange, page = 1 } = req.query;
@@ -105,7 +106,7 @@ export const getProducts = asyncHandler(async (req, res) => {
           },
           {
             $project: {
-              _id: 0,
+              _id: 1,
               images: 1,
             },
           },
@@ -121,6 +122,9 @@ export const getProducts = asyncHandler(async (req, res) => {
     // Extract thumbnail
     {
       $addFields: {
+        defaultVariantId: {
+          $arrayElemAt: ["$variant._id", 0],
+        },
         thumbnail: {
           $arrayElemAt: [
             {
@@ -143,6 +147,7 @@ export const getProducts = asyncHandler(async (req, res) => {
         category: 1,
         gender: 1,
         thumbnail: 1,
+        defaultVariantId: 1,
         createdAt: 1,
       },
     },
@@ -161,17 +166,36 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   const totalProducts = countResult[0]?.count || 0;
 
-  // Final Price Calculation
-  const processedProducts = products.map((p) => ({
-    ...p,
-    finalPrice: calculateFinalPrice({
-      price: p.price,
-      productOffer: p.offerPercent,
-      productOfferExpiry: p.offerExpiry,
-      categoryOffer: p.category.offerPercent,
-      categoryOfferExpiry: p.category.offerExpiry,
-    }),
-  }));
+  let wishlistSet = new Set();
+
+  if(req?.user){
+    const wishlist = await Wishlist.findOne({user: req.user.userId})
+    .select("items.product items.variant")
+    .lean();
+
+    if(wishlist){
+      wishlist.items.forEach((item)=>{
+        wishlistSet.add(`${item.product.toString()}_${item.variant.toString()}`);
+      });
+    }
+  }
+
+  // Proccessing price and wishlist
+  const processedProducts = products.map((p) => {
+    const key = `${p._id.toString()}_${p.defaultVariantId.toString()}`;
+  
+    return {
+      ...p,
+      finalPrice: calculateFinalPrice({
+        price: p.price,
+        productOffer: p.offerPercent,
+        productOfferExpiry: p.offerExpiry,
+        categoryOffer: p.category.offerPercent,
+        categoryOfferExpiry: p.category.offerExpiry,
+      }),
+      isWishlisted: wishlistSet.has(key),
+    };
+  });
 
   /* -------- Render -------- */
   res.render("user/shop", {
@@ -234,6 +258,24 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     .select("variant size stock")
     .lean();
 
+
+  // Fetch wishlist
+  let wishlistSet = new Set();
+
+  if(req.user){
+    const wishlist = await Wishlist.findOne({user: req.user.userId})
+    .select("items.product items.variant")
+    .lean();
+
+    if(wishlist){
+      wishlist.items.forEach((item)=>{
+        wishlistSet.add(
+          `${item.product.toString()}_${item.variant.toString()}`
+        );
+      });
+    }
+  }
+
   // Merge variants with size and stock
   const variantsWithSizes = variants.map((variant) => {
     const sizes = inventory
@@ -245,10 +287,15 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         inStock: i.stock > 0,
       }));
 
+      const isWishlisted = wishlistSet.has(
+        `${product._id.toString()}_${variant._id.toString()}`
+      );
+
     return {
       ...variant,
       sizes,
       totalStock: sizes.reduce((sum, s) => sum + s.stock, 0),
+      isWishlisted
     };
   });
 
@@ -257,6 +304,8 @@ export const getProductDetails = asyncHandler(async (req, res) => {
     (sum, v) => sum + v.totalStock,
     0,
   );
+
+
 
   // Final Price Calculation
   const finalPrice = calculateFinalPrice({
@@ -314,6 +363,7 @@ export const getProductDetails = asyncHandler(async (req, res) => {
           },
           {
             $project: {
+              _id: 1,
               images: 1,
             },
           },
@@ -327,6 +377,9 @@ export const getProductDetails = asyncHandler(async (req, res) => {
 
     {
       $addFields: {
+        defaultVariantId:{
+          $arrayElemAt: ["$variant._id", 0],
+        },
         thumbnail: {
           $arrayElemAt: [{ $arrayElemAt: ["$variant.images.url", 0] }, 0],
         },
@@ -345,20 +398,26 @@ export const getProductDetails = asyncHandler(async (req, res) => {
         category: 1,
         gender: 1,
         thumbnail: 1,
+        defaultVariantId: 1
       },
     },
   ]);
 
-  const processedRelatedProducts = relatedProducts.map((p) => ({
-    ...p,
-    finalPrice: calculateFinalPrice({
-      price: p.price,
-      productOffer: p.offerPercent,
-      productOfferExpiry: p.offerExpiry,
-      categoryOffer: p.category.offerPercent,
-      categoryOfferExpiry: p.category.offerExpiry,
-    }),
-  }));
+  const processedRelatedProducts = relatedProducts.map((p) => {
+    const key = `${p._id.toString()}_${p.defaultVariantId.toString()}`;
+
+    return {
+      ...p,
+      finalPrice: calculateFinalPrice({
+        price: p.price,
+        productOffer: p.offerPercent,
+        productOfferExpiry: p.offerExpiry,
+        categoryOffer: p.category.offerPercent,
+        categoryOfferExpiry: p.category.offerExpiry,
+      }),
+      isWishlisted: wishlistSet.has(key),
+    };
+  });
 
   // Render the page
   res.render("user/product-details", {

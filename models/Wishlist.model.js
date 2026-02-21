@@ -14,13 +14,12 @@ const wishlistItemSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Store when item was added 
     addedAt: {
       type: Date,
       default: Date.now,
-    },
+    }
   },
-  { _id: false } 
+  { _id: false }
 );
 
 const wishlistSchema = new mongoose.Schema(
@@ -29,27 +28,19 @@ const wishlistSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // One wishlist per user
+      unique: true,
       index: true,
     },
 
     items: [wishlistItemSchema],
-
-    totalItems: {
-      type: Number,
-      default: 0,
-    },
   },
   { timestamps: true }
 );
 
-// Compound index to prevent duplicate 
-wishlistItemSchema.index({ product: 1, variant: 1 }, { unique: true, sparse: true });
-
-// Update totalItems before saving
-wishlistSchema.pre("save", function (next) {
-  this.totalItems = this.items.length;
-  next();
-});
+// Prevent duplicate product+variant
+wishlistSchema.index(
+  { user: 1, "items.product": 1, "items.variant": 1 },
+  { unique: true }
+);
 
 export default mongoose.model("Wishlist", wishlistSchema);

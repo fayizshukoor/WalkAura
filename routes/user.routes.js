@@ -31,6 +31,8 @@ import { downloadInvoice } from "../controllers/user/invoice.controller.js";
 
 import { getWalletPage } from "../controllers/user/wallet.controller.js";
 
+import { addToWishlist, getWishlistPage, removeFromWishlist } from "../controllers/user/wishlist.controller.js";
+
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
@@ -148,4 +150,9 @@ router.get("/orders/:orderId/invoice",downloadInvoice);
 
 // Wallet
 router.get("/wallet",getWalletPage);
+
+// Wishlist
+router.get("/wishlist",getWishlistPage);
+router.post("/wishlist/add",addToWishlist);
+router.delete("/wishlist/remove",removeFromWishlist);
 export default router;

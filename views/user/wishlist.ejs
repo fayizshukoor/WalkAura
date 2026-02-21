@@ -1,0 +1,170 @@
+<div class="flex flex-col md:flex-row gap-6 pt-24 min-h-screen bg-black">
+    <main class="flex-1 p-4 md:p-10 bg-black">
+        <div class="max-w-7xl mx-auto w-full">
+            
+            <div class="flex items-center justify-between mb-10 px-2">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-white tracking-tight">My Wishlist</h1>
+                    <p class="text-gray-400 text-sm mt-1 uppercase tracking-widest font-semibold">WalkAura Personal Collection</p>
+                </div>
+                <span class="bg-primary/20 text-indigo-400 text-xs font-bold px-5 py-2.5 rounded-full border border-primary/30 uppercase tracking-widest">
+                    <%= wishlistItems.length %> Items
+                </span>
+            </div>
+
+            <div class="bg-surface-dark border border-white/10 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-2xl">
+                <% if (wishlistItems && wishlistItems.length > 0) { %>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                                <tr class="text-gray-300 text-[12px] uppercase tracking-[0.15em] bg-white/[0.05]">
+                                    <th class="px-8 py-6 font-bold">Product</th>
+                                    <th class="px-8 py-6 font-bold text-center">Price Details</th>
+                                    <th class="px-8 py-6 font-bold text-center">Stock Status</th>
+                                    <th class="px-8 py-6 font-bold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/10">
+                                <% wishlistItems.forEach(item => { %>
+                                    <tr id="row-<%= item.variantId %>" class="hover:bg-white/[0.02] transition-all group">
+                                        
+                                        <td class="px-8 py-8">
+                                            <a href="/product/<%= item.slug %>" class="flex items-center gap-6">
+                                                <div class="w-24 h-24 rounded-2xl bg-[#1a1c21] overflow-hidden border border-white/10 flex-shrink-0">
+                                                    <img src="<%= item.thumbnail %>" alt="<%= item.name %>" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 p-2">
+                                                </div>
+                                                <div class="flex-1">
+                                                    <p class="text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors line-clamp-1 uppercase tracking-wide"><%= item.name %></p>
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest"><%= item.categoryName %></span>
+                                                        <span class="text-gray-600 font-bold">•</span>
+                                                        <span class="text-[11px] font-bold text-primary uppercase tracking-widest"><%= item.color %></span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </td>
+
+                                        <td class="px-8 py-8 text-center">
+                                            <div class="flex flex-col items-center justify-center gap-1">
+                                                <div class="flex items-center gap-3">
+                                                    <p class="text-xl font-black text-white">₹<%= item.finalPrice.toLocaleString('en-IN') %></p>
+                                                    <% if(item.price > item.finalPrice) { %>
+                                                        <span class="text-[10px] font-black text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 whitespace-nowrap">
+                                                            <%= Math.round(((item.price - item.finalPrice) / item.price) * 100) %>% OFF
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                                <% if(item.price > item.finalPrice) { %>
+                                                    <span class="text-sm text-gray-500 line-through font-medium">₹<%= item.price.toLocaleString('en-IN') %></span>
+                                                <% } %>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-8 py-8 text-center">
+                                            <% if (item.inStock) { %>
+                                                <span class="inline-flex items-center gap-2 text-[11px] font-bold text-green-500 uppercase tracking-[0.1em] bg-green-500/5 px-4 py-2 rounded-full border border-green-500/10">
+                                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                    In Stock
+                                                </span>
+                                            <% } else { %>
+                                                <span class="inline-flex items-center gap-2 text-[11px] font-bold text-red-500 uppercase tracking-[0.1em] bg-red-500/5 px-4 py-2 rounded-full border border-red-500/10">
+                                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                                    Out of Stock
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <td class="px-8 py-8 text-right">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <button onclick="removeFromWishlist('<%= item.productId %>', '<%= item.variantId %>')" 
+                                                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-gray-400 hover:bg-red-500/20 hover:text-red-500 transition-all border border-white/5">
+                                                    <span class="material-symbols-outlined text-xl">delete</span>
+                                                </button>
+                                                
+                                                <% if (item.inStock) { %>
+                                                    <button onclick="moveToCart('<%= item.productId %>', '<%= item.variantId %>')" 
+                                                            class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-primary transition-all active:scale-95 shadow-lg shadow-indigo-500/5">
+                                                        Add to Cart
+                                                    </button>
+                                                <% } else { %>
+                                                    <button class="bg-white/5 text-gray-600 text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl cursor-not-allowed border border-white/10">
+                                                        Sold Out
+                                                    </button>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="py-32 text-center">
+                        <span class="material-icons-outlined text-7xl text-gray-700 mb-6">favorite_border</span>
+                        <p class="text-gray-300 text-lg font-bold uppercase tracking-widest">Your wishlist is empty</p>
+                        <a href="/shop" class="inline-block mt-8 bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all">Start Shopping</a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+</div>  
+
+<script>
+    async function removeFromWishlist(productId, variantId) {
+        if(!confirm('Remove this item from your wishlist?')) return;
+    
+        try {
+            const response = await fetch('/wishlist/remove', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, variantId })
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                // Smoothly remove the row from UI
+                const row = document.getElementById(`row-${variantId}`);
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    row.remove();
+                    // If no items left, reload to show empty state
+                    if (document.querySelectorAll('tbody tr').length === 0) {
+                        window.location.reload();
+                    }
+                }, 300);
+                showToast(data.message || 'Item removed', 'success');
+            }
+        } catch (error) {
+            showToast('Failed to remove item', 'error');
+        }
+    }
+    
+    async function moveToCart(productId, variantId) {
+        try {
+            const response = await fetch('/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    productId, 
+                    variantId, 
+                    quantity: 1 
+                })
+            });
+    
+            const data = await response.json();
+    
+            if (response.ok) {
+                showToast('Added to cart!', 'success');
+                // Optional: Remove from wishlist after adding to cart
+                // removeFromWishlist(productId, variantId); 
+            } else {
+                showToast(data.message || 'Could not add to cart', 'error');
+            }
+        } catch (error) {
+            showToast('Connection error', 'error');
+        }
+    }
+    </script>

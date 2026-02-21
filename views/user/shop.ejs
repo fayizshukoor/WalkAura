@@ -1,216 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Shop | WalkAura</title>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#4F46E5",
-                        "background-dark": "#0B0C10",
-                        "surface-dark": "#13151A",
-                        "card-dark": "#1F2937",
-                        "border-dark": "#374151",
-                    },
-                    fontFamily: { sans: ["Inter", "sans-serif"] },
-                },
-            },
-        };
-    </script>
-    <style>
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0B0C10; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
-        
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Shop | WalkAura</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5",
+            "background-dark": "#0B0C10",
+            "surface-dark": "#13151A",
+            "card-dark": "#1F2937",
+            "border-dark": "#374151",
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"]
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0B0C10;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4B5563;
+    }
+
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+    }
+
+    #toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .toast {
+      background: #111;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      display: flex;
+      items-center;
+      gap: 12px;
+      min-width: 280px;
+      animation: slideIn 0.3s ease-out forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.fade-out {
+      animation: slideOut 0.3s ease-in forwards;
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    .toast-icon-success {
+      color: #10b981;
+    }
+
+    /* Green */
+    .toast-icon-error {
+      color: #ef4444;
+    }
+
+    /* Red */
+    .toast-icon-info {
+      color: #6366f1;
+    }
+
+    /* Indigo */
+  </style>
 </head>
+
 <body class="bg-background-dark text-white font-sans antialiased">
 
-<main class="flex-1 pt-24 pb-20 px-4 max-w-[95%] xl:max-w-[90%] mx-auto w-full">
+  <main class="flex-1 pt-24 pb-20 px-4 max-w-[95%] xl:max-w-[90%] mx-auto w-full">
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-        <nav class="flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="/" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <span class="material-icons-outlined text-gray-500 text-sm mx-1">chevron_right</span>
-                        <span class="text-sm font-medium text-white">Shop</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+          <li class="inline-flex items-center">
+            <a href="/" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <span class="material-icons-outlined text-gray-500 text-sm mx-1">chevron_right</span>
+              <span class="text-sm font-medium text-white">Shop</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
-        <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-            <div class="relative w-full md:w-80">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="material-icons-outlined text-gray-400">search</span>
-                </div>
-                <input type="text" id="searchInput" name="search" value="<%= filters.search %>"
-                    class="bg-surface-dark border border-border-dark text-white text-sm rounded-xl focus:ring-primary focus:border-primary block w-full pl-10 p-3 placeholder-gray-500 transition-all hover:border-gray-500" 
-                    placeholder="Search products...">
-            </div>
-            <div class="flex gap-2">
-                <button id="searchBtn" class="flex-1 sm:flex-none bg-primary hover:bg-indigo-600 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95">
-                    Search
-                </button>
-                <% if (filters.search) { %>
-                    <button id="clearSearchBtn" class="bg-card-dark hover:bg-gray-700 px-4 rounded-xl text-gray-400 transition-all border border-border-dark flex items-center justify-center">
-                        <span class="material-icons-outlined text-sm">close</span>
-                    </button>
-                <% } %>
-            </div>
+      <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div class="relative w-full md:w-80">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="material-icons-outlined text-gray-400">search</span>
+          </div>
+          <input type="text" id="searchInput" name="search" value="<%= filters.search %>" class="bg-surface-dark border border-border-dark text-white text-sm rounded-xl focus:ring-primary focus:border-primary block w-full pl-10 p-3 placeholder-gray-500 transition-all hover:border-gray-500" placeholder="Search products...">
         </div>
+        <div class="flex gap-2">
+          <button id="searchBtn" class="flex-1 sm:flex-none bg-primary hover:bg-indigo-600 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95">
+            Search
+          </button>
+          <% if (filters.search) { %>
+          <button id="clearSearchBtn" class="bg-card-dark hover:bg-gray-700 px-4 rounded-xl text-gray-400 transition-all border border-border-dark flex items-center justify-center">
+            <span class="material-icons-outlined text-sm">close</span>
+          </button>
+          <% } %>
+        </div>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <aside class="lg:col-span-3 xl:col-span-2">
-            <div class="bg-surface-dark rounded-2xl p-5 border border-white/5 sticky top-24">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-base font-bold text-white">Filters</h3>
-                    <a href="/shop" class="text-[10px] text-primary hover:underline uppercase font-bold tracking-tighter">Clear All</a>
-                </div>
 
-                <form id="filterForm" action="/shop" method="GET" class="space-y-5">
-                    <input type="hidden" name="search" value="<%= filters.search %>">
-                    
-                    <div>
-                        <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Category</label>
-                        <select name="category" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
-                            <option value="all" <%= filters.category === 'all' ? 'selected' : '' %>>All Categories</option>
-                            <% activeCategories.forEach(cat => { %>
-                                <option value="<%= cat._id %>" <%= filters.category == cat._id.toString() ? 'selected' : '' %>>
-                                    <%= cat.name %>
-                                </option>
-                            <% }) %>
-                        </select>
-                    </div>
+      <aside class="lg:col-span-3 xl:col-span-2">
+        <div class="bg-surface-dark rounded-2xl p-5 border border-white/5 sticky top-24">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-base font-bold text-white">Filters</h3>
+            <a href="/shop" class="text-[10px] text-primary hover:underline uppercase font-bold tracking-tighter">Clear All</a>
+          </div>
 
-                    <div>
-                        <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Price Range</label>
-                        <select name="priceRange" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
-                            <option value="all" <%= filters.priceRange === 'all' ? 'selected' : '' %>>All Prices</option>
-                            <option value="below_5000" <%= filters.priceRange === 'below_5000' ? 'selected' : '' %>>Below ₹5,000</option>
-                            <option value="5000_10000" <%= filters.priceRange === '5000_10000' ? 'selected' : '' %>>₹5,000 - ₹10,000</option>
-                            <option value="above_10000" <%= filters.priceRange === 'above_10000' ? 'selected' : '' %>>Above ₹10,000</option>
-                        </select>
-                    </div>
+          <form id="filterForm" action="/shop" method="GET" class="space-y-5">
+            <input type="hidden" name="search" value="<%= filters.search %>">
 
-                    <div>
-                        <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Gender</label>
-                        <select name="gender" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
-                            <option value="all" <%= filters.gender === 'all' ? 'selected' : '' %>>All</option>
-                            <option value="Men" <%= filters.gender === 'Men' ? 'selected' : '' %>>Men</option>
-                            <option value="Women" <%= filters.gender === 'Women' ? 'selected' : '' %>>Women</option>
-                            <option value="Unisex" <%= filters.gender === 'Unisex' ? 'selected' : '' %>>Unisex</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Sort By</label>
-                        <select name="sort" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
-                            <option value="">Newest Arrivals</option>
-                            <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
-                            <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
-                            <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Name: A - Z</option>
-                            <option value="name_desc" <%= filters.sort === 'name_desc' ? 'selected' : '' %>>Name: Z - A</option>
-                        </select>
-                    </div>
-
-                    <div class="pt-4">
-                        <button type="submit" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 text-xs tracking-widest uppercase">
-                            Apply Filters
-                        </button>
-                    </div>
-                </form>
+            <div>
+              <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Category</label>
+              <select name="category" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
+                <option value="all" <%= filters.category === 'all' ? 'selected' : '' %>>All Categories</option>
+                <% activeCategories.forEach(cat => { %>
+                <option value="<%= cat._id %>" <%= filters.category == cat._id.toString() ? 'selected' : '' %>>
+                  <%= cat.name %>
+                </option>
+                <% }) %>
+              </select>
             </div>
-        </aside>
 
-        <div class="lg:col-span-9 xl:col-span-10">
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <% if (products && products.length > 0) { %>
-                    <% products.forEach(function(product) { %>
-                        <a href="/product/<%= product.slug %>" class="group block">
-                            <div class="bg-surface-dark border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1">
-                                
-                                <div class="relative aspect-square rounded-xl bg-[#202020] overflow-hidden mb-4">
-                                    <% if (product.thumbnail && product.thumbnail.length > 0) { %>
-                                        <img src="<%= product.thumbnail %>" 
-                                             alt="<%= product.name %>" 
-                                             class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                                             onerror="this.src='https://via.placeholder.com/400x400?text=No+Image';">
-                                    <% } else { %>
-                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-600 opacity-50">
-                                            <span class="material-icons-outlined text-5xl mb-2">inventory_2</span>
-                                            <span class="text-[10px] uppercase font-bold tracking-widest">No Image available</span>
-                                        </div>
-                                    <% } %>
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                
-                                <div class="px-2 pb-2">
-                                    <h3 class="text-base font-bold text-white tracking-tight group-hover:text-primary transition-colors line-clamp-1">
-                                        <%= product.name %>
-                                    </h3>
-                                    
-                                    <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-2 mt-2">
-                                        <%= product.category.name %> • <%= product.gender %>
-                                    </p>
+            <div>
+              <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Price Range</label>
+              <select name="priceRange" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
+                <option value="all" <%= filters.priceRange === 'all' ? 'selected' : '' %>>All Prices</option>
+                <option value="below_5000" <%= filters.priceRange === 'below_5000' ? 'selected' : '' %>>Below ₹5,000</option>
+                <option value="5000_10000" <%= filters.priceRange === '5000_10000' ? 'selected' : '' %>>₹5,000 - ₹10,000</option>
+                <option value="above_10000" <%= filters.priceRange === 'above_10000' ? 'selected' : '' %>>Above ₹10,000</option>
+              </select>
+            </div>
 
-                                    
+            <div>
+              <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Gender</label>
+              <select name="gender" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
+                <option value="all" <%= filters.gender === 'all' ? 'selected' : '' %>>All</option>
+                <option value="Men" <%= filters.gender === 'Men' ? 'selected' : '' %>>Men</option>
+                <option value="Women" <%= filters.gender === 'Women' ? 'selected' : '' %>>Women</option>
+                <option value="Unisex" <%= filters.gender === 'Unisex' ? 'selected' : '' %>>Unisex</option>
+              </select>
+            </div>
 
-                                   
-                                    
-                                    <div class="flex items-center justify-between mt-2">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-white font-semibold">₹<%= product.finalPrice.toLocaleString('en-IN') %></span>
-                                            <% if (product.finalPrice < product.price) { %>
-                                                <span class="text-xs text-gray-500 line-through">₹<%= product.price.toLocaleString('en-IN') %></span>
-                                            <% } %>
-                                        </div>
-                                        
-                                        <button type="button" class="wishlist-btn w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative z-10">
-                                            <span class="material-icons-outlined text-sm">favorite_border</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    <% }); %>
+            <div>
+              <label class="block mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Sort By</label>
+              <select name="sort" class="w-full bg-card-dark border-border-dark text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-2.5 cursor-pointer">
+                <option value="">Newest Arrivals</option>
+                <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
+                <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
+                <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Name: A - Z</option>
+                <option value="name_desc" <%= filters.sort === 'name_desc' ? 'selected' : '' %>>Name: Z - A</option>
+              </select>
+            </div>
+
+            <div class="pt-4">
+              <button type="submit" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 text-xs tracking-widest uppercase">
+                Apply Filters
+              </button>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <div class="lg:col-span-9 xl:col-span-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <% if (products && products.length > 0) { %>
+          <% products.forEach(function(product) { %>
+          <a href="/product/<%= product.slug %>" class="group block">
+            <div class="bg-surface-dark border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1">
+
+              <div class="relative aspect-square rounded-xl bg-[#202020] overflow-hidden mb-4">
+                <% if (product.thumbnail && product.thumbnail.length > 0) { %>
+                <img src="<%= product.thumbnail %>" alt="<%= product.name %>" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image';">
                 <% } else { %>
-                    <div class="col-span-full text-center py-20 bg-surface-dark rounded-2xl border border-dashed border-border-dark">
-                        <span class="material-icons-outlined text-gray-600 text-5xl mb-4">search_off</span>
-                        <p class="text-gray-500 italic">No products found matching your criteria.</p>
-                    </div>
+                <div class="w-full h-full flex flex-col items-center justify-center text-gray-600 opacity-50">
+                  <span class="material-icons-outlined text-5xl mb-2">inventory_2</span>
+                  <span class="text-[10px] uppercase font-bold tracking-widest">No Image available</span>
+                </div>
                 <% } %>
-            </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
 
-            <% if (pagination.totalPages > 1) { %>
-            <div class="mt-12 flex justify-center">
-                <nav class="flex items-center gap-2">
-                    <% 
+              <div class="px-2 pb-2">
+                <h3 class="text-base font-bold text-white tracking-tight group-hover:text-primary transition-colors line-clamp-1">
+                  <%= product.name %>
+                </h3>
+
+                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-2 mt-2">
+                  <%= product.category.name %> • <%= product.gender %>
+                </p>
+
+
+
+
+
+                <div class="flex items-center justify-between mt-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-white font-semibold">₹<%= product.finalPrice.toLocaleString('en-IN') %></span>
+                    <% if (product.finalPrice < product.price) { %>
+                    <span class="text-xs text-gray-500 line-through">₹<%= product.price.toLocaleString('en-IN') %></span>
+                    <% } %>
+                  </div>
+
+                  <button type="button" onclick="toggleWishlist(event, '<%= product._id %>', '<%= product.defaultVariantId %>')" class="wishlist-btn w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10 
+                    <%= product.isWishlisted ? 'text-red-500 bg-red-500/10' : 'bg-white/5 text-white hover:bg-white/20' %>">
+                    <span class="material-icons-outlined text-sm">
+                      <%= product.isWishlisted ? 'favorite' : 'favorite_border' %>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </a>
+          <% }); %>
+          <% } else { %>
+          <div class="col-span-full text-center py-20 bg-surface-dark rounded-2xl border border-dashed border-border-dark">
+            <span class="material-icons-outlined text-gray-600 text-5xl mb-4">search_off</span>
+            <p class="text-gray-500 italic">No products found matching your criteria.</p>
+          </div>
+          <% } %>
+        </div>
+
+        <% if (pagination.totalPages > 1) { %>
+        <div class="mt-12 flex justify-center">
+          <nav class="flex items-center gap-2">
+            <% 
                         let queryParts = [];
                         if (filters.search) queryParts.push(`search=${encodeURIComponent(filters.search)}`);
                         if (filters.category && filters.category !== 'all') queryParts.push(`category=${filters.category}`);
@@ -219,96 +301,186 @@
                         if (filters.sort) queryParts.push(`sort=${filters.sort}`);
                         const baseQuery = queryParts.join('&');
                     %>
-                    
-                    <% if (pagination.currentPage > 1) { %>
-                        <a href="?page=<%= pagination.currentPage - 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
-                            <span class="material-icons-outlined text-sm">chevron_left</span>
-                        </a>
-                    <% } %>
-                    
-                    <% for(let i = 1; i <= pagination.totalPages; i++) { %>
-                        <a href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>" 
-                           class="w-10 h-10 flex items-center justify-center rounded-lg <%= i === pagination.currentPage ? 'bg-primary text-white shadow-lg shadow-indigo-500/20' : 'border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white' %> transition-colors">
-                            <%= i %>
-                        </a>
-                    <% } %>
 
-                    <% if (pagination.currentPage < pagination.totalPages) { %>
-                        <a href="?page=<%= pagination.currentPage + 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
-                            <span class="material-icons-outlined text-sm">chevron_right</span>
-                        </a>
-                    <% } %>
-                </nav>
-            </div>
+            <% if (pagination.currentPage > 1) { %>
+            <a href="?page=<%= pagination.currentPage - 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+              <span class="material-icons-outlined text-sm">chevron_left</span>
+            </a>
             <% } %>
+
+            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+            <a href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg <%= i === pagination.currentPage ? 'bg-primary text-white shadow-lg shadow-indigo-500/20' : 'border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white' %> transition-colors">
+              <%= i %>
+            </a>
+            <% } %>
+
+            <% if (pagination.currentPage < pagination.totalPages) { %>
+            <a href="?page=<%= pagination.currentPage + 1 %><%= baseQuery ? '&' + baseQuery : '' %>" class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-dark text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+              <span class="material-icons-outlined text-sm">chevron_right</span>
+            </a>
+            <% } %>
+          </nav>
         </div>
+        <% } %>
+      </div>
     </div>
-</main>
+  </main>
 
-<script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const clearSearchBtn = document.getElementById('clearSearchBtn');
-        const filterForm = document.getElementById('filterForm');
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      const filterForm = document.getElementById('filterForm');
 
-        function executeSearch() {
-            const url = new URL(window.location.origin + window.location.pathname);
-            const query = searchInput.value.trim();
-            
-            // Re-apply existing non-default filters when searching
-            const formData = new FormData(filterForm);
-            for (let [key, value] of formData.entries()) {
-                if (value && value !== 'all' && key !== 'search') {
-                    url.searchParams.set(key, value);
-                }
+      function executeSearch() {
+        const url = new URL(window.location.origin + window.location.pathname);
+        const query = searchInput.value.trim();
+
+        // Re-apply existing non-default filters when searching
+        const formData = new FormData(filterForm);
+        for (let [key, value] of formData.entries()) {
+          if (value && value !== 'all' && key !== 'search') {
+            url.searchParams.set(key, value);
+          }
+        }
+
+        if (query) {
+          url.searchParams.set('search', query);
+        }
+
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+      }
+
+      // Intercept form submission to clean "all" values from URL
+      if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const url = new URL(window.location.origin + window.location.pathname);
+          const formData = new FormData(this);
+
+          for (let [key, value] of formData.entries()) {
+            if (value && value !== 'all') {
+              url.searchParams.set(key, value);
             }
+          }
+          url.searchParams.set('page', 1);
+          window.location.href = url.toString();
+        });
+      }
 
-            if (query) {
-                url.searchParams.set('search', query);
+      if (searchBtn) searchBtn.addEventListener('click', executeSearch);
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && executeSearch());
+      }
+
+      if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+          const url = new URL(window.location.origin + window.location.pathname);
+          // Keep other filters but clear search
+          const formData = new FormData(filterForm);
+          for (let [key, value] of formData.entries()) {
+            if (value && value !== 'all' && key !== 'search') {
+              url.searchParams.set(key, value);
             }
-            
-            url.searchParams.set('page', 1);
-            window.location.href = url.toString();
-        }
-
-        // Intercept form submission to clean "all" values from URL
-        if (filterForm) {
-            filterForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const url = new URL(window.location.origin + window.location.pathname);
-                const formData = new FormData(this);
-                
-                for (let [key, value] of formData.entries()) {
-                    if (value && value !== 'all') {
-                        url.searchParams.set(key, value);
-                    }
-                }
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-        }
-
-        if (searchBtn) searchBtn.addEventListener('click', executeSearch);
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && executeSearch());
-        }
-
-        if (clearSearchBtn) {
-            clearSearchBtn.addEventListener('click', function() {
-                const url = new URL(window.location.origin + window.location.pathname);
-                // Keep other filters but clear search
-                const formData = new FormData(filterForm);
-                for (let [key, value] of formData.entries()) {
-                    if (value && value !== 'all' && key !== 'search') {
-                        url.searchParams.set(key, value);
-                    }
-                }
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-        }
+          }
+          url.searchParams.set('page', 1);
+          window.location.href = url.toString();
+        });
+      }
     });
-</script>
+
+    function showToast(message, type = 'info') {
+      // Create container if it doesn't exist
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = `toast`;
+
+      // Choose icon based on type
+      const icons = {
+        success: 'check_circle',
+        error: 'error',
+        info: 'favorite'
+      };
+
+      toast.innerHTML = `
+        <span class="material-icons-outlined toast-icon-${type}">${icons[type]}</span>
+        <div class="flex-1 text-sm font-medium">${message}</div>
+    `;
+
+      container.appendChild(toast);
+
+      // Auto remove
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        toast.addEventListener('animationend', () => toast.remove());
+      }, 3000);
+    }
+
+
+    async function toggleWishlist(event, productId, variantId) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const btn = event.target.closest('.wishlist-btn');
+      const icon = btn.querySelector('.material-icons-outlined');
+
+      // Check if currently wishlisted by looking at the icon text or a class
+      const isWishlisted = icon.innerText.trim() === 'favorite';
+
+      // Determine endpoint based on current state
+      const endpoint = isWishlisted ? '/wishlist/remove' : '/wishlist/add';
+      const method = isWishlisted ? 'DELETE' : 'POST'; // Usually remove is DELETE or POST
+
+      try {
+        const response = await fetch(endpoint, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            productId,
+            variantId
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          if (isWishlisted) {
+            // UI UPDATE: REMOVED
+            icon.innerText = 'favorite_border';
+            btn.classList.remove('text-red-500', 'bg-red-500/10');
+            btn.classList.add('bg-white/5', 'text-white', 'hover:bg-white/20');
+            showToast(data.message || 'Removed from wishlist', 'info');
+          } else {
+            // UI UPDATE: ADDED
+            icon.innerText = 'favorite';
+            btn.classList.remove('bg-white/5', 'text-white', 'hover:bg-white/20');
+            btn.classList.add('text-red-500', 'bg-red-500/10');
+            showToast(data.message || 'Added to wishlist', 'success');
+          }
+        } else {
+          if (response.status === 401) {
+            showToast('Please login first', 'error');
+            setTimeout(() => window.location.href = '/login', 1500);
+          } else {
+            showToast(data.message || 'Something went wrong', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Wishlist Error:', error);
+        showToast('Connection error. Please try again.', 'error');
+      }
+    }
+  </script>
 </body>
+
 </html>
