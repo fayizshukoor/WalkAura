@@ -100,7 +100,7 @@
                     </div>
                 <% } else { %>
                     <div class="py-32 text-center">
-                        <span class="material-icons-outlined text-7xl text-gray-700 mb-6">favorite_border</span>
+                        <span class="material-symbols-outlined text-7xl text-gray-700 mb-6">favorite</span>
                         <p class="text-gray-300 text-lg font-bold uppercase tracking-widest">Your wishlist is empty</p>
                         <a href="/shop" class="inline-block mt-8 bg-primary text-white px-10 py-4 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all">Start Shopping</a>
                     </div>
@@ -110,24 +110,69 @@
     </main>
 </div>  
 
+<div id="sizeModal" class="fixed inset-0 z-[150] hidden flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeSizeModal()"></div>
+    
+    <div class="relative bg-surface-dark border border-white/10 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl transform transition-all">
+        <button onclick="closeSizeModal()" class="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <h3 class="text-2xl font-black text-white mb-2 uppercase tracking-tight">Select Size</h3>
+        <p class="text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mb-8">Choose your perfect fit (UK)</p>
+
+        <div id="modalSizeGrid" class="grid grid-cols-4 gap-3 mb-8">
+            </div>
+
+        <button id="confirmAddToCart" disabled 
+                class="w-full bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-xl shadow-indigo-500/20">
+            Confirm & Add to Cart
+        </button>
+    </div>
+</div>
+
 <script>
-    async function removeFromWishlist(productId, variantId) {
-        if(!confirm('Remove this item from your wishlist?')) return;
-    
-        try {
-            const response = await fetch('/wishlist/remove', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId, variantId })
-            });
-    
-            const data = await response.json();
-    
-            if (response.ok) {
-                // Smoothly remove the row from UI
-                const row = document.getElementById(`row-${variantId}`);
+   async function removeFromWishlist(productId, variantId) {
+    // 1. Trigger SweetAlert2 Confirmation
+const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "Remove this item from your wishlist?",
+    icon: 'warning',
+    iconColor: '#f8bb86', // Keeps the warning icon visible on black
+    background: '#121212', // Pure black or very dark grey
+    color: '#ffffff',      // White text color
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, remove it!',
+    cancelButtonText: 'Cancel'
+});
+
+    // 2. If user cancelled, exit the function
+    if (!result.isConfirmed) return;
+
+    try {
+        const response = await fetch('/wishlist/remove', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, variantId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+            detail: { count: data.wishlistCount } // Ensure your backend returns the new count
+            }));
+
+            // 3. Smoothly remove the row from UI
+            const row = document.getElementById(`row-${variantId}`);
+            if (row) {
+                row.style.transition = 'all 0.3s ease'; // Ensure transition is applied
                 row.style.opacity = '0';
                 row.style.transform = 'translateX(20px)';
+                
                 setTimeout(() => {
                     row.remove();
                     // If no items left, reload to show empty state
@@ -135,36 +180,137 @@
                         window.location.reload();
                     }
                 }, 300);
-                showToast(data.message || 'Item removed', 'success');
             }
-        } catch (error) {
-            showToast('Failed to remove item', 'error');
-        }
-    }
-    
-    async function moveToCart(productId, variantId) {
-        try {
-            const response = await fetch('/cart/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    productId, 
-                    variantId, 
-                    quantity: 1 
-                })
+            
+            // Using Swal for the success toast as well
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: data.message || 'Item removed',
+                showConfirmButton: false,
+                timer: 3000,
+                background: '#121212', // Pure black or very dark grey
+                color: '#ffffff',
             });
-    
-            const data = await response.json();
-    
-            if (response.ok) {
-                showToast('Added to cart!', 'success');
-                // Optional: Remove from wishlist after adding to cart
-                // removeFromWishlist(productId, variantId); 
-            } else {
-                showToast(data.message || 'Could not add to cart', 'error');
-            }
-        } catch (error) {
-            showToast('Connection error', 'error');
         }
+    } catch (error) {
+        Swal.fire('Error', 'Failed to remove item', 'error');
     }
+}
+    
+let currentSelection = { productId: null, variantId: null, inventoryId: null };
+
+async function moveToCart(productId, variantId) {
+    try {
+        // Show a loading state if you want, or just fetch
+        const response = await fetch(`/wishlist/variant/${variantId}/sizes`);
+        const data = await response.json();
+
+        if (!data.success || data.sizes.length === 0) {
+            return Swal.fire({ icon: 'error', title: 'Oops', text: 'No sizes available', background: '#121212', color: '#fff' });
+        }
+
+        // Reset Selection
+        currentSelection = { productId, variantId, inventoryId: null };
+        const grid = document.getElementById('modalSizeGrid');
+        const confirmBtn = document.getElementById('confirmAddToCart');
+        confirmBtn.disabled = true;
+        
+        // Populate Grid
+        grid.innerHTML = data.sizes.sort((a,b)=> parseFloat(a.size) - parseFloat(b.size)).map(s => `
+            <button 
+                onclick="selectModalSize('${s.inventoryId}', this)"
+                ${!s.inStock ? 'disabled' : ''}
+                class="h-14 rounded-xl border-2 font-bold transition-all flex items-center justify-center
+                ${s.inStock 
+                    ? 'border-white/5 bg-white/5 text-white hover:border-primary' 
+                    : 'border-white/5 bg-transparent text-gray-700 cursor-not-allowed opacity-40'}">
+                ${s.size}
+            </button>
+        `).join('');
+
+        // Open Modal
+        document.getElementById('sizeModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load sizes', background: '#121212', color: '#fff' });
+    }
+}
+
+function selectModalSize(inventoryId, btn) {
+    // UI update
+    document.querySelectorAll('#modalSizeGrid button').forEach(b => {
+        b.classList.remove('border-primary', 'bg-primary/20');
+        b.classList.add('border-white/5');
+    });
+    btn.classList.add('border-primary', 'bg-primary/20');
+    
+    // Logic update
+    currentSelection.inventoryId = inventoryId;
+    document.getElementById('confirmAddToCart').disabled = false;
+}
+
+function closeSizeModal() {
+    document.getElementById('sizeModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// Final Add to Cart execution
+document.getElementById('confirmAddToCart').addEventListener('click', async () => {
+    const btn = document.getElementById('confirmAddToCart');
+    btn.innerText = 'ADDING...';
+    
+    try {
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentSelection)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+
+            window.dispatchEvent(new CustomEvent('cartUpdated', { 
+                detail: { count: result.newCartCount } 
+            }));
+
+            window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+            detail: { count: result.newWishlistCount } // Ensure your backend returns the new count
+            }));
+
+            closeSizeModal();
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: result.message, showConfirmButton: false, timer: 2000,
+                background: '#121212', color: '#fff'
+            });
+            // 2. Target the specific row and animate it out
+            const row = document.getElementById(`row-${currentSelection.variantId}`);
+            if (row) {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(50px)';
+
+            setTimeout(() => {
+            row.remove();
+            // If the table is now empty, THEN reload to show the "Empty Wishlist" state
+            if (document.querySelectorAll('tbody tr').length === 0) {
+            window.location.reload();
+            }
+            }, 500);
+            }
+
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Failed', text: error.message, background: '#121212', color: '#fff' });
+    } finally {
+        btn.innerText = 'Confirm & Add to Bag';
+    }
+});
     </script>

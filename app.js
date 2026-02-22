@@ -20,7 +20,7 @@ import { ensureNotBlocked } from "./middlewares/ensureNotBlocked.middleware.js";
 import notFoundHandler from "./middlewares/notFound.middleware.js";
 import errorHandler from "./middlewares/error.middleware.js";
 import { adminSilentRefresh, authenticateAdmin} from "./middlewares/admin.middleware.js";
-import { getCartCount } from "./middlewares/cartCount.middleware.js";
+import { getGlobalCounts } from "./middlewares/globalCounts.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,7 +40,7 @@ app.use(authenticateUser);
 app.use(silentRefresh);
 app.use(ensureNotBlocked);
 app.use(userContext);
-app.use(getCartCount);
+app.use(getGlobalCounts);
 
 app.use(
   session({

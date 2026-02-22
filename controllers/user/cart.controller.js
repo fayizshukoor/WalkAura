@@ -105,8 +105,15 @@ export const addToCart = asyncHandler(async (req, res) => {
 
   // Check if item already exists
   const existingItemIndex = cart.items.findIndex(
-    (item) => item.inventory.toString() === inventoryId,
+    (item) => item.inventory.toString() === inventoryId.toString(),
   );
+
+  const currentTotal = cart.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+  
+  let newTotal;
 
   if (existingItemIndex > -1) {
     const newQuantity = cart.items[existingItemIndex].quantity + quantity;
@@ -123,12 +130,7 @@ export const addToCart = asyncHandler(async (req, res) => {
         .json({ message: `Only ${inventory.stock} items available in stock` });
     }
 
-    const currentTotal = cart.items.reduce(
-      (sum, item) => sum + item.quantity,
-      0,
-    );
-    const newTotal =
-      currentTotal - cart.items[existingItemIndex].quantity + newQuantity;
+     newTotal = currentTotal - cart.items[existingItemIndex].quantity + newQuantity;
 
     if (newTotal > MAX_CART_QUANTITY) {
       return res.status(400).json({
@@ -140,6 +142,14 @@ export const addToCart = asyncHandler(async (req, res) => {
     cart.items[existingItemIndex].priceAtAdd = finalPrice;
     cart.items[existingItemIndex].offerPercentAtAdd = appliedOfferPercent;
   } else {
+
+    newTotal = currentTotal + quantity;
+
+    if(newTotal > MAX_CART_QUANTITY){
+      return res.status(400).json({
+        message: `Cart limit exceeded. Maximum ${MAX_CART_QUANTITY} items allowed in cart`
+      })
+    }
     cart.items.push({
       product: productId,
       variant: variantId,
@@ -164,12 +174,19 @@ export const addToCart = asyncHandler(async (req, res) => {
   // Remove from wishlist
   await Wishlist.findOneAndUpdate(
     { user: userId },
-    { $pull: { items: { product: productId, variant: variantId } } },
-  ).catch(() => {});
+    { $pull: { items: { product: productId, variant: variantId } } }
+  );
+
+  const wishlist = await Wishlist.findOne({ user: userId })
+  .select("items")
+  .lean();
+
+const wishlistCount = wishlist ? wishlist.items.length : 0;
 
   res.status(200).json({
     message: "Item added to cart successfully",
-    newCount: cart.totalItems,
+    newCartCount: cart.totalItems,
+    newWishlistCount: wishlistCount
   });
 });
 

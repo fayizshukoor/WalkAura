@@ -236,7 +236,7 @@
             }
 
             window.dispatchEvent(new CustomEvent('cartUpdated', { 
-                detail: { count: result.newCount } 
+                detail: { count: result.newCartCount } 
             }));
 
             showToast("Quantity updated", "success");

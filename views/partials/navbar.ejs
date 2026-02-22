@@ -14,13 +14,16 @@
 
   <div class="flex items-center gap-6">
 
-    <a href="/wishlist" class="hidden md:block text-gray-400 hover:text-white transition">
-      <span class="material-symbols-outlined">favorite</span>
-    </a>
+   <a href="/wishlist" class="hidden md:block relative text-gray-400 hover:text-white transition">
+  <span class="material-symbols-outlined">favorite</span>
+  <span id="wishlistCount" 
+    class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[10px] font-bold rounded-full flex items-center justify-center text-white <%= (locals.wishlistCount > 0) ? '' : 'hidden' %>">
+    <%= locals.wishlistCount || 0 %>
+  </span>
+</a>
 
     <a href="/cart" class="hidden md:block relative text-gray-400 hover:text-white transition">
       <span class="material-symbols-outlined">shopping_cart</span>
-      <% const count = (locals.cart && cart.totalItems > 0) ? cart.totalItems : 0; %>
       <span id="cartCount" 
       class="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-[10px] font-bold rounded-full flex items-center justify-center text-white <%= cartCount > 0 ? '' : 'hidden' %>">
       <%= cartCount %>
@@ -135,25 +138,31 @@
     }
     });
 
-    window.addEventListener('cartUpdated', (e) => {
-        const count = e.detail.count;
-        const badge = document.getElementById('cartCount'); // Match your HTML ID
-        
-        if (badge) {
-            badge.innerText = count;
-            
-            // Toggle visibility based on count
-            if (count > 0) {
-                badge.classList.remove('hidden');
-                // Optional: Add a little pop effect
-                badge.animate([
-                    { transform: 'scale(1)' },
-                    { transform: 'scale(1.3)' },
-                    { transform: 'scale(1)' }
-                ], { duration: 200 });
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-    });
+    // Universal function to update badges
+function updateBadge(badgeId, count) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+
+    badge.innerText = count;
+    if (count > 0) {
+        badge.classList.remove('hidden');
+        badge.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.3)' },
+            { transform: 'scale(1)' }
+        ], { duration: 200 });
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+// Cart Listener
+window.addEventListener('cartUpdated', (e) => {
+    updateBadge('cartCount', e.detail.count);
+});
+
+// Wishlist Listener
+window.addEventListener('wishlistUpdated', (e) => {
+    updateBadge('wishlistCount', e.detail.count);
+});
   </script>

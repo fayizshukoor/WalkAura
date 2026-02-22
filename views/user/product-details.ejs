@@ -352,7 +352,7 @@
             if (response.ok) {
 
                 window.dispatchEvent(new CustomEvent('cartUpdated', { 
-                detail: { count: result.newCount } 
+                detail: { count: result.newCartCount } 
             }));
             
                 showToast(result.message);
@@ -414,6 +414,15 @@
         const data = await response.json();
 
         if (response.ok) {
+
+            const variantIndex = variants.findIndex(v => v._id === variantId);
+            if (variantIndex !== -1) {
+            variants[variantIndex].isWishlisted = !isCurrentlyWishlisted;
+            }
+
+            window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+            detail: { count: data.wishlistCount } // Ensure your backend returns the new count
+            }));
             if (isCurrentlyWishlisted) {
                 // UI: Switch to "Removed" state
                 icon.innerText = 'favorite_border';

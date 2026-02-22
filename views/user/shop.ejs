@@ -454,6 +454,11 @@
         const data = await response.json();
 
         if (response.ok) {
+
+          window.dispatchEvent(new CustomEvent('wishlistUpdated', {
+            detail: { count: data.wishlistCount } // Ensure your backend returns the new count
+            }));
+            
           if (isWishlisted) {
             // UI UPDATE: REMOVED
             icon.innerText = 'favorite_border';

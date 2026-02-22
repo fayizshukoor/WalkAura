@@ -195,3 +195,27 @@ export const removeFromWishlist = asyncHandler(async (req, res) => {
     wishlistCount: updatedWishlist.items.length,
   });
 });
+
+
+export const getVariantSizes = asyncHandler(async (req, res) => {
+  const { variantId } = req.params;
+
+  const sizes = await Inventory.find({
+    variant: variantId,
+    isActive: true,
+  })
+    .select("_id size stock")
+    .lean();
+
+  const processedSizes = sizes.map((s) => ({
+    inventoryId: s._id,
+    size: s.size,
+    stock: s.stock,
+    inStock: s.stock > 0,
+  }));
+
+  res.status(200).json({
+    success: true,
+    sizes: processedSizes,
+  });
+});
