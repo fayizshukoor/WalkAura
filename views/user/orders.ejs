@@ -122,8 +122,10 @@
                                         <div class="flex flex-col items-end gap-4 w-full sm:w-auto">
                                             <% 
                                                 let statusStyles = 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
-                                                if(order.orderStatus === 'Delivered') statusStyles = 'text-green-500 bg-green-500/10 border-green-500/20';
-                                                if(order.orderStatus === 'Cancelled') statusStyles = 'text-red-500 bg-red-500/10 border-red-500/20';
+                                                if(order.orderStatus === 'SHIPPED') statusStyles = 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+                                                if(order.orderStatus === 'OUT_FOR_DELIVERY') statusStyles = 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+                                                if(order.orderStatus === 'DELIVERED') statusStyles = 'text-green-500 bg-green-500/10 border-green-500/20';
+                                                if(order.orderStatus === 'CANCELLED') statusStyles = 'text-red-500 bg-red-500/10 border-red-500/20';
                                             %>
                                             <span class="<%= statusStyles %> px-6 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-widest border text-center w-full">
                                                 <%= order.orderStatus %>

@@ -1,3 +1,19 @@
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+    /* Consistent styling for the SweetAlert Input */
+    .swal-custom-input {
+        background-color: #000 !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        height: 50px !important;
+        border-radius: 12px !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+    }
+</style>
+
 <div class="flex flex-col md:flex-row gap-6 pt-20 min-h-screen">
     
     <%- include("../partials/sidebar") %>
@@ -17,7 +33,7 @@
                         </h2>
                     </div>
                     <div>
-                        <button class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-indigo-900/20">
+                        <button onclick="handleAddMoneyClick()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-indigo-900/20">
                             <span class="material-symbols-outlined">add_circle</span>
                             Add Money
                         </button>
@@ -107,18 +123,11 @@
                                     <span class="material-symbols-outlined text-sm">chevron_left</span>
                                     <span class="text-[10px] font-black uppercase tracking-widest">Prev</span>
                                 </a>
-                            <% } else { %>
-                                <div class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-900 text-gray-700 cursor-not-allowed">
-                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
-                                    <span class="text-[10px] font-black uppercase tracking-widest">Prev</span>
-                                </div>
                             <% } %>
                     
                             <div class="px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-xl">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                    Page <span class="text-indigo-500"><%= pagination.currentPage %></span> 
-                                    <span class="mx-1 opacity-30">/</span> 
-                                    <%= pagination.totalPages %>
+                                    Page <span class="text-indigo-500"><%= pagination.currentPage %></span> / <%= pagination.totalPages %>
                                 </p>
                             </div>
                     
@@ -127,11 +136,6 @@
                                     <span class="text-[10px] font-black uppercase tracking-widest">Next</span>
                                     <span class="material-symbols-outlined text-sm">chevron_right</span>
                                 </a>
-                            <% } else { %>
-                                <div class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-900 text-gray-700 cursor-not-allowed">
-                                    <span class="text-[10px] font-black uppercase tracking-widest">Next</span>
-                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
-                                </div>
                             <% } %>
                         </div>
                     </div>
@@ -142,10 +146,130 @@
                             <span class="material-symbols-outlined text-4xl text-gray-700">history</span>
                         </div>
                         <p class="text-gray-400 font-medium">No transactions found yet.</p>
-                        <p class="text-gray-600 text-sm mt-1">Your wallet activity will appear here.</p>
                     </div>
                 <% } %>
             </div>
         </div>
     </main>
 </div>
+
+<script>
+    const swalConfig = {
+        background: '#12141a',
+        color: '#fff',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#374151',
+        customClass: {
+            input: 'swal-custom-input'
+        }
+    };
+
+    // Step 1: Open Amount Input Modal
+    async function handleAddMoneyClick() {
+        const { value: amount } = await Swal.fire({
+            ...swalConfig,
+            title: 'ADD MONEY',
+            text: 'Enter the amount you want to add to your wallet',
+            input: 'number',
+            inputAttributes: {
+                min: 1,
+                step: 1
+            },
+            inputValue: 100,
+            showCancelButton: true,
+            confirmButtonText: 'PROCEED TO PAY',
+            inputValidator: (value) => {
+                if (!value || value <= 0) {
+                    return 'Please enter a valid amount greater than zero';
+                }
+            }
+        });
+
+        if (amount) {
+            startWalletTopup(parseFloat(amount));
+        }
+    }
+
+    // Step 2: Initialize Razorpay
+    async function startWalletTopup(amount) {
+        try {
+            Swal.fire({
+                ...swalConfig,
+                title: 'Initializing Payment',
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Create Top-up Order
+            const response = await fetch("/wallet/create-topup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to initialize payment");
+            }
+
+            const options = {
+                key: data.key,
+                amount: data.razorpayOrder.amount,
+                currency: "INR",
+                name: "WalkAura Wallet",
+                description: "Wallet Top-up",
+                order_id: data.razorpayOrder.id,
+                theme: { color: "#4f46e5" },
+                handler: async function (rzpResponse) {
+                    // Step 3: Verify Payment
+                    Swal.fire({
+                        ...swalConfig,
+                        title: 'Verifying Transaction',
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    const verifyRes = await fetch("/wallet/verify-topup", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ...rzpResponse,
+                            amount
+                        })
+                    });
+
+                    const verifyData = await verifyRes.json();
+
+                    if (verifyData.success) {
+                        await Swal.fire({
+                            ...swalConfig,
+                            icon: 'success',
+                            title: 'WALLET UPDATED',
+                            text: `Successfully added ₹${amount} to your wallet.`
+                        });
+                        window.location.reload();
+                    } else {
+                        throw new Error("Verification failed");
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        Swal.close();
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+            Swal.close();
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                ...swalConfig,
+                icon: 'error',
+                title: 'Payment Failed',
+                text: err.message
+            });
+        }
+    }
+</script>

@@ -16,6 +16,7 @@ import { calculateShipping } from "../../helpers/shipping.helper.js";
 import Coupon from "../../models/Coupon.model.js";
 import { debitFromWallet } from "../../services/wallet.service.js";
 import Wallet from "../../models/Wallet.model.js";
+import { buildOrderData, finalizeOrderAfterPayment } from "../../services/order.service.js";
 
 const TAX_PERCENTAGE = 18;
 
@@ -186,282 +187,46 @@ export const removeCoupon = asyncHandler(async (req, res) => {
     .json({ success: true, message: "Coupon removed successfully" });
 });
 
+
+
 export const placeOrder = asyncHandler(async (req, res) => {
   const { addressId, paymentMethod = "COD" } = req.body;
   const userId = req?.user?.userId;
 
-  if (!["COD", "RAZORPAY", "WALLET"].includes(paymentMethod)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid Payment Method",
-    });
-  }
+  const appliedCouponCode = req.session?.appliedCoupon?.code;
 
-  // User name and email for snapshot
-  const user = await User.findById(userId).select("name email");
-
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: "User not found",
-    });
-  }
-  // Validate address
-  const address = await Address.findOne({
-    _id: addressId,
-    userId: userId,
-    isDeleted: false,
+  const {orderData, cart} = await buildOrderData({
+    userId,
+    addressId,
+    paymentMethod,
+    appliedCouponCode
   });
 
-  if (!address) {
-    return res.status(404).json({
-      success: false,
-      message: "Invalid delivery address",
-    });
-  }
+  const order = await Order.create(orderData);
 
-  // Get cart with populate
-  const cart = await Cart.findOne({ user: userId })
-    .populate({
-      path: "items.product",
-      select: "name price offerPercent offerExpiry isListed category",
-      populate: {
-        path: "category",
-        select: "name offerPercent offerExpiry isListed isDeleted",
-      },
-    })
-    .populate({
-      path: "items.variant",
-      select: "color images isActive",
-    })
-    .populate({
-      path: "items.inventory",
-      select: "size stock sku isActive",
-    });
-
-  if (!cart || cart.items.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Your cart is empty",
-    });
-  }
-
-  const orderItems = [];
-
-  for (const item of cart.items) {
-    const size = item.inventory?.size ?? "N/A";
-    const color = item.variant?.color ?? "N/A";
-
-    // Validate product
-    if (!item.product || !item.product.isListed) {
-      return res.status(409).json({
-        success: false,
-        message: `Product "${item.product?.name || "Unknown"}" is no longer available`,
-      });
-    }
-
-    // Validate category
-    if (
-      !item.product.category ||
-      !item.product.category.isListed ||
-      item.product.category.isDeleted
-    ) {
-      return res.status(409).json({
-        success: false,
-        message: `Product "${item.product.name}" category is no longer available`,
-      });
-    }
-
-    // Validate variant
-    if (!item.variant || !item.variant.isActive) {
-      return res.status(409).json({
-        success: false,
-        message: `Color ${color} for "${item.product.name}" is no longer available`,
-      });
-    }
-
-    // Validate inventory and stock
-    if (!item.inventory || !item.inventory.isActive) {
-      return res.status(409).json({
-        success: false,
-        message: `Size ${size} for "${item.product.name}" is no longer available`,
-      });
-    }
-
-    if (item.inventory.stock < item.quantity) {
-      return res.status(409).json({
-        success: false,
-        message: `Insufficient stock for "${item.product.name}". Only ${item.inventory.stock} available on ${color} color of size ${size}`,
-      });
-    }
-
-
-    // Calculate final price
-    const finalPrice = calculateFinalPrice({
-      price: item.product.price,
-      productOffer: item.product.offerPercent,
-      productOfferExpiry: item.product.offerExpiry,
-      categoryOffer: item.product.category.offerPercent,
-      categoryOfferExpiry: item.product.category.offerExpiry,
-    });
-
-    orderItems.push({
-      product: item.product._id,
-      productName: item.product.name,
-      variant: item.variant._id,
-      color: item.variant.color,
-      image: item.variant.images[0]?.url || "",
-      inventory: item.inventory._id,
-      size: item.inventory.size,
-      sku: item.inventory.sku,
-      quantity: item.quantity,
-      price: finalPrice,
-      itemTotal: finalPrice * item.quantity,
-      status: "PENDING",
-      statusTimeline: [
-        {
-          status: "PENDING",
-          at: new Date(),
-        },
-      ],
-    });
-  }
-
-  // Calculate totals
-  const subtotal = orderItems.reduce((sum, item) => sum + item.itemTotal, 0);
-
-  // Coupon check
-  let discount = 0;
-  let appliedCouponData = null;
-
-  //  Apply coupon if exists in session
-  if (req.session.appliedCoupon?.code) {
-    try {
-      const { coupon, discount: calculatedDiscount } =
-        await validateCouponForSubtotal({
-          userId,
-          couponCode: req.session.appliedCoupon.code,
-          subtotal,
-        });
-
-      //  Atomic increment (race condition protection)
-      const updatedCoupon = await Coupon.findOneAndUpdate(
-        {
-          _id: coupon._id,
-          $or: [
-            { usageLimit: { $exists: false } },
-            { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
-          ],
-        },
-        { $inc: { usedCount: 1 } },
-        { new: true },
-      );
-
-      if (!updatedCoupon) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Coupon usage limit exceeded" });
-      }
-
-      discount = calculatedDiscount;
-
-      appliedCouponData = {
-        coupon: coupon._id,
-        code: coupon.code,
-        discountPercentage: coupon.discountPercentage,
-        discountAmount: discount,
-      };
-    } catch (err) {
-      // If coupon invalid during order
-      req.session.appliedCoupon = null;
-      throw err;
-    }
-
-    // Always clear session after processing
-    req.session.appliedCoupon = null;
-  }
-  const discountedSubtotal = subtotal - discount;
-  const tax = Math.round((discountedSubtotal * TAX_PERCENTAGE) / 100);
-  const shippingCharge = calculateShipping(discountedSubtotal);
-  const totalAmount = discountedSubtotal + tax + shippingCharge;
-
-  let paymentStatus = "PENDING";
-
-  if(paymentMethod === "WALLET"){
-
+  // WALLET
+  if (paymentMethod === "WALLET") {
     await debitFromWallet({
       userId,
-      amount: totalAmount,
+      amount: order.pricing.totalAmount,
       source: "ORDER_PAYMENT",
-      description: "Payment via Wallet"
+      orderId: order._id,
+      description: "Payment via Wallet",
     });
-    paymentStatus = "PAID"
+
+    await finalizeOrderAfterPayment({ order, cart });
+
+    req.session.appliedCoupon = null;
   }
 
-  // Update stock
-  for (const item of cart.items) {
-
-    const updated = await Inventory.findOneAndUpdate(
-      { _id: item.inventory._id, stock: { $gte: item.quantity } },
-      { $inc: { stock: -item.quantity } },
-      { new: true }
-    );
-  
-    if (!updated) {
-      return res.status(409).json({
-        success: false,
-        message: "Stock changed during checkout. Please try again."
-      });
-    }
+  // COD
+  if (paymentMethod === "COD") {
+    await finalizeOrderAfterPayment({ order, cart });
+    req.session.appliedCoupon = null;
   }
 
-  // Generate unique order ID
-  const orderId = generateOrderId();
 
-  // Create order
-  const order = new Order({
-    orderId,
-    user: userId,
-    customerSnapshot: {
-      name: user.name,
-      email: user.email,
-    },
-    items: orderItems,
-    shippingAddress: {
-      fullName: address.fullName,
-      phone: address.phone,
-      streetAddress: address.streetAddress,
-      city: address.city,
-      state: address.state,
-      pincode: address.pincode,
-    },
-    payment: {
-      method: paymentMethod,
-      status: paymentStatus,
-      refundedAmount: 0,
-    },
-    orderStatus: "PENDING",
-    pricing: {
-      subtotal,
-      tax,
-      taxPercentage: TAX_PERCENTAGE,
-      shippingCharge,
-      discount,
-      totalAmount,
-    },
-
-    appliedCoupon: appliedCouponData,
-  });
-
-  await order.save();
-
-  // Clear cart
-  cart.items = [];
-  cart.totalItems = 0;
-  cart.totalAmount = 0;
-  await cart.save();
-
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Order placed successfully",
     order: {

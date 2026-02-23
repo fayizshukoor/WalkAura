@@ -367,7 +367,7 @@ export const approveReturn = asyncHandler(async (req, res) => {
       amount: refundAmount,
       source: "ORDER_RETURN",
       orderId: order._id,
-      referenceId: order.orderId,
+      referenceId: `ORDER_REFUND_${order._id}_${itemId}`,
       description: "Refund for returned Item"
     });
 

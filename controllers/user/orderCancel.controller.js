@@ -70,7 +70,7 @@ export const cancelItem = asyncHandler(async (req, res) => {
     amount: refundAmount,
     source: "ORDER_REFUND",
     orderId: order._id,
-    referenceId: orderId,
+    referenceId: `ORDER_REFUND_${order._id}_${itemId}`,
     description: "Refund for Cancelled Item"
   });
 
@@ -174,7 +174,7 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
         amount: remainingFund,
         source: "ORDER_REFUND",
         orderId: order._id,
-        referenceId: order.orderId,
+        referenceId: `ORDER_REFUND_${order._id}_${Date.now()}`,
         description: "Refund for Full order Cancellation"
       });
 

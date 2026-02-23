@@ -1,4 +1,5 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
  
 <main class="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8">
     <div class="max-w-[1400px] mx-auto">
@@ -264,13 +265,29 @@
                         </div>
                       </label>
   
-                    <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl cursor-pointer hover:border-primary/50 group transition-all has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]">
-                      <input type="radio" name="paymentMethod" value="COD" class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30">
-                      <div class="ml-4 flex items-center gap-3">
-                          <span class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors">local_atm</span>
-                          <span class="text-sm font-bold text-white">Cash on Delivery</span>
-                      </div>
-                    </label>
+                      <% const isCodDisabled = checkout.pricing.totalAmount > 10000; %>
+
+                      <label class="relative flex items-center p-4 bg-black/40 border border-white/5 rounded-2xl transition-all 
+                          <%= isCodDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50 group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.02]' %>">
+                          
+                          <input type="radio" name="paymentMethod" value="COD" 
+                              class="w-4 h-4 text-primary focus:ring-0 bg-transparent border-white/30"
+                              <%= isCodDisabled ? 'disabled' : '' %>>
+                          
+                          <div class="ml-4 flex items-center justify-between flex-grow">
+                              <div class="flex items-center gap-3">
+                                  <span class="material-symbols-outlined text-gray-500 <%= !isCodDisabled ? 'group-hover:text-primary' : '' %> transition-colors">local_atm</span>
+                                  <span class="text-sm font-bold text-white">Cash on Delivery</span>
+                              </div>
+                              
+                              <% if (isCodDisabled) { %>
+                                  <span class="text-[9px] text-red-500 font-black uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded-md">
+                                      Not available above ₹10k
+                                  </span>
+                              <% } %>
+                          </div>
+                      </label>
+
                 </div>
               </div>
   
@@ -386,7 +403,7 @@
   </div>
 
   </main>
-  
+ 
   <script>
     /**
      * GLOBAL SWEETALERT HELPER
@@ -581,12 +598,25 @@
         const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked')?.value;
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
 
+        const totalAmount = parseInt(document.getElementById('totalAmountDisplay').innerText.replace(/[₹,]/g, ''));
+        
         if (!selectedAddress) {
             return showSwal("Notice", "Please select a shipping address", "info");
         }
         if (!paymentMethod) {
             return showSwal("Notice", "Please select a payment method", "info");
         }
+
+        if (paymentMethod === "COD" && totalAmount > 10000) {
+        return Swal.fire({
+            title: "COD Unavailable",
+            text: "Cash on Delivery is only available for orders below ₹10,000. Please choose an online payment method.",
+            icon: "warning",
+            background: '#12141a',
+            color: '#ffffff',
+            confirmButtonColor: '#4f46e5'
+        });
+    }
 
         try {
             Swal.fire({
@@ -613,6 +643,10 @@
             const result = await response.json();
 
             if (response.ok) {
+
+                if(paymentMethod === "RAZORPAY"){
+                    return startRazorpayPayment(result.order.orderId);
+                }
                 showSwal("Success!", result.message || "Your order has been placed.", "success");
                 setTimeout(() => {
                     window.location.href = `/order-success/${result.order.orderId}`;
@@ -645,6 +679,96 @@
             showSwal("Error", "Something went wrong while placing your order. Please try again.", "error");
         }
     }
+
+    // RazorPay
+    async function startRazorpayPayment(orderId) {
+    try {
+        // 1. Show Loading State 
+        Swal.fire({
+            background: '#12141a',
+            color: '#fff',
+            title: 'Initializing Secure Payment',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch('/razorpay/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            window.location.href = `/payment-failed/${orderId}`;
+            return;
+        }
+
+        const options = {
+            key: data.key,
+            amount: data.razorpayOrder.amount,
+            currency: "INR",
+            name: "WalkAura",
+            description: "Shoe Purchase",
+            order_id: data.razorpayOrder.id,
+            
+            handler: async function (response) {
+                // 2. Verification Loading State
+                Swal.fire({
+                    background: '#12141a',
+                    color: '#fff',
+                    title: 'Verifying Transaction',
+                    text: 'Updating your order status...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const verifyRes = await fetch('/razorpay/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(response)
+                });
+
+                if (!verifyRes.ok) {
+                    window.location.href = `/payment-failed/${orderId}`;
+                    return;
+                }
+
+                const verifyData = await verifyRes.json();
+
+                if (verifyData.success) {
+                    window.location.href = `/order-success/${orderId}`;
+                } else {
+                    window.location.href = `/payment-failed/${orderId}`;
+                }
+            },
+
+            modal: {
+                ondismiss: function () {
+                    window.location.href = `/payment-failed/${orderId}`;
+                }
+            },
+
+            theme: {
+                color: "#4f46e5" 
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+        // Close the "Initializing" Swal once the Razorpay popup appears
+        Swal.close();
+
+    } catch (err) {
+        console.error("Payment Error:", err);
+        window.location.href = `/payment-failed/${orderId}`;
+    }
+}
 
 
     /**

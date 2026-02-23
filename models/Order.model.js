@@ -134,6 +134,9 @@ const orderSchema = new mongoose.Schema(
         default: "PENDING"
       },
       transactionId: String,
+      razorpayOrderId: { type: String, index: true },
+      razorpayPaymentId: { type: String, index: true },
+      razorpaySignature: String,
       refundedAmount: { type: Number, default: 0 }
     },
 

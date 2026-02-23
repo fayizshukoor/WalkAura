@@ -28,7 +28,8 @@ const walletTransactionSchema = new mongoose.Schema(
         "ORDER_REFUND",
         "ORDER_PAYMENT",
         "REFERRAL_BONUS",
-        "ORDER_RETURN"
+        "ORDER_RETURN",
+        "TOPUP"
       ],
       required: true
     },

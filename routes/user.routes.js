@@ -29,9 +29,11 @@ import { requestReturn, requestReturnEntireOrder } from "../controllers/user/ord
 
 import { downloadInvoice } from "../controllers/user/invoice.controller.js";
 
-import { getWalletPage } from "../controllers/user/wallet.controller.js";
+import { createWalletTopup, getWalletPage, verifyWalletTopup } from "../controllers/user/wallet.controller.js";
 
 import { addToWishlist, getVariantSizes, getWishlistPage, removeFromWishlist } from "../controllers/user/wishlist.controller.js";
+
+import { createRazorpayPaymentOrder, getPaymentFailedPage, verifyRazorpayPayment } from "../controllers/user/payment.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
@@ -150,10 +152,17 @@ router.get("/orders/:orderId/invoice",downloadInvoice);
 
 // Wallet
 router.get("/wallet",getWalletPage);
+router.post("/wallet/create-topup",createWalletTopup);
+router.post("/wallet/verify-topup",verifyWalletTopup);
 
 // Wishlist
 router.get("/wishlist",getWishlistPage);
 router.post("/wishlist/add",addToWishlist);
 router.delete("/wishlist/remove",removeFromWishlist);
 router.get("/wishlist/variant/:variantId/sizes",getVariantSizes);
+
+// RazorPay
+router.post("/razorpay/create-order", createRazorpayPaymentOrder);
+router.post("/razorpay/verify", verifyRazorpayPayment);
+router.get("/payment-failed/:orderId",getPaymentFailedPage);
 export default router;
