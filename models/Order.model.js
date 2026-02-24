@@ -142,7 +142,7 @@ const orderSchema = new mongoose.Schema(
 
     orderStatus: {
       type: String,
-      enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
+      enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURNED"],
       default: "PENDING",
     },
 
@@ -175,10 +175,12 @@ orderSchema.index({ user: 1, createdAt: -1 });
 
 orderSchema.index({ orderStatus: 1});
 
-orderSchema.index({ createdAt: -1});
-
 orderSchema.index({ "customerSnapshot.name": 1});
 orderSchema.index({ "customerSnapshot.email": 1});
+
+orderSchema.index({ createdAt: 1, "payment.status": 1 });
+orderSchema.index({ "payment.method": 1 });
+orderSchema.index({ "items.product": 1 });
 
 
 

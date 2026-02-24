@@ -378,6 +378,7 @@ export const approveReturn = asyncHandler(async (req, res) => {
 
     if(order.payment.refundedAmount >= order.pricing.totalAmount){
       order.payment.status = "REFUNDED";
+      order.orderStatus = "RETURNED"
     }
   }
 

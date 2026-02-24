@@ -1,24 +1,14 @@
-import { calculateFinalPrice } from "../../helpers/price.helper.js";
-import User from "../../models/User.model.js";
 import Address from "../../models/Address.model.js";
-import Cart from "../../models/Cart.model.js";
-import Inventory from "../../models/Inventory.model.js";
 import Order from "../../models/Order.model.js";
 import { getReconciledCart } from "../../services/cart.service.js";
 import asyncHandler from "../../utils/asyncHandler.util.js";
-import { generateOrderId } from "../../utils/generateOrderId.util.js";
-import {
-  applyCouponService,
-  getAvailableCouponsForCheckoutService,
-  validateCouponForSubtotal,
-} from "../../services/coupon.service.js";
+import { applyCouponService, getAvailableCouponsForCheckoutService } from "../../services/coupon.service.js";
 import { calculateShipping } from "../../helpers/shipping.helper.js";
-import Coupon from "../../models/Coupon.model.js";
 import { debitFromWallet } from "../../services/wallet.service.js";
 import Wallet from "../../models/Wallet.model.js";
 import { buildOrderData, finalizeOrderAfterPayment } from "../../services/order.service.js";
+import { TAX_PERCENTAGE } from "../../constants/app.constants.js";
 
-const TAX_PERCENTAGE = 18;
 
 export const getCheckoutPage = asyncHandler(async (req, res) => {
   const userId = req?.user?.userId;

@@ -35,6 +35,8 @@ import { addToWishlist, getVariantSizes, getWishlistPage, removeFromWishlist } f
 
 import { createRazorpayPaymentOrder, getPaymentFailedPage, verifyRazorpayPayment } from "../controllers/user/payment.controller.js";
 
+import { getReferralPage } from "../controllers/user/referral.controller.js";
+
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
@@ -156,13 +158,16 @@ router.post("/wallet/create-topup",createWalletTopup);
 router.post("/wallet/verify-topup",verifyWalletTopup);
 
 // Wishlist
-router.get("/wishlist",getWishlistPage);
+router.get("/wishlist",requireAuth,getWishlistPage);
 router.post("/wishlist/add",addToWishlist);
 router.delete("/wishlist/remove",removeFromWishlist);
-router.get("/wishlist/variant/:variantId/sizes",getVariantSizes);
+router.get("/wishlist/variant/:variantId/sizes",requireAuth,getVariantSizes);
 
 // RazorPay
 router.post("/razorpay/create-order", createRazorpayPaymentOrder);
 router.post("/razorpay/verify", verifyRazorpayPayment);
 router.get("/payment-failed/:orderId",getPaymentFailedPage);
+
+// Refer and Earn 
+router.get("/refer",getReferralPage);
 export default router;

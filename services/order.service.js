@@ -8,8 +8,8 @@ import User from "../models/User.model.js";
 import AppError from "../utils/appError.js";
 import { generateOrderId } from "../utils/generateOrderId.util.js";
 import { validateCouponForSubtotal } from "./coupon.service.js";
+import { TAX_PERCENTAGE } from "../constants/app.constants.js";
 
-const TAX_PERCENTAGE = 18;
 export const buildOrderData = async ({
     userId,
     addressId,

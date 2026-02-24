@@ -7,7 +7,7 @@ import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Inventory from "../../models/Inventory.model.js";
 
 export const getWishlistPage = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
 
   /* ------------------ Fetch Wishlist ------------------ */
   const wishlist = await Wishlist.findOne({ user: userId })
@@ -88,6 +88,12 @@ export const addToWishlist =  asyncHandler( async (req, res)=>{
     const userId = req?.user?.userId;
     const {productId, variantId} = req.body;
 
+    if(!userId){
+      return res.status(400).json({
+        success: false,
+        message: "Please Login first"
+      })
+    }
 
     // Validate ObjectIds
   if (!mongoose.Types.ObjectId.isValid(productId) ||

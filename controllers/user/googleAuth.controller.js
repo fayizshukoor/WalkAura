@@ -5,7 +5,7 @@ import {
 
 export const googleCallback = (req, res) => {
   const user = req.user;
-  console.log(user);
+  
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);

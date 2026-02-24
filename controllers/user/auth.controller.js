@@ -6,13 +6,15 @@ import {
   generateRefreshToken,
 } from "../../utils/userTokens.utils.js";
 import asyncHandler from "../../utils/asyncHandler.util.js";
+import { generateReferralCode } from "../../utils/referralCodeGenerator.util.js";
+import { processReferralReward } from "../../services/referral.service.js";
 
 export const showSignup = (req, res) => {
   return res.render("user/signup");
 };
 
 export const handleSignup = asyncHandler(async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, phone, password, confirmPassword, referralCode } = req.body;
 
   if (!name || !/^[A-Za-z ]+$/.test(name)) {
     return res.render("user/signup", {
@@ -46,6 +48,13 @@ export const handleSignup = asyncHandler(async (req, res) => {
     });
   }
 
+  console.log(req.body);
+  if(password !== confirmPassword){
+    return res.render("user/signup",{
+      error: "Passwords do not match"
+    })
+  }
+
   const existingUser = await User.findOne({ email });
 
   if (existingUser && existingUser.googleId && !existingUser.password) {
@@ -57,6 +66,27 @@ export const handleSignup = asyncHandler(async (req, res) => {
     return res.render("user/signup", { error: "Email Already Registered" });
   }
 
+  let referralCodeToStore = existingUser?.referralCode || null;
+
+if (!existingUser) {
+  referralCodeToStore = await generateReferralCode(name);
+}
+
+  // Referral code validation
+  let referredByUser = null;
+
+  if(!existingUser && referralCode){
+    referredByUser = await User.findOne({referralCode: referralCode.trim().toUpperCase()});
+
+    if(!referredByUser){
+      return res.render("user/signup", {
+        error: "Invalid referral code"
+      })
+    }
+  }
+
+
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   await User.findOneAndUpdate(
@@ -66,6 +96,8 @@ export const handleSignup = asyncHandler(async (req, res) => {
       phone,
       password: hashedPassword,
       isVerified: false,
+      referralCode: referralCodeToStore,
+      ...( !existingUser && referredByUser && { referredBy: referredByUser._id })
     },
     { upsert: true, new: true },
   );
@@ -123,6 +155,14 @@ export const handleLogin = asyncHandler(async (req, res) => {
   if (!isMatch) {
     req.flash("error", "Incorrect email or Password");
     return res.redirect("/login");
+  }
+
+  // 🔹 Process Referral Reward (non-blocking safety)
+  try {
+    await processReferralReward(user._id);
+  } catch (error) {
+    console.error("Referral Reward Failed:", error);
+    // Do NOT block login
   }
 
   const accessToken = generateAccessToken(user);

@@ -4,7 +4,7 @@ import express from "express";
 
 import { adminLogout,handleAdminLogin,showAdminLogin } from "../controllers/admin/auth.controller.js";
 
-import { showAdminDashboard } from "../controllers/admin/dashboard.controller.js";
+import { getAdminDashboard } from "../controllers/admin/dashboard.controller.js";
 
 import { showCustomers,toggleCustomerStatus } from "../controllers/admin/customers.controller.js";
 
@@ -14,10 +14,13 @@ import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAd
 
 import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } from "../controllers/admin/variant.controller.js";
 
-import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/order.controller.js";
+import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/orders.controller.js";
 
 import { addCoupon, editCoupon, getCouponsPage, getCouponsPageAjax, softDeleteCoupon, toggleCouponStatus } from "../controllers/admin/coupon.controller.js";
 
+import { getAdminReferralPage } from "../controllers/admin/referral.controller.js";
+
+import { downloadSalesExcel, downloadSalesPDF, getSalesReport } from "../controllers/admin/salesReport.controller.js";
 
 // middleware imports
 import { redirectIfAdminAuthenticated, requireAdmin } from "../middlewares/admin.middleware.js";
@@ -35,7 +38,7 @@ router.use(requireAdmin,noCache);
 
 router.post("/logout",adminLogout);
 
-router.get("/dashboard", showAdminDashboard);
+router.get("/dashboard", getAdminDashboard);
 
 // Customers
 router.get("/customers", showCustomers);
@@ -81,5 +84,13 @@ router.post("/coupons/add",addCoupon);
 router.put("/coupons/edit/:couponId",editCoupon);
 router.patch("/coupons/toggle-status/:couponId",toggleCouponStatus);
 router.delete("/coupons/delete/:couponId",softDeleteCoupon);
+
+// Referrals
+router.get("/referrals",getAdminReferralPage);
+
+// Sales Report
+router.get("/sales-report",getSalesReport);
+router.get("/sales-report/export-excel",downloadSalesExcel);
+router.get("/sales-report/export-pdf",downloadSalesPDF);
 
 export default router;

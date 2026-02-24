@@ -7,7 +7,8 @@ const userSchema = new Schema(
     name:{
         type:String,
         required:true,
-        trim:true
+        trim:true,
+        index: true
     },
 
     email:{
@@ -41,7 +42,8 @@ const userSchema = new Schema(
 
     isVerified:{
         type:Boolean,
-        default:false
+        default:false,
+        index: true
     },
     
     role:{
@@ -62,7 +64,26 @@ const userSchema = new Schema(
 
     passwordChangedAt:{
         type:Date
-    }
+    },
+
+    referralCode: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+      },
+      
+      referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true
+      },
+      
+      isReferralRewarded: {
+        type: Boolean,
+        default: false,
+        index: true
+      }
 },
 
     {

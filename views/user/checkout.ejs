@@ -812,27 +812,8 @@
 
         if (response.ok) {
 
-            // 1. Update the Summary Numbers dynamically
-            // Note: Adjust result.data keys based on what your Service returns
-            document.getElementById('discountDisplay').innerText = `- ₹${result.data.pricing.discount.toLocaleString()}`;
-            document.getElementById('totalAmountDisplay').innerText = `₹${result.data.pricing.finalSubtotal.toLocaleString()}`;
-
-            // 2. Toggle UI States
-            document.getElementById('couponInputGroup').classList.add('hidden');
-
-            const badge = document.getElementById('activeCouponBadge');
-            badge.classList.remove('hidden');
-            badge.style.display = 'flex';
-
-            document.getElementById('activeCodeName').innerText = code;
-
-            const percentText = document.getElementById('activeCodeDiscount');
-            if (percentText && result.data.coupon.discountPercentage) {
-                percentText.innerText = `SAVED ${result.data.coupon.discountPercentage}% EXTRA`;
-            }
-
             showSwal("Applied", result.message || "Coupon applied successfully!", "success");
-            setTimeout(()=> window.location.reload(),2000)
+            setTimeout(()=> window.location.reload(),1000)
         } else {
             showSwal("Failed", result.message || "Invalid coupon code", "error");
             applyBtn.disabled = false;
