@@ -401,6 +401,115 @@ export const approveReturn = asyncHandler(async (req, res) => {
 });
 
 
+// Approve All Return Request
+// export const approveAllReturn = asyncHandler(async (req, res) => {
+//   const { orderId } = req.params;
+
+//   const order = await Order.findOne({ orderId });
+
+//   if (!order) {
+//     return res.status(404).json({
+//       success: false,
+//       message: "Order not found",
+//     });
+//   }
+
+//   const returnableItems = order.items.filter(
+//     (item) =>
+//       item.status === "RETURN_REQUESTED" &&
+//       item.refundStatus !== "REFUNDED"
+//   );
+
+//   if (returnableItems.length === 0) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "No return requested items found",
+//     });
+//   }
+
+//   const now = new Date();
+
+//   let totalRefundForThisAction = 0;
+//   const remainingRefund =
+//     order.pricing.totalAmount - order.payment.refundedAmount;
+
+//   for (let i = 0; i < returnableItems.length; i++) {
+//     const item = returnableItems[i];
+
+//     // Update item status
+//     item.status = "RETURNED";
+//     item.returnInfo.approvedAt = now;
+//     item.returnInfo.receivedAt = now;
+
+//     item.statusTimeline.push({
+//       status: "RETURNED",
+//       at: now,
+//     });
+
+//     if (order.payment.status === "PAID") {
+//       const calculatedRefund = calculateItemRefund(order, item);
+
+//       const isLastItem = i === returnableItems.length - 1;
+
+//       let refundAmount;
+
+//       if (isLastItem) {
+//         // absorb rounding difference
+//         refundAmount =
+//           remainingRefund - totalRefundForThisAction;
+//       } else {
+//         refundAmount = Math.min(
+//           calculatedRefund,
+//           remainingRefund - totalRefundForThisAction
+//         );
+//       }
+
+//       if (refundAmount > 0) {
+//         await creditToWallet({
+//           userId: order.user,
+//           amount: refundAmount,
+//           source: "ORDER_RETURN",
+//           orderId: order._id,
+//           referenceId: `ORDER_REFUND_${order._id}_${item._id}`,
+//           description: "Refund for returned Item",
+//         });
+
+//         item.refundStatus = "REFUNDED";
+//         item.refundedAmount = refundAmount;
+
+//         totalRefundForThisAction += refundAmount;
+//       }
+//     }
+
+//     // Restore inventory
+//     await Inventory.findByIdAndUpdate(item.inventory, {
+//       $inc: { stock: item.quantity },
+//     });
+//   }
+
+//   // Update payment totals
+//   if (order.payment.status === "PAID") {
+//     order.payment.refundedAmount += totalRefundForThisAction;
+
+//     if (order.payment.refundedAmount >= order.pricing.totalAmount) {
+//       order.payment.status = "REFUNDED";
+//       order.orderStatus = "RETURNED";
+//     }
+//   }
+
+//   await order.save();
+
+//   return res.status(200).json({
+//     success: true,
+//     message: "All returns approved successfully",
+//     data: {
+//       orderId: order.orderId,
+//       totalRefundedNow: totalRefundForThisAction,
+//       totalRefundedOverall: order.payment.refundedAmount,
+//     },
+//   });
+// });
+
 // Return reject
 export const rejectReturn = asyncHandler(async (req, res) => {
   const { orderId, itemId } = req.params;

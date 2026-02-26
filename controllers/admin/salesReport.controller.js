@@ -4,47 +4,66 @@ import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit-table";
 
 const parseDates = (range, from, to) => {
+    const now = new Date();
+  
     let startDate;
     let endDate = new Date();
   
     switch (range) {
       case "today":
-        startDate = new Date();
+        startDate = new Date(now);
         startDate.setHours(0, 0, 0, 0);
   
+        endDate = new Date(now);
         endDate.setHours(23, 59, 59, 999);
         break;
   
       case "lastWeek":
-        startDate = new Date();
-        startDate.setDate(endDate.getDate() - 7);
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+  
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
         break;
   
       case "lastMonth":
-        startDate = new Date();
-        startDate.setMonth(endDate.getMonth() - 1);
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+        startDate.setHours(0, 0, 0, 0);
+  
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
         break;
   
       case "lastYear":
-        startDate = new Date();
-        startDate.setFullYear(endDate.getFullYear() - 1);
+        startDate = new Date(now);
+        startDate.setFullYear(now.getFullYear() - 1);
+        startDate.setHours(0, 0, 0, 0);
+  
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
         break;
   
       default:
         if (from && to) {
           startDate = new Date(from);
+          startDate.setHours(0, 0, 0, 0);
+  
           endDate = new Date(to);
           endDate.setHours(23, 59, 59, 999);
         } else {
-          // Default fallback = last 7 days
-          startDate = new Date();
-          startDate.setDate(endDate.getDate() - 7);
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 7);
+          startDate.setHours(0, 0, 0, 0);
+  
+          endDate = new Date(now);
+          endDate.setHours(23, 59, 59, 999);
         }
     }
   
     return { startDate, endDate };
   };
-
 
 export const getSalesReport = asyncHandler(async (req, res) => {
     const { range, from, to, page = 1, limit = 5 } = req.query;

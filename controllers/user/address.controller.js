@@ -135,6 +135,15 @@ export const deleteAddress = asyncHandler(async (req, res) => {
   const { addressId } = req.params;
   const userId = req.user.userId;
 
+  const address = await Address.findOne({_id: addressId, userId: userId});
+
+  console.log(address);
+
+  if(address.isDefault){
+    return res.status(400).json({success: false, message: "Default address cannot be deleted"})
+  }
+
+
   const deletedAddress = await Address.findOneAndUpdate(
     { _id: addressId, userId: userId },
     { $set: { isDeleted: true } },

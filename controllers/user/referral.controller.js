@@ -6,6 +6,10 @@ import mongoose from "mongoose";
 export const getReferralPage = asyncHandler(async (req, res) => {
   const userId = req?.user?.userId;
 
+  if(!userId){
+    return res.redirect("/login");
+  }
+
   //  Get current user referral code
   const user = await User.findById(userId).select("referralCode");
 

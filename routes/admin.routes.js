@@ -74,7 +74,8 @@ router.patch("/products/variants/toggle/:variantId",toggleVariantStatus);
 router.get("/orders",getAllOrders);
 router.post("/orders/:orderId/status",updateOrderStatus);
 router.get("/orders/:orderId",getOrderDetails);
-router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn); 
+router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn);
+// router.post("/orders/:orderId/returns/approve-all",approveAllReturn); 
 router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn);
 
 //Coupons

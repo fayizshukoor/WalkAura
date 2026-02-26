@@ -133,15 +133,15 @@ router.delete("/cart/remove/:inventoryId", requireAuth, removeCartItem);
 router.delete("/cart/clear", requireAuth, clearCart);
 
 // Checkout
-router.get("/checkout",getCheckoutPage);
+router.get("/checkout",requireAuth,getCheckoutPage);
 router.post("/apply-coupon",applyCoupon);
 router.post('/remove-coupon',removeCoupon);
 router.post("/place-order",placeOrder);
 
 // Order 
-router.get("/order-success/:orderId",getOrderSuccess);
-router.get("/orders/:orderId",getOrderDetails);
-router.get("/orders",getUserOrders);
+router.get("/order-success/:orderId",requireAuth,getOrderSuccess);
+router.get("/orders/:orderId",requireAuth,getOrderDetails);
+router.get("/orders",requireAuth,getUserOrders);
 
 // Cancel and Returns
 router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
@@ -153,7 +153,7 @@ router.post("/orders/:orderId/return",requestReturnEntireOrder);
 router.get("/orders/:orderId/invoice",downloadInvoice);
 
 // Wallet
-router.get("/wallet",getWalletPage);
+router.get("/wallet",requireAuth,getWalletPage);
 router.post("/wallet/create-topup",createWalletTopup);
 router.post("/wallet/verify-topup",verifyWalletTopup);
 
@@ -169,5 +169,5 @@ router.post("/razorpay/verify", verifyRazorpayPayment);
 router.get("/payment-failed/:orderId",getPaymentFailedPage);
 
 // Refer and Earn 
-router.get("/refer",getReferralPage);
+router.get("/refer",requireAuth,getReferralPage);
 export default router;

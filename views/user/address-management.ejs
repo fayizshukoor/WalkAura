@@ -419,6 +419,8 @@
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/addresses/${id}`, { method: 'DELETE' });
+
+                    const result = await response.json()
                     if (response.ok) {
                         Swal.fire({
                             icon: 'success',
@@ -427,7 +429,7 @@
                             confirmButtonText: 'OK'
                         }).then(() => window.location.reload());
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong while deleting.' });
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: result.message });
                     }
                 } catch (err) {
                     Swal.fire({ icon: 'error', title: 'Network Error', text: 'Connection failed.' });

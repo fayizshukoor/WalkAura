@@ -12,6 +12,7 @@
                 <p class="text-gray-500 text-sm mt-1">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
             </div>
             <div class="flex items-center gap-3">
+
                 <% 
                     const statusColors = {
                         'PENDING': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
@@ -155,6 +156,20 @@
                     </div>
                 <% }) %>
             </div>
+
+            <% const hasPendingReturns = false %>
+    <% if (hasPendingReturns) { %>
+        <div class="p-6 bg-white/[0.02] border-t border-gray-800 flex justify-end">
+            <button 
+                onclick="approveAllReturns('<%= order.orderId %>')"
+                class="group flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-green-900/20 active:scale-95"
+            >
+                <span class="material-symbols-outlined text-sm">done_all</span>
+                Approve All Pending Returns
+            </button>
+        </div>
+    <% } %>
+
         </section>
     </div>
 </main>
@@ -193,6 +208,66 @@
             processAction(orderId, itemId, 'approve');
         }
     }
+
+    async function approveAllReturns(orderId) {
+    const result = await Swal.fire({
+        title: 'Approve All Returns?',
+        text: "This will authorize the return process and initiate refunds for ALL pending items in this order.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#1f2937',
+        confirmButtonText: 'Yes, Approve All',
+        background: '#111',
+        color: '#fff',
+        customClass: {
+            popup: 'rounded-3xl border border-gray-800'
+        }
+    });
+
+    if (result.isConfirmed) {
+        try {
+            Swal.fire({
+                title: 'Processing Bulk Approvals...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); },
+                background: '#111',
+                color: '#fff'
+            });
+
+            // Adjust the URL to your actual backend endpoint
+            const response = await fetch(`/admin/orders/${orderId}/returns/approve-all`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Action Processed',
+                    text: data.message,
+                    background: '#111',
+                    color: '#fff',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                window.location.reload();
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Something went wrong',
+                background: '#111',
+                color: '#fff'
+            });
+        }
+    }
+}
 
     async function rejectReturn(orderId, itemId) {
         const { value: reason } = await Swal.fire({
