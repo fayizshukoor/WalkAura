@@ -114,3 +114,17 @@ export const getHomePage = asyncHandler(async (req, res) => {
     newArrivals: processedNewArrivals,
   });
 });
+
+
+
+export const getAboutPage = (req, res)=>{
+  return res.render("user/about");
+}
+
+export const getPrivacyPage = (req, res)=>{
+  return res.render("user/privacy");
+}
+
+export const getContactPage = (req, res)=>{
+  return res.render("user/contact");
+}

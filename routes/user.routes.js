@@ -1,7 +1,7 @@
 import express from "express";
 
 //Controller imports
-import { getHomePage } from "../controllers/user/home.controller.js";
+import { getAboutPage, getContactPage, getHomePage, getPrivacyPage } from "../controllers/user/home.controller.js";
 
 import { showSignup, showLogin, handleSignup, handleLogin, logout, handleForgotPassword, handleResetPassword, showForgotPassword, showResetPassword } from "../controllers/user/auth.controller.js";
 
@@ -47,6 +47,9 @@ import { noCache } from "../middlewares/cache.middleware.js";
 const router = express.Router();
 
 router.get("/", noCache, getHomePage);
+router.get("/about", getAboutPage);
+router.get("/privacy",getPrivacyPage);
+router.get("/contact",getContactPage);
 
 router
   .route("/signup")
@@ -133,7 +136,7 @@ router.delete("/cart/remove/:inventoryId", requireAuth, removeCartItem);
 router.delete("/cart/clear", requireAuth, clearCart);
 
 // Checkout
-router.get("/checkout",requireAuth,getCheckoutPage);
+router.get("/checkout",requireAuth,noCache,getCheckoutPage);
 router.post("/apply-coupon",applyCoupon);
 router.post('/remove-coupon',removeCoupon);
 router.post("/place-order",placeOrder);

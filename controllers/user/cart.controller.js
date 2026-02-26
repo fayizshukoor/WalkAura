@@ -182,7 +182,7 @@ export const addToCart = asyncHandler(async (req, res) => {
 
 const wishlistCount = wishlist ? wishlist.items.length : 0;
 
-  res.status(200).json({
+  return res.status(200).json({
     message: "Item added to cart successfully",
     newCartCount: cart.totalItems,
     newWishlistCount: wishlistCount
@@ -344,7 +344,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
 
   const updatedItem = cart.items[itemIndex];
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     newCount: cart.totalItems,
     cart: {

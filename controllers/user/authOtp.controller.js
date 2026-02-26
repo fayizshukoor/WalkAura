@@ -52,7 +52,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   }
 
   if (purpose === "SIGNUP") {
-    let user = await User.findOneAndUpdate(
+    const user = await User.findOneAndUpdate(
       { email },
       { isVerified: true },
       { new: true },
@@ -71,6 +71,8 @@ export const verifyOTP = asyncHandler(async (req, res) => {
 
   delete req.session.email;
   delete req.session.otpPurpose;
+
+  return res.redirect("/signup");
 });
 
 export const resendOTP = async (req, res) => {
@@ -100,6 +102,7 @@ export const resendOTP = async (req, res) => {
 
     return res.status(HTTP_STATUS.OK).json({ message });
   } catch (error) {
+    console.log(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Failed to resend OTP" });
   }
 };

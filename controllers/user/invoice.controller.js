@@ -242,5 +242,5 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   // Branded Accent Bar at the very edge
   doc.rect(0, PAGE_BOTTOM - 10, 595, 10).fill(accentColor);
 
-  doc.end();
+  return doc.end();
 });
