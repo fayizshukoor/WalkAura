@@ -6,7 +6,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +28,6 @@
     "india-pincode-lookup": "^1.0.3",
     "jsonwebtoken": "^9.0.3",
     "method-override": "^3.0.0",
-    "mongodb": "^7.0.0",
     "mongoose": "^9.0.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^2.2.1",
@@ -35,10 +36,13 @@
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2",
     "pdfkit-table": "^0.1.99",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "morgan": "^1.10.1"
   },
   "devDependencies": {
-    "morgan": "^1.10.1",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
+    "globals": "^17.3.0",
     "nodemon": "^3.1.11"
   }
 }

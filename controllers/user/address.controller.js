@@ -4,7 +4,7 @@ import pincodeLookup from "india-pincode-lookup";
 
 // Show address Page (Initial Render)
 export const showAddressManagement = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req?.user?.userId;
   const page = parseInt(req.query.page) || 1;
   const limit = 5;
   const skip = (page - 1) * limit;

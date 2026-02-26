@@ -82,7 +82,7 @@ export const resendOTP = async (req, res) => {
 
     if (!email || !purpose) {
       return res
-        .status(400)
+        .status(HTTP_STATUS.BAD_REQUEST)
         .json({ message: "Session expired.Please signup again." });
     }
 
@@ -98,8 +98,8 @@ export const resendOTP = async (req, res) => {
       message = "OTP Resent.You will receive an OTP shortly";
     }
 
-    return res.status(200).json({ message });
+    return res.status(HTTP_STATUS.OK).json({ message });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to resend OTP" });
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Failed to resend OTP" });
   }
 };

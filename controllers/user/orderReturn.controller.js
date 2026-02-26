@@ -49,7 +49,7 @@ export const requestReturn = asyncHandler(async (req, res) => {
   }
 
   // Upload images
-  let uploadedImages = [];
+  const uploadedImages = [];
 
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {

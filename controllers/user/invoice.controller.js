@@ -155,7 +155,9 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   invoice.items.forEach((item) => {
     const rowHeight = 18;
     // Hard check: If the next row hits the summary section, stop.
-    if (itemY + rowHeight > SUMMARY_Y - 20) return;
+    if (itemY + rowHeight > SUMMARY_Y - 20){
+      return;
+    } 
 
     doc.fillColor("#333").font("Roboto-Regular").fontSize(8);
     doc.text(item.name, 50, itemY, { width: 170, height: 10, ellipsis: true });

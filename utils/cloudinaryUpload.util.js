@@ -23,7 +23,9 @@ export const uploadToCloudinary = (
         ]
       },
       (error, result) => {
-        if (error) return reject(error);
+        if (error){
+          return reject(error);
+        } 
         resolve(result);
       }
     ).end(buffer);
@@ -31,8 +33,10 @@ export const uploadToCloudinary = (
 };
 
 export const deleteFromCloudinary = async (publicId)=>{
-  if(!publicId)
+  if(!publicId){
     return;
+  }
+    
 
   try{
     await cloudinary.uploader.destroy(publicId);

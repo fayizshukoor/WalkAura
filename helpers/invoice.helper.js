@@ -19,9 +19,8 @@ export const buildInvoiceData = (order) => {
     invoiceDate: order.payment.paidAt || order.createdAt,
 
     customer: {
-      name: order.user.name,
-      email: order.user.email,
-      phone: order.user.phone,
+      name: order.customerSnapshot.name,
+      email: order.customerSnapshot.email
     },
 
     shippingAddress: order.shippingAddress,

@@ -16,6 +16,7 @@ export const ensureNotBlocked = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.log("Error in block middleware:",error);
     res.clearCookie("accessToken");
     res.redirect("/login");
   }

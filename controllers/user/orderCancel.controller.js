@@ -112,7 +112,7 @@ export const cancelItem = asyncHandler(async (req, res) => {
     $inc: { stock: item.quantity },
   });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Item cancelled successfully",
   });
@@ -202,7 +202,7 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
 
   await order.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Order cancellation processed successfully",
   });

@@ -17,7 +17,7 @@ export const getOrderSuccess = async (req, res) => {
     });
   }
 
-  res.render("user/order-success", {
+  return res.render("user/order-success", {
     success: true,
     order,
   });
@@ -42,7 +42,7 @@ export const getOrderDetails = asyncHandler(async (req, res) => {
     });
   }
 
-  res.render("user/order-details", {
+  return res.render("user/order-details", {
     success: true,
     order,
   });

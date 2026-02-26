@@ -1,7 +1,9 @@
 const RETURN_WINDOW_DAYS = 7;
 
 export const isItemEligibleForReturn = (item) => {
-  if (!item) return { eligible: false, message: "Item not found" };
+  if (!item){
+    return { eligible: false, message: "Item not found" };
+  } 
 
   if(item.returninfo?.rejectedAt){
     return {eligible: false, message: "Return request was rejected for this item"};

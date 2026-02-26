@@ -19,6 +19,7 @@ export const authenticateUser = (req,res,next)=>{
         next();
         
     }catch(error){
+        console.log("Error authenticating user",error);
         return next(); 
     }
 
@@ -46,9 +47,13 @@ export const silentRefresh = async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
 
   // move to next if accessToken exist
-  if (accessToken) return next();
+  if (accessToken){
+    return next();
+  } 
   // move to next if no refreshToken
-  if (!refreshToken) return next();
+  if (!refreshToken){
+    return next();
+  } 
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);

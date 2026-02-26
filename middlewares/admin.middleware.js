@@ -5,7 +5,9 @@ import { generateAdminAccessToken } from "../utils/adminTokens.util.js";
 export const authenticateAdmin = (req, res, next) => {
   const accessToken = req.cookies?.adminAccessToken;
 
-  if (!accessToken) return next();
+  if (!accessToken){
+    return next();
+  } 
 
   try {
     const decoded = jwt.verify(
@@ -43,8 +45,12 @@ export const adminSilentRefresh = async (req, res, next) => {
   const accessToken = req.cookies?.adminAccessToken;
   const refreshToken = req.cookies?.adminRefreshToken;
 
-  if (accessToken) return next();
-  if (!refreshToken) return next();
+  if (accessToken){
+    return next();
+  } 
+  if (!refreshToken){
+    return next();
+  } 
 
   try {
     const decoded = jwt.verify(
