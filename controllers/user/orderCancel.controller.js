@@ -77,6 +77,7 @@ export const cancelItem = asyncHandler(async (req, res) => {
   item.refundStatus = "REFUNDED";
   item.refundedAmount = refundAmount;
 
+  order.payment.status = "PARTIALLY_REFUNDED";
   order.payment.refundedAmount += refundAmount;
 
   if(order.payment.refundedAmount >= order.pricing.totalAmount){

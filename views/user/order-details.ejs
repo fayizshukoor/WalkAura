@@ -242,7 +242,7 @@
                                 <% } else if (item.status === 'PENDING') { %>
                                     <% 
                                         /* Rule: User cannot cancel individual items if Razorpay payment is pending */
-                                        const isUnpaidRazorpay = order.payment.method === "RAZORPAY" && order.payment.status !== "PAID";
+                                        const isUnpaidRazorpay = order.payment.method === "RAZORPAY" && (order.payment.status !== "PAID" && order.payment.status !== "PARTIALLY_REFUNDED");
                                     %>
                                     
                                     <% if (!isUnpaidRazorpay) { %>
@@ -274,11 +274,11 @@
                 
                 const canCancelOrder = order.orderStatus === 'PENDING' && !allItemsFinalized;
                 const canReturnOrder = order.orderStatus === 'DELIVERED' && !allItemsFinalized;
-                const canDownloadInvoice = order.payment.status === 'PAID';
+                const canDownloadInvoice = order.payment.status !== 'PENDING';
 
                 // New condition for Retry Payment
                 const canRetryPayment = order.payment.method === "RAZORPAY" &&
-                order.payment.status !== "PAID" &&
+                (order.payment.status === "PENDING" || order.payment.status === "FAILED") &&
                 order.orderStatus === "PENDING";
             %>
 

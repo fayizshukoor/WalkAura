@@ -229,6 +229,24 @@
             return [year, month, day].join('-');
         };
 
+        const todayStr = formatDate(new Date());
+
+        // 2. Set Max Date attribute to prevent future date selection
+        fromInput.setAttribute('max', todayStr);
+        toInput.setAttribute('max', todayStr);
+
+        // 3. Logic to pre-fill last 7 days if inputs are empty (initial load)
+        if (!fromInput.value || !toInput.value) {
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+
+        fromInput.value = formatDate(lastWeek);
+        toInput.value = todayStr;
+
+        // Match the dropdown to the default pre-filled state
+        rangeSelect.value = 'lastWeek';
+        }
+
         // Function to ensure To Date is valid based on From Date
         const validateToDate = () => {
             // Set the minimum selectable 'To Date' to the current 'From Date'
@@ -287,6 +305,10 @@
             rangeSelect.value = 'custom';
         });
 
+        toInput.addEventListener('change', () => {
+        rangeSelect.value = 'custom';
+    });
+    
         // Prevent form submission if validation fails (Final check)
         filterForm.addEventListener('submit', (e) => {
             if (toInput.value < fromInput.value) {

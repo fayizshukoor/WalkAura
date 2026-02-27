@@ -371,7 +371,9 @@ export const getAvailableCouponsForCheckoutService = async ({
     )
     .lean();
 
-  if (!coupons.length) return [];
+  if (!coupons.length){
+    return [];
+  }
 
   // Get user's previous usage
   const userOrders = await Order.aggregate([
@@ -443,7 +445,7 @@ export const validateCouponForSubtotal = async ({
   const userUsageCount = await Order.countDocuments({
     user: userId,
     "appliedCoupon.coupon": coupon._id,
-    orderStatus: { $ne: "CANCELLED" }
+    orderStatus: { $nin: ["CANCELLED", "RETURNED"] }
   });
 
   if (

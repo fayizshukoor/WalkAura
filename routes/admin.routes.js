@@ -14,7 +14,7 @@ import { addProduct, editProduct, getProductFullDetails, getProductsAjax, showAd
 
 import { addVariant, showManageVariants, toggleVariantStatus, updateVariant } from "../controllers/admin/variant.controller.js";
 
-import { approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/orders.controller.js";
+import { approveAllReturn, approveReturn, getAllOrders, getOrderDetails, rejectReturn, updateOrderStatus } from "../controllers/admin/orders.controller.js";
 
 import { addCoupon, editCoupon, getCouponsPage, getCouponsPageAjax, softDeleteCoupon, toggleCouponStatus } from "../controllers/admin/coupon.controller.js";
 
@@ -75,7 +75,7 @@ router.get("/orders",getAllOrders);
 router.post("/orders/:orderId/status",updateOrderStatus);
 router.get("/orders/:orderId",getOrderDetails);
 router.post("/orders/:orderId/items/:itemId/return-approve",approveReturn);
-// router.post("/orders/:orderId/returns/approve-all",approveAllReturn); 
+router.post("/orders/:orderId/returns/approve-all",approveAllReturn); 
 router.post("/orders/:orderId/items/:itemId/return-reject",rejectReturn);
 
 //Coupons

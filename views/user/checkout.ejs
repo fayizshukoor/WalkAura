@@ -812,8 +812,7 @@
 
         if (response.ok) {
 
-            showSwal("Applied", result.message || "Coupon applied successfully!", "success");
-            setTimeout(()=> window.location.reload(),1000)
+            showSwal("Applied", result.message || "Coupon applied successfully!", "success", shouldReload = true);
         } else {
             showSwal("Failed", result.message || "Invalid coupon code", "error");
             applyBtn.disabled = false;

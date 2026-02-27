@@ -157,7 +157,7 @@
                 <% }) %>
             </div>
 
-            <% const hasPendingReturns = false %>
+            <% const hasPendingReturns = order.items.some(item => item.status === 'RETURN_REQUESTED'); %>
     <% if (hasPendingReturns) { %>
         <div class="p-6 bg-white/[0.02] border-t border-gray-800 flex justify-end">
             <button 

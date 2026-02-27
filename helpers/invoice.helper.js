@@ -1,17 +1,4 @@
 export const buildInvoiceData = (order) => {
-  // Items that were actually billed
-  const invoiceItems = order.items.filter(item =>
-    !(
-      item.status === "CANCELLED" &&
-      item.cancellation?.at &&
-      order.payment.status !== "PAID"
-    )
-  );
-
-  const subtotal = invoiceItems.reduce(
-    (sum, item) => sum + item.itemTotal,
-    0
-  );
 
   return {
     invoiceNumber: `INV-${order.orderId}`,
@@ -28,23 +15,28 @@ export const buildInvoiceData = (order) => {
     payment: {
       method: order.payment.method,
       status: order.payment.status,
+      transactionId: order.payment.razorpayPaymentId
     },
 
-    items: invoiceItems.map(item => ({
+    items: order.items.map(item => ({
       name: item.productName,
       color: item.color,
       size: item.size,
       quantity: item.quantity,
       price: item.price,
       total: item.itemTotal,
+      status: item.status,
+      refundedAmount: item.refundedAmount || 0
     })),
 
     pricing: {
-      subtotal,
+      subtotal: order.pricing.subtotal,
       discount: order.pricing.discount || 0,
       tax: order.pricing.tax || 0,
       shippingCharge: order.pricing.shippingCharge || 0,
       totalAmount: order.pricing.totalAmount,
+      refundedAmount: order.payment.refundedAmount || 0,
+      netPaid: order.pricing.totalAmount - (order.payment.refundedAmount || 0)
     },
   };
 };

@@ -186,8 +186,9 @@ export const buildOrderData = async ({
         { $inc: { stock: -item.quantity } },
         { new: true }
       );
-      if (!updated)
+      if (!updated){
         throw new AppError("Stock changed during payment finalization",409);
+      }
     }
   
     // Increment coupon usage safely

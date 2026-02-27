@@ -172,7 +172,11 @@
         <div class="bg-surface-dark rounded-2xl p-5 border border-white/5 sticky top-24">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-base font-bold text-white">Filters</h3>
-            <a href="/shop" class="text-[10px] text-primary hover:underline uppercase font-bold tracking-tighter">Clear All</a>
+            
+            <button type="button" id="clearAllFilters" class="text-[10px] text-primary hover:underline uppercase font-bold tracking-tighter">
+              Clear All
+          </button>
+
           </div>
 
           <form id="filterForm" action="/shop" method="GET" class="space-y-5">
@@ -221,11 +225,7 @@
               </select>
             </div>
 
-            <div class="pt-4">
-              <button type="submit" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 text-xs tracking-widest uppercase">
-                Apply Filters
-              </button>
-            </div>
+
           </form>
         </div>
       </aside>
@@ -328,68 +328,82 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const searchInput = document.getElementById('searchInput');
-      const searchBtn = document.getElementById('searchBtn');
-      const clearSearchBtn = document.getElementById('clearSearchBtn');
-      const filterForm = document.getElementById('filterForm');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const filterForm = document.getElementById('filterForm');
+    const clearAllBtn = document.getElementById('clearAllFilters');
 
-      function executeSearch() {
+    // Helper function to build the URL and redirect
+    function submitFilters() {
         const url = new URL(window.location.origin + window.location.pathname);
-        const query = searchInput.value.trim();
-
-        // Re-apply existing non-default filters when searching
         const formData = new FormData(filterForm);
-        for (let [key, value] of formData.entries()) {
-          if (value && value !== 'all' && key !== 'search') {
-            url.searchParams.set(key, value);
-          }
+
+        // Add search from the top search bar (to ensure it's always synced)
+        const currentSearch = searchInput.value.trim();
+        if (currentSearch) {
+            url.searchParams.set('search', currentSearch);
         }
 
-        if (query) {
-          url.searchParams.set('search', query);
+        // Add dropdown filters
+        for (let [key, value] of formData.entries()) {
+            if (value && value !== 'all' && key !== 'search') {
+                url.searchParams.set(key, value);
+            }
         }
 
         url.searchParams.set('page', 1);
         window.location.href = url.toString();
-      }
+    }
 
-      // Intercept form submission to clean "all" values from URL
-      if (filterForm) {
+    // 1. Auto-submit when any select dropdown changes
+    if (filterForm) {
+        const selects = filterForm.querySelectorAll('select');
+        selects.forEach(select => {
+            select.addEventListener('change', submitFilters);
+        });
+
+        // Still handle the form's submit event (for the hidden search input)
         filterForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const url = new URL(window.location.origin + window.location.pathname);
-          const formData = new FormData(this);
-
-          for (let [key, value] of formData.entries()) {
-            if (value && value !== 'all') {
-              url.searchParams.set(key, value);
-            }
-          }
-          url.searchParams.set('page', 1);
-          window.location.href = url.toString();
+            e.preventDefault();
+            submitFilters();
         });
-      }
+    }
 
-      if (searchBtn) searchBtn.addEventListener('click', executeSearch);
-      if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && executeSearch());
-      }
+    // 2. Clear All Filters (Preserving Search)
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = new URL(window.location.origin + window.location.pathname);
+            const currentSearch = searchInput.value.trim();
+            
+            if (currentSearch) {
+                url.searchParams.set('search', currentSearch);
+            }
+            
+            window.location.href = url.toString();
+        });
+    }
 
-      if (clearSearchBtn) {
+    // 3. Search Bar Logic
+    if (searchBtn) searchBtn.addEventListener('click', submitFilters);
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitFilters();
+            }
+        });
+    }
+
+    // 4. Clear Search (Preserving Filters)
+    if (clearSearchBtn) {
         clearSearchBtn.addEventListener('click', function() {
-          const url = new URL(window.location.origin + window.location.pathname);
-          // Keep other filters but clear search
-          const formData = new FormData(filterForm);
-          for (let [key, value] of formData.entries()) {
-            if (value && value !== 'all' && key !== 'search') {
-              url.searchParams.set(key, value);
-            }
-          }
-          url.searchParams.set('page', 1);
-          window.location.href = url.toString();
+            searchInput.value = ''; // Clear the input field
+            submitFilters();        // Re-submit with empty search but existing dropdowns
         });
-      }
-    });
+    }
+});
 
     function showToast(message, type = 'info') {
       // Create container if it doesn't exist

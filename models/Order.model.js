@@ -82,7 +82,7 @@ returnInfo: {
 
 refundStatus: {
   type: String,
-  enum: ["NONE", "PARTIAL", "REFUNDED"],
+  enum: ["NONE", "REFUNDED"],
   default: "NONE"
 },
 
@@ -130,7 +130,7 @@ const orderSchema = new mongoose.Schema(
       },
       status: {
         type: String,
-        enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+        enum: ["PENDING", "PAID", "FAILED","PARTIALLY_REFUNDED", "REFUNDED"],
         default: "PENDING"
       },
       transactionId: String,
