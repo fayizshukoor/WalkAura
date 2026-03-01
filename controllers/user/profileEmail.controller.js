@@ -40,7 +40,6 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
   // deleting unverified user
   if (emailExists && !emailExists.isVerified) {
     await User.deleteOne({ email: emailExists.email });
-    console.log("deleted unverified user");
   }
   user.pendingEmail = newEmail;
   await user.save();

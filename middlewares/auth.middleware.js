@@ -25,7 +25,7 @@ export const authenticateUser = (req,res,next)=>{
 
 }
 
-export const requireAuth = (req,res,next)=>{
+export const requireAuthPage = (req,res,next)=>{
     if(req.user){
         return next();
     }else{
@@ -33,11 +33,21 @@ export const requireAuth = (req,res,next)=>{
     }
 }
 
+export const requireAuth = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized. Please Login."
+    });
+  }
+  return next();
+};
+
 export const redirectIfAuthenticated = (req,res,next)=>{
     if(req.user){
         return res.redirect("/");
     }
-    next();
+    return next();
 }
 
 // Silent refresh for users
@@ -81,7 +91,7 @@ export const silentRefresh = async (req, res, next) => {
     res.clearCookie("refreshToken");
     console.log("Error in silent refresh:",error);
   }
-  next();
+  return next();
 };
 
 

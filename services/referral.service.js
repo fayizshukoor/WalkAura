@@ -8,7 +8,9 @@ export const processReferralReward = async (userId) => {
     //  Fetch user
     const user = await User.findById(userId);
 
-    if (!user) return;
+    if (!user){
+      return;
+    } 
 
     //  Guard Conditions
     if (
@@ -25,7 +27,6 @@ export const processReferralReward = async (userId) => {
       { $set: { isReferralRewarded: true } }
     );
 
-    console.log(updateResult);
 
     if (updateResult.modifiedCount === 0) {
       // Another request already processed reward

@@ -28,7 +28,6 @@ export const verifyOTP = asyncHandler(async (req, res) => {
 
   if (otpRecord?.attempts >= 5) {
     await OTP.deleteOne({ _id: otpRecord._id });
-    console.log("Too many attempts");
     req.flash("error", "Too many failed attempts. Please request a new OTP");
     return res.redirect("/verify-otp");
   }
@@ -43,7 +42,6 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   if (otpRecord.otp !== hashedOtp) {
     otpRecord.attempts += 1;
     await otpRecord.save();
-    console.log("Low attempts");
     req.flash(
       "error",
       `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
@@ -52,12 +50,11 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   }
 
   if (purpose === "SIGNUP") {
-    const user = await User.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { email },
       { isVerified: true },
       { new: true },
     );
-    console.log("User verified succesfully", user);
     req.flash("success", "Email verified Successfully.Please Login.");
     return res.redirect("/login");
   }
@@ -80,7 +77,6 @@ export const resendOTP = async (req, res) => {
     const email = req.session ? req.session.email : null;
     const purpose = req.session.otpPurpose;
 
-    console.log(email, purpose);
 
     if (!email || !purpose) {
       return res
@@ -102,7 +98,7 @@ export const resendOTP = async (req, res) => {
 
     return res.status(HTTP_STATUS.OK).json({ message });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: "Failed to resend OTP" });
   }
 };

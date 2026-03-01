@@ -95,8 +95,6 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
         couponCode: req.session.appliedCoupon.code,
       });
 
-      console.log(couponResult.coupon);
-
       discount = couponResult.pricing.discount;
       appliedCoupon = couponResult.coupon;
     } catch (err) {
@@ -155,7 +153,6 @@ export const applyCoupon = asyncHandler(async (req, res) => {
 
   const result = await applyCouponService({ userId, couponCode });
 
-  console.log(result);
 
   req.session.appliedCoupon = {
     couponId: result.coupon._id,

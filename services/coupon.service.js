@@ -498,8 +498,6 @@ export const applyCouponService = async ({
 
   const {coupon, discount} = await validateCouponForSubtotal({userId, couponCode, subtotal});
 
-  console.log(coupon, `discount:${discount}`);
-
   //  Return Pricing
   return {
     coupon: {

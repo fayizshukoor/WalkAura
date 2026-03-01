@@ -48,7 +48,6 @@ export const handleSignup = asyncHandler(async (req, res) => {
     });
   }
 
-  console.log(req.body);
   if(password !== confirmPassword){
     return res.render("user/signup",{
       error: "Passwords do not match"

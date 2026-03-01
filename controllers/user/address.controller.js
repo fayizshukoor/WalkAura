@@ -29,7 +29,6 @@ export const showAddressManagement = asyncHandler(async (req, res) => {
 export const addAddress = asyncHandler(async (req, res) => {
   const { fullName, phone, pincode, streetAddress, city, state, isDefault } =
     req.body;
-  console.log(req.body);
 
   // Strict Server-side Validation
   if (!fullName || !phone || !streetAddress || !city || !state || !pincode) {
@@ -137,7 +136,6 @@ export const deleteAddress = asyncHandler(async (req, res) => {
 
   const address = await Address.findOne({_id: addressId, userId: userId});
 
-  console.log(address);
 
   if(address.isDefault){
     return res.status(400).json({success: false, message: "Default address cannot be deleted"})
