@@ -40,7 +40,6 @@ const wishlistSchema = new mongoose.Schema(
 // Prevent duplicate product+variant
 wishlistSchema.index(
   { user: 1, "items.product": 1, "items.variant": 1 },
-  { unique: true }
 );
 
 export default mongoose.model("Wishlist", wishlistSchema);

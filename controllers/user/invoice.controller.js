@@ -14,8 +14,17 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne({ orderId, user: userId }).populate("user");
 
-  if (!order || (order.payment.status !== "PAID" && order.payment.status !== "PARTIALLY_REFUNDED")) {
-    return res.status(404).json({ success: false, message: "Invoice unavailable" });
+  const ALLOWED_INVOICE_STATUSES = [
+    "PAID",
+    "PARTIALLY_REFUNDED",
+    "REFUNDED"
+  ];
+  
+  if (!order || !ALLOWED_INVOICE_STATUSES.includes(order.payment.status)) {
+    return res.status(404).json({
+      success: false,
+      message: "Invoice unavailable",
+    });
   }
 
   const invoice = buildInvoiceData(order);

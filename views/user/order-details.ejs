@@ -148,6 +148,16 @@
                         <span class="font-bold uppercase tracking-widest">Discount</span>
                         <span class="font-bold">- ₹<%= order.pricing.discount.toLocaleString() %></span>
                     </div>
+
+                    <% if (order.payment.refundedAmount > 0) { %>
+                        <div class="flex justify-between items-center text-sm text-green-400 pt-2 border-t border-white/5">
+                            <span class="font-bold uppercase tracking-widest flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">assignment_return</span>
+                                Total Refunded
+                            </span>
+                            <span class="font-bold">₹<%= order.payment.refundedAmount.toLocaleString() %></span>
+                        </div>
+                    <% } %>
                     
                     <div class="pt-6 border-t border-white/10 flex justify-between items-end">
                         <span class="text-primary font-black uppercase text-xs tracking-widest">Total</span>
@@ -168,12 +178,14 @@
             <div class="p-8 border-b border-white/10 bg-white/[0.03]">
                 <h2 class="text-base font-black uppercase tracking-widest text-white">Ordered Items</h2>
             </div>
+        
             <div class="divide-y divide-white/5">
                 <% order.items.forEach(item => { %>
                 <div class="p-10 flex flex-col lg:flex-row items-center gap-10">
                     <div class="w-28 h-28 rounded-2xl bg-black border border-white/10 p-4 flex-shrink-0">
                         <img src="<%= item.image %>" class="w-full h-full object-contain" alt="<%= item.productName %>">
                     </div>
+        
                     <div class="flex-1 text-center lg:text-left">
                         <p class="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-2">SKU: <%= item.sku %></p>
                         <h3 class="text-white font-bold text-xl"><%= item.productName %></h3>
@@ -195,7 +207,7 @@
                                 <%= item.status.replace(/_/g, ' ') %>
                             </span>
                         </div>
-
+        
                         <% if (item.status === 'RETURN_REJECTED' && item.returnInfo?.rejectionReason) { %>
                             <div class="mt-4 p-4 bg-red-500/5 border border-red-500/10 rounded-xl max-w-xl">
                                 <p class="text-[10px] text-red-400 font-black uppercase tracking-widest mb-1">Return Rejected Reason:</p>
@@ -203,23 +215,39 @@
                             </div>
                         <% } %>
                     </div>
-
-                    <div class="flex flex-col sm:flex-row items-center gap-8 w-full lg:w-auto">
-                        <div class="text-center sm:text-right min-w-[120px]">
-                            <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
-                            <p class="text-xs text-gray-500 font-bold uppercase mt-1">₹<%= item.price.toLocaleString() %> / unit</p>
+        
+                    <div class="flex flex-col xl:flex-row items-center gap-8 w-full lg:w-auto">
+                        
+                        <div class="flex flex-col sm:flex-row items-center gap-5 min-w-max">
+                            <div class="text-center sm:text-right">
+                                <p class="text-white font-black text-2xl tracking-tighter">₹<%= item.itemTotal.toLocaleString() %></p>
+                                <p class="text-xs text-gray-500 font-bold uppercase mt-1">₹<%= item.price.toLocaleString() %> / unit</p>
+                            </div>
+                        
+                            <% if (item.refundedAmount > 0) { %>
+                                <div class="hidden sm:block w-px h-10 bg-white/10"></div>
+        
+                                <div class="flex flex-col items-center sm:items-start gap-1.5">
+                                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg w-fit">
+                                        <span class="material-symbols-outlined text-[14px] text-green-500">payments</span>
+                                        <div class="flex flex-col leading-none text-left">
+                                            <span class="text-[10px] text-green-500/70 font-black uppercase tracking-widest">Refunded</span>
+                                            <span class="text-xs text-green-500 font-black">₹<%= item.refundedAmount.toLocaleString() %></span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 font-medium italic text-center sm:text-left leading-tight max-w-[130px]">
+                                        *Includes tax & adjusted for discounts
+                                    </p>
+                                </div>
+                            <% } %>
                         </div>
                         
-                        <div class="w-full sm:w-auto min-w-[200px] flex justify-center">
+                        <div class="w-full sm:w-auto min-w-[180px] flex justify-center">
                             <% if (item.status === 'DELIVERED' && order.orderStatus !== 'RETURN_REQUESTED') { %>
-                                <button 
-                                onclick="handleReturnItem(this)"
-                                data-order-id="<%= order.orderId %>"
-                                data-item-id="<%= item._id %>"
-                                data-product-name="<%= item.productName %>"
-                                class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                Return Item
-                            </button>
+                                <button onclick="handleReturnItem(this)" data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>" data-product-name="<%= item.productName %>"
+                                    class="w-full sm:w-auto bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                    Return Item
+                                </button>
                             <% } else if (item.status === 'RETURN_REQUESTED') { %>
                                 <div class="flex flex-col items-center gap-1 opacity-80">
                                     <span class="material-symbols-outlined text-orange-500">pending_actions</span>
@@ -239,32 +267,43 @@
                                 <span class="text-red-500 font-black uppercase text-[10px] tracking-widest border border-red-500/20 px-6 py-4 rounded-xl bg-red-500/5">
                                     Item Cancelled
                                 </span>
-                                <% } else if (item.status === 'PENDING') { %>
-                                    <% 
-                                        /* Rule: User cannot cancel individual items if Razorpay payment is pending */
-                                        const isUnpaidRazorpay = order.payment.method === "RAZORPAY" && (order.payment.status !== "PAID" && order.payment.status !== "PARTIALLY_REFUNDED");
-                                    %>
-                                    
-                                    <% if (!isUnpaidRazorpay) { %>
-                                        <button 
-                                            onclick="handleCancelItem(this)"
-                                            data-order-id="<%= order.orderId %>"
-                                            data-item-id="<%= item._id %>"
-                                            data-product-name="<%= item.productName %>"
-                                            class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                            Cancel Item
-                                        </button>
-                                    <% } else { %>
-                                        <div class="text-[9px] text-gray-600 font-black uppercase tracking-widest text-center">
-                                            Individual cancellation <br> unavailable for unpaid orders
-                                        </div>
-                                    <% } %>
+                            <% } else if (item.status === 'PENDING') { %>
+                                <% 
+                                    const isUnpaidRazorpay = order.payment.method === "RAZORPAY" && (order.payment.status !== "PAID" && order.payment.status !== "PARTIALLY_REFUNDED");
+                                %>
+                                <% if (!isUnpaidRazorpay) { %>
+                                    <button onclick="handleCancelItem(this)" data-order-id="<%= order.orderId %>" data-item-id="<%= item._id %>" data-product-name="<%= item.productName %>"
+                                        class="w-full sm:w-auto bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-gray-400 hover:text-red-500 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                        Cancel Item
+                                    </button>
+                                <% } else { %>
+                                    <div class="text-[9px] text-gray-600 font-black uppercase tracking-widest text-center">
+                                        Individual cancellation <br> unavailable for unpaid orders
+                                    </div>
                                 <% } %>
+                            <% } %>
                         </div>
                     </div>
                 </div>
                 <% }) %>
             </div>
+        
+            <% if (order.payment.refundedAmount > 0) { %>
+                <div class="p-8 bg-white/[0.04] border-t border-white/10 flex items-start gap-4 transition-all hover:bg-white/[0.06]">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <p class="text-[11px] text-white font-black uppercase tracking-[0.2em]">Refund Calculation Policy</p>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest leading-relaxed max-w-3xl">
+                            Refund amounts are calculated <span class="text-primary/80">proportionally</span>. 
+                            The final amount includes applicable taxes and is adjusted based on any 
+                            <span class="text-primary/80">coupon discounts</span> applied to the original transaction.
+                        </p>
+                    </div>
+                </div>
+            <% } %>
         </section>
 
         <div class="flex flex-col sm:flex-row justify-end gap-6 pt-4 pb-12">

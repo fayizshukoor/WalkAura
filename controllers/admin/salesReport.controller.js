@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-useless-assignment */
 import { getSalesReportService } from "../../services/dashboard.service.js";
 import asyncHandler from "../../utils/asyncHandler.util.js";
 import ExcelJS from "exceljs";

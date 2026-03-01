@@ -20,7 +20,6 @@
                                 <tr class="text-gray-300 text-[12px] uppercase tracking-[0.15em] bg-white/[0.05]">
                                     <th class="px-8 py-6 font-bold">Product</th>
                                     <th class="px-8 py-6 font-bold text-center">Price Details</th>
-                                    <th class="px-8 py-6 font-bold text-center">Stock Status</th>
                                     <th class="px-8 py-6 font-bold text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -60,20 +59,6 @@
                                             </div>
                                         </td>
 
-                                        <td class="px-8 py-8 text-center">
-                                            <% if (item.inStock) { %>
-                                                <span class="inline-flex items-center gap-2 text-[11px] font-bold text-green-500 uppercase tracking-[0.1em] bg-green-500/5 px-4 py-2 rounded-full border border-green-500/10">
-                                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                                    In Stock
-                                                </span>
-                                            <% } else { %>
-                                                <span class="inline-flex items-center gap-2 text-[11px] font-bold text-red-500 uppercase tracking-[0.1em] bg-red-500/5 px-4 py-2 rounded-full border border-red-500/10">
-                                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                                    Out of Stock
-                                                </span>
-                                            <% } %>
-                                        </td>
-
                                         <td class="px-8 py-8 text-right">
                                             <div class="flex items-center justify-end gap-3">
                                                 <button onclick="removeFromWishlist('<%= item.productId %>', '<%= item.variantId %>')" 
@@ -84,7 +69,7 @@
                                                 <% if (item.inStock) { %>
                                                     <button onclick="moveToCart('<%= item.productId %>', '<%= item.variantId %>')" 
                                                             class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-primary transition-all active:scale-95 shadow-lg shadow-indigo-500/5">
-                                                        Add to Cart
+                                                        Move to Cart
                                                     </button>
                                                 <% } else { %>
                                                     <button class="bg-white/5 text-gray-600 text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl cursor-not-allowed border border-white/10">
@@ -126,7 +111,7 @@
 
         <button id="confirmAddToCart" disabled 
                 class="w-full bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-xl shadow-indigo-500/20">
-            Confirm & Add to Cart
+            Confirm & Move to Cart
         </button>
     </div>
 </div>
@@ -310,7 +295,7 @@ document.getElementById('confirmAddToCart').addEventListener('click', async () =
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'Failed', text: error.message, background: '#121212', color: '#fff' });
     } finally {
-        btn.innerText = 'Confirm & Add to Bag';
+        btn.innerText = 'Confirm & Move to Cart';
     }
 });
     </script>

@@ -39,8 +39,11 @@ import { getReferralPage } from "../controllers/user/referral.controller.js";
 
 // Middleware imports
 import { redirectIfAuthenticated, requireAuth } from "../middlewares/auth.middleware.js";
+
 import { upload } from "../middlewares/upload.middleware.js";
+
 import { requireOtpSession } from "../middlewares/otp.middleware.js";
+
 import { noCache } from "../middlewares/cache.middleware.js";
 
 
@@ -130,47 +133,47 @@ router.get("/product/:slug", getProductDetails);
 
 // Cart
 router.get("/cart",requireAuth,getCart);
-router.post("/cart/add",addToCart);
+router.post("/cart/add",requireAuth,addToCart);
 router.patch("/cart/update-quantity",requireAuth,updateCartItemQuantity);
 router.delete("/cart/remove/:inventoryId", requireAuth, removeCartItem);
 router.delete("/cart/clear", requireAuth, clearCart);
 
 // Checkout
 router.get("/checkout",requireAuth,noCache,getCheckoutPage);
-router.post("/apply-coupon",applyCoupon);
-router.post('/remove-coupon',removeCoupon);
-router.post("/place-order",placeOrder);
+router.post("/apply-coupon",requireAuth,applyCoupon);
+router.post('/remove-coupon',requireAuth,removeCoupon);
+router.post("/place-order".requireAuth,placeOrder);
 
 // Order 
 router.get("/order-success/:orderId",requireAuth,getOrderSuccess);
-router.get("/orders/:orderId",requireAuth,getOrderDetails);
-router.get("/orders",requireAuth,getUserOrders);
+router.get("/orders/:orderId",requireAuth, noCache, getOrderDetails);
+router.get("/orders",requireAuth, noCache ,getUserOrders);
 
 // Cancel and Returns
-router.post("/orders/:orderId/items/:itemId/cancel",cancelItem);
-router.post("/orders/:orderId/cancel",cancelEntireOrder);
-router.post("/orders/:orderId/items/:itemId/return",upload.array("images",3),requestReturn);
-router.post("/orders/:orderId/return",requestReturnEntireOrder);
+router.post("/orders/:orderId/items/:itemId/cancel",requireAuth,cancelItem);
+router.post("/orders/:orderId/cancel",requireAuth,cancelEntireOrder);
+router.post("/orders/:orderId/items/:itemId/return",upload.array("images",3),requireAuth,requestReturn);
+router.post("/orders/:orderId/return",requireAuth,requestReturnEntireOrder);
 
 // Invoice download
-router.get("/orders/:orderId/invoice",downloadInvoice);
+router.get("/orders/:orderId/invoice",requireAuth,downloadInvoice);
 
 // Wallet
-router.get("/wallet",requireAuth,getWalletPage);
-router.post("/wallet/create-topup",createWalletTopup);
-router.post("/wallet/verify-topup",verifyWalletTopup);
+router.get("/wallet",requireAuth, noCache ,getWalletPage);
+router.post("/wallet/create-topup",requireAuth,createWalletTopup);
+router.post("/wallet/verify-topup",requireAuth,verifyWalletTopup);
 
 // Wishlist
-router.get("/wishlist",requireAuth,getWishlistPage);
-router.post("/wishlist/add",addToWishlist);
-router.delete("/wishlist/remove",removeFromWishlist);
+router.get("/wishlist",requireAuth, noCache, getWishlistPage);
+router.post("/wishlist/add",requireAuth,addToWishlist);
+router.delete("/wishlist/remove",requireAuth, removeFromWishlist);
 router.get("/wishlist/variant/:variantId/sizes",requireAuth,getVariantSizes);
 
 // RazorPay
-router.post("/razorpay/create-order", createRazorpayPaymentOrder);
-router.post("/razorpay/verify", verifyRazorpayPayment);
-router.get("/payment-failed/:orderId",getPaymentFailedPage);
+router.post("/razorpay/create-order", requireAuth, createRazorpayPaymentOrder);
+router.post("/razorpay/verify", requireAuth, verifyRazorpayPayment);
+router.get("/payment-failed/:orderId", requireAuth, getPaymentFailedPage);
 
 // Refer and Earn 
-router.get("/refer",requireAuth,getReferralPage);
+router.get("/refer",requireAuth, noCache, getReferralPage);
 export default router;

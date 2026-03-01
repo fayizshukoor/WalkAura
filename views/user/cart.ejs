@@ -120,13 +120,19 @@
             <span id="summary-subtotal" class="text-white font-extrabold text-base">₹<%= cart.totalAmount.toLocaleString() %></span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Items</span>
+            <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Total Items</span>
             <span id="summary-items" class="text-white font-extrabold text-base"><%= cart.totalItems %></span>
           </div>
+          
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-bold uppercase tracking-[0.15em] text-[10px]">Tax Estimate (18%)</span>
+            <span id="summary-tax" class="text-white font-extrabold text-base">₹<%= tax.toLocaleString() %></span>
+          </div>
+
           <div class="flex justify-between items-end pt-8 border-t border-white/10 mt-2">
             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total</span>
             <div class="text-right">
-              <span id="summary-total" class="block text-3xl font-black text-primary tracking-tighter">₹<%= cart.totalAmount.toLocaleString() %></span>
+              <span id="summary-total" class="block text-3xl font-black text-primary tracking-tighter">₹<%= grandTotal.toLocaleString() %></span>
             </div>
           </div>
         </div>
@@ -186,6 +192,7 @@
     const summarySubtotal = document.getElementById('summary-subtotal');
     const summaryTotal = document.getElementById('summary-total');
     const summaryItems = document.getElementById('summary-items');
+    const summaryTax = document.getElementById('summary-tax');
     const selectionCount = document.querySelector('.text-white.ml-2'); // Top selection count
 
     const currentQty = parseInt(input.value);
@@ -227,7 +234,8 @@
 
             // 3. Update the Summary Sidebar
             summarySubtotal.innerText = `₹${result.cart.totalAmount.toLocaleString()}`;
-            summaryTotal.innerText = `₹${result.cart.totalAmount.toLocaleString()}`;
+            summaryTax.innerText = `₹${result.cart.tax.toLocaleString()}`;
+            summaryTotal.innerText = `₹${result.cart.grandTotal.toLocaleString()}`;
             summaryItems.innerText = result.cart.totalItems;
 
             // 4. Update the "Selection" count at the top of the page
@@ -236,7 +244,7 @@
             }
 
             window.dispatchEvent(new CustomEvent('cartUpdated', { 
-                detail: { count: result.newCartCount } 
+                detail: { count: result.newCount } 
             }));
 
             showToast("Quantity updated", "success");

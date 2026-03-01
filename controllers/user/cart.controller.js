@@ -7,6 +7,7 @@ import { calculateFinalPrice } from "../../helpers/price.helper.js";
 import Wishlist from "../../models/Wishlist.model.js";
 import { HTTP_STATUS } from "../../constants/httpStatus.js";
 import { getReconciledCart } from "../../services/cart.service.js";
+import { TAX_PERCENTAGE } from "../../constants/app.constants.js";
 
 const MAX_QUANTITY_PER_ITEM = 3;
 const MAX_CART_QUANTITY = 10;
@@ -210,12 +211,18 @@ export const getCart = asyncHandler(async (req, res) => {
   // Navbar count
   res.locals.cartCount = cart.totalItems || 0;
 
+  const subtotal = cart.totalAmount || 0;
+  const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
+  const grandTotal = subtotal + tax;
+
   const cartChanges = req.session.cartChanges || (hasChanges ? changes : []);
 
   delete req.session.cartChanges;
 
   return res.render("user/cart", {
     cart,
+    tax,
+    grandTotal,
     changes: cartChanges,
   });
 });
@@ -340,6 +347,10 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
     0,
   );
 
+  const subtotal = cart.totalAmount || 0;
+  const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
+  const grandTotal = subtotal + tax;
+
   await cart.save();
 
   const updatedItem = cart.items[itemIndex];
@@ -350,6 +361,8 @@ export const updateCartItemQuantity = asyncHandler(async (req, res) => {
     cart: {
       totalItems: cart.totalItems,
       totalAmount: cart.totalAmount,
+      tax,
+      grandTotal
     },
     updatedItem: {
       inventoryId: updatedItem.inventory,

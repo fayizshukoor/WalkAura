@@ -258,19 +258,21 @@
                   <%= product.category.name %> • <%= product.gender %>
                 </p>
 
-
-
-
-
                 <div class="flex items-center justify-between mt-2">
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-white font-semibold">₹<%= product.finalPrice.toLocaleString('en-IN') %></span>
+                    
                     <% if (product.finalPrice < product.price) { %>
-                    <span class="text-xs text-gray-500 line-through">₹<%= product.price.toLocaleString('en-IN') %></span>
+                      <span class="text-xs text-gray-500 line-through">₹<%= product.price.toLocaleString('en-IN') %></span>
+                      
+                      <% const discountPercentage = Math.round(((product.price - product.finalPrice) / product.price) * 100); %>
+                      <span class="bg-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide">
+                        <%= discountPercentage %>% OFF
+                      </span>
                     <% } %>
                   </div>
 
-                  <button type="button" onclick="toggleWishlist(event, '<%= product._id %>', '<%= product.defaultVariantId %>')" class="wishlist-btn w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10 
+                  <button type="button" onclick="toggleWishlist(event, '<%= product._id %>', '<%= product.defaultVariantId %>')" class="wishlist-btn w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10 shrink-0
                     <%= product.isWishlisted ? 'text-red-500 bg-red-500/10' : 'bg-white/5 text-white hover:bg-white/20' %>">
                     <span class="material-icons-outlined text-sm">
                       <%= product.isWishlisted ? 'favorite' : 'favorite_border' %>

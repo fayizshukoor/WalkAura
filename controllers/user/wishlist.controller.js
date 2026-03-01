@@ -79,7 +79,7 @@ export const getWishlistPage = asyncHandler(async (req, res) => {
     };
   });
 
-  res.render("user/wishlist", {
+  return res.render("user/wishlist", {
     wishlistItems,
   });
 });
@@ -145,7 +145,7 @@ export const addToWishlist =  asyncHandler( async (req, res)=>{
     { upsert: true, new: true }
   );
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Added to wishlist",
     wishlistCount: wishlist.items.length,
@@ -220,7 +220,7 @@ export const getVariantSizes = asyncHandler(async (req, res) => {
     inStock: s.stock > 0,
   }));
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     sizes: processedSizes,
   });
