@@ -112,6 +112,7 @@ if (!existingUser) {
   req.session.email = email;
   req.session.otpPurpose = "SIGNUP";
 
+  console.log("Session before redirect:", req.session);
   return res.redirect("/verify-otp");
 });
 
