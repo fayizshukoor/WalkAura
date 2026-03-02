@@ -178,13 +178,17 @@ export const buildOrderData = async ({
   };
 
 
-  export const finalizeOrderAfterPayment = async ({ order, cart }) => {
+  export const finalizeOrderAfterPayment = async ({ order, cart, session = null }) => {
+
+    if(!session){
+      throw new Error("Session is required for finalizing order");
+    }
     // Deduct stock
     for (const item of order.items) {
       const updated = await Inventory.findOneAndUpdate(
         { _id: item.inventory, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
-        { new: true }
+        { new: true, session }
       );
       if (!updated){
         throw new AppError("Stock changed during payment finalization",409);
@@ -201,21 +205,22 @@ export const buildOrderData = async ({
               { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
             ],
           },
-          { $inc: { usedCount: 1 } }
+          { $inc: { usedCount: 1 } },
+          { session }
         );
       }
     // Clear cart
     cart.items = [];
     cart.totalItems = 0;
     cart.totalAmount = 0;
-    await cart.save();
+    await cart.save({ session });
   
     // Mark paid if not COD
     if (order.payment.method !== "COD") {
       order.payment.status = "PAID";
       order.payment.paidAt = new Date();
     }
-    await order.save();
+    await order.save({ session });
   
     return order;
   };

@@ -34,6 +34,7 @@
                         <option value="today" <%= filters.range === 'today' ? 'selected' : '' %>>Today</option>
                         <option value="lastWeek" <%= filters.range === 'lastWeek' ? 'selected' : '' %>>Last 7 Days</option>
                         <option value="lastMonth" <%= filters.range === 'lastMonth' ? 'selected' : '' %>>Last 30 Days</option>
+                        <option value="lastYear" <%= filters.range === 'lastMonth' ? 'selected' : '' %>>Last 1 Year</option>
                         <option value="custom" <%= filters.range === 'custom' ? 'selected' : '' %>>Custom Range</option>
                     </select>
                 </div>
@@ -271,6 +272,9 @@
                     break;
                 case 'lastMonth':
                     fromDate.setMonth(today.getMonth() - 1);
+                    break;
+                case 'lastYear':
+                    fromDate.setFullYear(today.getFullYear() - 1);
                     break;
                 default:
                     return;

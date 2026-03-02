@@ -87,7 +87,7 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
   doc.rect(SAFE_X, TABLE_TOP, SAFE_WIDTH, 20).fill("#1a1a1a");
   doc.fillColor("#ffffff").font("Roboto-Bold").fontSize(8);
   doc.text("Item Description / Status", 50, TABLE_TOP + 6);
-  doc.text("Specs", 220, TABLE_TOP + 6);
+  doc.text("Size/Color", 220, TABLE_TOP + 6);
   doc.text("Qty", 300, TABLE_TOP + 6, { width: 30, align: "center" });
   doc.text("Price", 340, TABLE_TOP + 6, { width: 60, align: "right" });
   doc.text("Refunded", 410, TABLE_TOP + 6, { width: 65, align: "right" }); 

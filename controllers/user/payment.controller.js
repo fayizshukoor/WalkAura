@@ -6,6 +6,7 @@ import {
 } from "../../services/razorpay.service.js";
 import { finalizeOrderAfterPayment } from "../../services/order.service.js";
 import Cart from "../../models/Cart.model.js";
+import mongoose from "mongoose";
 
 export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.body;
@@ -13,15 +14,16 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne({ orderId, user: userId });
 
-  if (!order)
+  if (!order){
     return res.status(404).json({ success: false, message: "Order not found" });
-
-  if (order.payment.method !== "RAZORPAY")
+  }
+  if (order.payment.method !== "RAZORPAY"){
     return res.status(400).json({ success: false, message: "Invalid payment method" });
-
-  if (order.payment.status === "PAID")
+  }
+  if (order.payment.status === "PAID"){
     return res.status(400).json({ success: false, message: "Already paid" });
-
+  }
+  
   const razorpayOrder = await createRazorpayOrder({
     amount: order.pricing.totalAmount,
     receipt: order.orderId,
@@ -44,6 +46,10 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
     } = req.body;
+
+    const order = await Order.findOne({
+      "payment.razorpayOrderId": razorpay_order_id,
+    });
   
     const isValid = verifyRazorpaySignature({
       razorpay_order_id,
@@ -57,29 +63,50 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
   
-    const order = await Order.findOne({
-      "payment.razorpayOrderId": razorpay_order_id,
-    });
   
-    if (!order)
+    if (!order){
       return res.status(404).json({ success: false, message: "Order not found" });
-  
+    } 
+     
     // Idempotency protection
     if (order.payment.status === "PAID") {
       return res.status(200).json({ success: true, message: "Already processed" });
     }
   
     const cart = await Cart.findOne({ user: order.user });
+
+    const session = await mongoose.startSession();
   
-    await finalizeOrderAfterPayment({ order, cart });
+    try {
+      session.startTransaction();
   
-    order.payment.razorpayPaymentId = razorpay_payment_id;
-    order.payment.status = "PAID";
-    order.payment.paidAt = new Date();
+      // Reload order inside session
+      const orderInTxn = await Order.findById(order._id).session(session);
   
-    await order.save();
+      // Finalize order (stock, coupon, cart, etc)
+      await finalizeOrderAfterPayment({
+        order: orderInTxn,
+        cart,
+        session,
+      });
   
-    return res.status(200).json({ success: true });
+      // Update payment details
+      orderInTxn.payment.razorpayPaymentId = razorpay_payment_id;
+      orderInTxn.payment.status = "PAID";
+      orderInTxn.payment.paidAt = new Date();
+  
+      await orderInTxn.save({ session });
+  
+      await session.commitTransaction();
+      session.endSession();
+  
+      return res.status(200).json({ success: true });
+  
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
   });
 
 

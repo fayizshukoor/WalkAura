@@ -406,6 +406,10 @@ export const removeCartItem = asyncHandler(async (req, res) => {
     0,
   );
 
+  const subtotal = cart.totalAmount || 0;
+  const tax = Math.round((subtotal * TAX_PERCENTAGE) / 100);
+  const grandTotal = subtotal + tax;
+
   await cart.save();
 
   // Navbar count
@@ -413,7 +417,12 @@ export const removeCartItem = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     message: "Item removed from cart",
-    newCount: cart.totalItems,
+    cart: {
+      totalAmount: cart.totalAmount,
+      totalItems: cart.totalItems
+    },
+    grandTotal,
+    tax,
   });
 });
 

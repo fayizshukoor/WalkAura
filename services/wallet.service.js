@@ -85,8 +85,13 @@ export const creditToWallet = async ({
     orderId = null,
     referenceId = null,
     description = "",
+    session = null
   }) => {
-    const wallet = await Wallet.findOne({ user: userId });
+
+    if (!session) {
+      throw new Error("Session is required for wallet transaction");
+    }
+    const wallet = await Wallet.findOne({ user: userId }).session(session);
   
     if (!wallet){
       throw new AppError("Wallet not found",400);
@@ -106,13 +111,18 @@ export const creditToWallet = async ({
           totalDebited: amount,
         },
       },
-      { new: true }
+      { 
+        new: true,
+        session
+       }
     );
   
     if (!updatedWallet) {
       throw new AppError("Insufficient wallet balance", 400);    }
   
-    await WalletTransaction.create({
+    await WalletTransaction.create(
+      [
+        {
         wallet: updatedWallet._id,
         user: userId,
         type: "DEBIT",
@@ -121,6 +131,9 @@ export const creditToWallet = async ({
         order: orderId,
         description,
         referenceId
-      });
+      }
+    ],
+      {session}
+    );
   };
   

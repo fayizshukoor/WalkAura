@@ -8,6 +8,7 @@ import { debitFromWallet } from "../../services/wallet.service.js";
 import Wallet from "../../models/Wallet.model.js";
 import { buildOrderData, finalizeOrderAfterPayment } from "../../services/order.service.js";
 import { TAX_PERCENTAGE } from "../../constants/app.constants.js";
+import mongoose from "mongoose";
 
 
 export const getCheckoutPage = asyncHandler(async (req, res) => {
@@ -189,38 +190,75 @@ export const placeOrder = asyncHandler(async (req, res) => {
     appliedCouponCode
   });
 
-  const order = await Order.create(orderData);
 
-  // WALLET
-  if (paymentMethod === "WALLET") {
-    await debitFromWallet({
-      userId,
-      amount: order.pricing.totalAmount,
-      source: "ORDER_PAYMENT",
-      orderId: order._id,
-      description: "Payment via Wallet",
+  if (paymentMethod === "RAZORPAY") {
+    const order = await Order.create(orderData);
+
+    return res.status(201).json({
+      success: true,
+      order: {
+        orderId: order.orderId,
+        _id: order._id,
+        totalAmount: order.pricing.totalAmount,
+        orderDate: order.createdAt,
+      },
+    });
+  }
+
+  // WALLET && COD
+
+  const session = await mongoose.startSession();
+
+  try{
+
+    session.startTransaction();
+
+    // Create order inside transaction
+    const orderArr = await Order.create([orderData], { session });
+    const order = orderArr[0];
+
+    // WALLET
+    if (paymentMethod === "WALLET") {
+      await debitFromWallet({
+        userId,
+        amount: order.pricing.totalAmount,
+        source: "ORDER_PAYMENT",
+        orderId: order._id,
+        description: "Payment via Wallet",
+        session
+      });
+    }
+
+    // Finalize order (stock, coupon, cart, payment status)
+    await finalizeOrderAfterPayment({
+      order,
+      cart,
+      session
     });
 
-    await finalizeOrderAfterPayment({ order, cart });
+    await session.commitTransaction();
+    session.endSession();
 
     req.session.appliedCoupon = null;
+
+    return res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order: {
+        orderId: order.orderId,
+        _id: order._id,
+        totalAmount: order.pricing.totalAmount,
+        orderDate: order.createdAt,
+      },
+    });
+
+  }catch(error){
+
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+
   }
 
-  // COD
-  if (paymentMethod === "COD") {
-    await finalizeOrderAfterPayment({ order, cart });
-    req.session.appliedCoupon = null;
-  }
-
-
-  return res.status(201).json({
-    success: true,
-    message: "Order placed successfully",
-    order: {
-      orderId: order.orderId,
-      _id: order._id,
-      totalAmount: order.pricing.totalAmount,
-      orderDate: order.createdAt,
-    },
-  });
+  
 });
