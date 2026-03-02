@@ -27,6 +27,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(morgan("dev"));
 
 app.use(express.json());
@@ -48,7 +50,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true when using HTTPS
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
     },
