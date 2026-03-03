@@ -6,9 +6,11 @@ import { applyCouponService, getAvailableCouponsForCheckoutService } from "../..
 import { calculateShipping } from "../../helpers/shipping.helper.js";
 import { debitFromWallet } from "../../services/wallet.service.js";
 import Wallet from "../../models/Wallet.model.js";
-import { buildOrderData, finalizeOrderAfterPayment } from "../../services/order.service.js";
+import { buildOrderData } from "../../services/order.service.js";
 import { TAX_PERCENTAGE } from "../../constants/app.constants.js";
 import mongoose from "mongoose";
+import Inventory from "../../models/Inventory.model.js";
+import Coupon from "../../models/Coupon.model.js";
 
 
 export const getCheckoutPage = asyncHandler(async (req, res) => {
@@ -190,51 +192,77 @@ export const placeOrder = asyncHandler(async (req, res) => {
     appliedCouponCode
   });
 
-
-  if (paymentMethod === "RAZORPAY") {
-    const order = await Order.create(orderData);
-
-    return res.status(201).json({
-      success: true,
-      order: {
-        orderId: order.orderId,
-        _id: order._id,
-        totalAmount: order.pricing.totalAmount,
-        orderDate: order.createdAt,
-      },
-    });
-  }
-
-  // WALLET && COD
-
   const session = await mongoose.startSession();
 
-  try{
-
+  try {
     session.startTransaction();
 
-    // Create order inside transaction
-    const orderArr = await Order.create([orderData], { session });
+    const expiresAt =
+      paymentMethod === "RAZORPAY"
+        ? new Date(Date.now() + 5 * 60 * 1000)
+        : undefined;
+
+    const orderArr = await Order.create(
+      [
+        {
+          ...orderData,
+          expiresAt,
+        },
+      ],
+      { session }
+    );
+
     const order = orderArr[0];
 
-    // WALLET
+    //  STOCK RESERVATION (Atomic)
+    for (const item of order.items) {
+      const updated = await Inventory.findOneAndUpdate(
+        { _id: item.inventory, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } },
+        { session }
+      );
+
+      if (!updated) {
+        return res.status(409).json({message: "Stock changed during payment finalization "})
+      }
+    }
+
+    // Coupon increment
+    if (order.appliedCoupon?.coupon) {
+      const updatedCoupon = await Coupon.findOneAndUpdate(
+        {
+          _id: order.appliedCoupon.coupon,
+          $or: [
+            { usageLimit: { $exists: false } },
+            { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
+          ],
+        },
+        { $inc: { usedCount: 1 } },
+        { session }
+      );
+
+      if (!updatedCoupon) {
+        return res.status(400).json({message: "Coupon limit exceeded"});
+      }
+    }
+
+    // Wallet handling
     if (paymentMethod === "WALLET") {
       await debitFromWallet({
         userId,
         amount: order.pricing.totalAmount,
         source: "ORDER_PAYMENT",
         orderId: order._id,
-        description: "Payment via Wallet",
-        session
+        description: "Wallet payment",
+        session,
       });
     }
 
-    // Finalize order (stock, coupon, cart, payment status)
-    await finalizeOrderAfterPayment({
-      order,
-      cart,
-      session
-    });
+    // Clear cart
+    cart.items = [];
+    cart.totalItems = 0;
+    cart.totalAmount = 0;
+    await cart.save({ session });
 
     await session.commitTransaction();
     session.endSession();
@@ -243,22 +271,16 @@ export const placeOrder = asyncHandler(async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Order placed successfully",
       order: {
         orderId: order.orderId,
-        _id: order._id,
         totalAmount: order.pricing.totalAmount,
-        orderDate: order.createdAt,
       },
     });
 
-  }catch(error){
-
+  } catch (err) {
     await session.abortTransaction();
     session.endSession();
-    throw error;
-
+    throw err;
   }
-
   
 });

@@ -95,7 +95,8 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 
 // Allowed admin status transitions
 const ALLOWED_TRANSITIONS = {
-  PENDING: ["SHIPPED", "CANCELLED"],
+  PENDING: ["PLACED", "SHIPPED", "CANCELLED"],
+  PLACED: ["SHIPPED", "CANCELLED"],
   SHIPPED: ["OUT_FOR_DELIVERY"],
   OUT_FOR_DELIVERY: ["DELIVERED"],
   DELIVERED: [],
@@ -230,7 +231,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  if(newStatus === "DELIVERED" && order.payment.method === "COD" && order.payment.status === "PENDING"){
+  if(newStatus === "DELIVERED" && order.payment.method === "COD" && order.payment.status === "PLACED"){
     order.payment.status = "PAID";
   }
 

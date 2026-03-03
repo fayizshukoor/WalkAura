@@ -4,9 +4,8 @@ import {
   createRazorpayOrder,
   verifyRazorpaySignature,
 } from "../../services/razorpay.service.js";
-import { finalizeOrderAfterPayment } from "../../services/order.service.js";
-import Cart from "../../models/Cart.model.js";
-import mongoose from "mongoose";
+import { restoreStockAndCancel } from "../../services/order.service.js";
+
 
 export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.body;
@@ -17,6 +16,12 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   if (!order){
     return res.status(404).json({ success: false, message: "Order not found" });
   }
+
+  if (order.expiresAt && order.expiresAt < new Date()) {
+    await restoreStockAndCancel(order);
+    return res.status(400).json({ message: "Order expired" });
+ }
+
   if (order.payment.method !== "RAZORPAY"){
     return res.status(400).json({ success: false, message: "Invalid payment method" });
   }
@@ -41,73 +46,94 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
 
 
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    } = req.body;
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  } = req.body;
 
-    const order = await Order.findOne({
-      "payment.razorpayOrderId": razorpay_order_id,
-    });
-  
-    const isValid = verifyRazorpaySignature({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    });
-  
-    if (!isValid){
-      order.payment.status = "FAILED";
-      await order.save();
-      return res.status(400).json({ success: false, message: "Invalid signature" });
-    }
-  
-  
-    if (!order){
-      return res.status(404).json({ success: false, message: "Order not found" });
-    } 
-     
-    // Idempotency protection
-    if (order.payment.status === "PAID") {
-      return res.status(200).json({ success: true, message: "Already processed" });
-    }
-  
-    const cart = await Cart.findOne({ user: order.user });
-
-    const session = await mongoose.startSession();
-  
-    try {
-      session.startTransaction();
-  
-      // Reload order inside session
-      const orderInTxn = await Order.findById(order._id).session(session);
-  
-      // Finalize order (stock, coupon, cart, etc)
-      await finalizeOrderAfterPayment({
-        order: orderInTxn,
-        cart,
-        session,
-      });
-  
-      // Update payment details
-      orderInTxn.payment.razorpayPaymentId = razorpay_payment_id;
-      orderInTxn.payment.status = "PAID";
-      orderInTxn.payment.paidAt = new Date();
-  
-      await orderInTxn.save({ session });
-  
-      await session.commitTransaction();
-      session.endSession();
-  
-      return res.status(200).json({ success: true });
-  
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
-    }
+  const order = await Order.findOne({
+    "payment.razorpayOrderId": razorpay_order_id,
   });
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: "Order not found",
+    });
+  }
+
+  // Idempotency
+  if (order.payment.status === "PAID") {
+    return res.status(200).json({
+      success: true,
+      message: "Already processed",
+    });
+  }
+
+  // Order must be in payable state
+  if (order.orderStatus !== "PENDING") {
+    return res.status(400).json({
+      success: false,
+      message: "Order not in payable state",
+    });
+  }
+
+  // Expiry check
+  if (order.expiresAt && order.expiresAt < new Date()) {
+    await restoreStockAndCancel(order);
+    return res.status(400).json({
+      success: false,
+      message: "Order expired",
+    });
+  }
+
+  const isValid = verifyRazorpaySignature({
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  });
+
+  if (!isValid) {
+    order.payment.status = "FAILED";
+
+    const cancellableItems = order.items.filter((item) => item.status === "PENDING");
+
+      for (const item of cancellableItems) {
+            item.status = "CANCELLED";
+            item.cancellation = {
+              reason: "Payment Failed",
+              at: new Date(),
+              by: "ADMIN",
+            };
+      
+            item.statusTimeline.push({
+              status: "CANCELLED",
+              at: new Date()
+            })
+          }
+          
+    order.orderStatus = "CANCELLED";
+    await order.save();
+
+    return res.status(400).json({
+      success: false,
+      message: "Invalid signature",
+    });
+  }
+
+  // Success
+  order.payment.razorpayPaymentId = razorpay_payment_id;
+  order.payment.razorpaySignature = razorpay_signature;
+  order.payment.status = "PAID";
+  order.payment.paidAt = new Date();
+  order.orderStatus = "PLACED";
+
+  await order.save();
+
+  return res.status(200).json({ success: true });
+});
+
 
 
   export const getPaymentFailedPage = asyncHandler(async (req, res) => {

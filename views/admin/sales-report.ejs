@@ -38,7 +38,7 @@
                         <option value="custom" <%= filters.range === 'custom' ? 'selected' : '' %>>Custom Range</option>
                     </select>
                 </div>
-
+        
                 <div id="dateContainer" class="flex flex-wrap gap-4 flex-[2]">
                     <div class="flex-1 min-w-[160px] space-y-2">
                         <label class="block text-xs uppercase text-gray-500 font-black tracking-widest ml-1">From Date</label>
@@ -49,18 +49,13 @@
                         <input type="date" name="to" id="toDate" value="<%= filters.to %>" class="w-full bg-[#18181b] border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all [color-scheme:dark]">
                     </div>
                 </div>
-
+        
                 <div class="flex items-center gap-3">
                     <button type="button" id="clearFilters" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 active:scale-95">
                         <span class="material-symbols-outlined">restart_alt</span>
                         Clear
                     </button>
-                
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20 active:scale-95">
-                        <span class="material-symbols-outlined">filter_list</span>
-                        Apply Filters
-                    </button>
-                </div>
+                    </div>
             </form>
         </div>
 
@@ -214,114 +209,115 @@
 
 <script>
    document.addEventListener('DOMContentLoaded', () => {
-        const rangeSelect = document.getElementById('rangeSelect');
-        const fromInput = document.getElementById('fromDate');
-        const toInput = document.getElementById('toDate');
-        const filterForm = document.getElementById('filterForm');
-        const clearBtn = document.getElementById('clearFilters');
+    const rangeSelect = document.getElementById('rangeSelect');
+    const fromInput = document.getElementById('fromDate');
+    const toInput = document.getElementById('toDate');
+    const filterForm = document.getElementById('filterForm');
+    const clearBtn = document.getElementById('clearFilters');
 
-        const formatDate = (date) => {
-            const d = new Date(date);
-            let month = '' + (d.getMonth() + 1);
-            let day = '' + d.getDate();
-            const year = d.getFullYear();
-            if (month.length < 2) month = '0' + month;
-            if (day.length < 2) day = '0' + day;
-            return [year, month, day].join('-');
-        };
+    // --- Helper Functions ---
 
-        const todayStr = formatDate(new Date());
+    const formatDate = (date) => {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [year, month, day].join('-');
+    };
 
-        // 2. Set Max Date attribute to prevent future date selection
-        fromInput.setAttribute('max', todayStr);
-        toInput.setAttribute('max', todayStr);
+    // Function to ensure To Date is valid based on From Date
+    const validateToDate = () => {
+        toInput.min = fromInput.value;
+        if (toInput.value && toInput.value < fromInput.value) {
+            toInput.value = fromInput.value;
+        }
+    };
 
-        // 3. Logic to pre-fill last 7 days if inputs are empty (initial load)
-        if (!fromInput.value || !toInput.value) {
+    const updateDateRange = (range) => {
+        const today = new Date();
+        let fromDate = new Date();
+
+        switch (range) {
+            case 'today':
+                fromDate = today;
+                break;
+            case 'lastWeek':
+                fromDate.setDate(today.getDate() - 7);
+                break;
+            case 'lastMonth':
+                fromDate.setMonth(today.getMonth() - 1);
+                break;
+            case 'lastYear':
+                fromDate.setFullYear(today.getFullYear() - 1);
+                break;
+            default:
+                return;
+        }
+        fromInput.value = formatDate(fromDate);
+        toInput.value = formatDate(today);
+        validateToDate();
+    };
+
+    // --- Initialization ---
+
+    const todayStr = formatDate(new Date());
+    fromInput.setAttribute('max', todayStr);
+    toInput.setAttribute('max', todayStr);
+
+    // Initial load: Pre-fill last 7 days if empty
+    if (!fromInput.value || !toInput.value) {
         const lastWeek = new Date();
         lastWeek.setDate(lastWeek.getDate() - 7);
-
         fromInput.value = formatDate(lastWeek);
         toInput.value = todayStr;
-
-        // Match the dropdown to the default pre-filled state
         rangeSelect.value = 'lastWeek';
-        }
-
-        // Function to ensure To Date is valid based on From Date
-        const validateToDate = () => {
-            // Set the minimum selectable 'To Date' to the current 'From Date'
-            toInput.min = fromInput.value;
-
-            // If To Date is currently before From Date, reset To Date to match From Date
-            if (toInput.value && toInput.value < fromInput.value) {
-                toInput.value = fromInput.value;
-            }
-        };
-
-        const updateDateRange = (range) => {
-            const today = new Date();
-            let fromDate = new Date();
-
-            switch (range) {
-                case 'today':
-                    fromDate = today;
-                    break;
-                case 'lastWeek':
-                    fromDate.setDate(today.getDate() - 7);
-                    break;
-                case 'lastMonth':
-                    fromDate.setMonth(today.getMonth() - 1);
-                    break;
-                case 'lastYear':
-                    fromDate.setFullYear(today.getFullYear() - 1);
-                    break;
-                default:
-                    return;
-            }
-            fromInput.value = formatDate(fromDate);
-            toInput.value = formatDate(today);
-            validateToDate(); // Ensure constraints update after auto-fill
-        };
-
-        clearBtn.addEventListener('click', () => {
-            // 1. Reset Select to default (e.g., today)
-            rangeSelect.value = 'lastWeek';
-            
-            // 2. Trigger the date update logic for 'today'
-            updateDateRange('lastWeek');
-            
-            // 3. Submit the form to refresh data
-            filterForm.submit();
-        });
-
-        // Listen for changes on Range Select
-        rangeSelect.addEventListener('change', (e) => {
-            if (e.target.value !== 'custom') {
-                updateDateRange(e.target.value);
-            }
-        });
-
-        // Listen for manual changes on From Date
-        fromInput.addEventListener('change', () => {
-            validateToDate();
-            // If user manually changes date, set select to 'custom'
-            rangeSelect.value = 'custom';
-        });
-
-        toInput.addEventListener('change', () => {
-        rangeSelect.value = 'custom';
-    });
+    }
     
-        // Prevent form submission if validation fails (Final check)
-        filterForm.addEventListener('submit', (e) => {
-            if (toInput.value < fromInput.value) {
-                e.preventDefault();
-                alert('The "To Date" cannot be earlier than the "From Date".');
-            }
-        });
+    validateToDate();
 
-        // Initialize min attribute on page load
-        validateToDate();
+    // --- Event Listeners (Auto-Submit Logic) ---
+
+    // 1. Listen for changes on Range Select
+    rangeSelect.addEventListener('change', (e) => {
+        if (e.target.value !== 'custom') {
+            updateDateRange(e.target.value);
+            // Submit immediately when a preset (Today, Last Week, etc.) is chosen
+            filterForm.submit();
+        }
     });
+
+    // 2. Listen for manual changes on Date Inputs
+    const handleManualDateChange = () => {
+        validateToDate();
+        rangeSelect.value = 'custom';
+        
+        // Short delay ensures that if "To Date" was auto-corrected, 
+        // the correct value is sent in the request.
+        setTimeout(() => {
+            if (fromInput.value && toInput.value) {
+                filterForm.submit();
+            }
+        }, 50);
+    };
+
+    fromInput.addEventListener('change', handleManualDateChange);
+    toInput.addEventListener('change', handleManualDateChange);
+
+    // 3. Clear Button Logic
+    clearBtn.addEventListener('click', () => {
+        rangeSelect.value = 'lastWeek';
+        updateDateRange('lastWeek');
+        filterForm.submit();
+    });
+
+    // 4. Safety check on form submission
+    filterForm.addEventListener('submit', (e) => {
+        if (toInput.value < fromInput.value) {
+            e.preventDefault();
+            alert('The "To Date" cannot be earlier than the "From Date".');
+        }
+    });
+});
 </script>

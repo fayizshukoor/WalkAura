@@ -594,28 +594,36 @@
     /**
      * ORDER LOGIC
      */
+     let isPlacingOrder = false;
+
      async function handlePlaceOrder() {
+        if (isPlacingOrder) return;
+        isPlacingOrder = true;
+
         const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked')?.value;
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
 
         const totalAmount = parseInt(document.getElementById('totalAmountDisplay').innerText.replace(/[₹,]/g, ''));
         
         if (!selectedAddress) {
+            isPlacingOrder = false;
             return showSwal("Notice", "Please select a shipping address", "info");
         }
         if (!paymentMethod) {
+            isPlacingOrder = false;
             return showSwal("Notice", "Please select a payment method", "info");
         }
 
         if (paymentMethod === "COD" && totalAmount > 10000) {
-        return Swal.fire({
-            title: "COD Unavailable",
-            text: "Cash on Delivery is only available for orders below ₹10,000. Please choose an online payment method.",
-            icon: "warning",
-            background: '#12141a',
-            color: '#ffffff',
-            confirmButtonColor: '#4f46e5'
-        });
+            isPlacingOrder = false;
+            return Swal.fire({
+                title: "COD Unavailable",
+                text: "Cash on Delivery is only available for orders below ₹10,000. Please choose an online payment method.",
+                icon: "warning",
+                background: '#12141a',
+                color: '#ffffff',
+                confirmButtonColor: '#4f46e5'
+            });
     }
 
         try {
@@ -642,6 +650,29 @@
 
             const result = await response.json();
 
+            if (!response.ok) {
+            isPlacingOrder = false;
+
+            if (response.status === 409) {
+                await Swal.fire({
+                    title: "Cart Updated",
+                    text: result.message,
+                    icon: "warning",
+                    background: '#12141a',
+                    color: '#ffffff'
+                });
+                return window.location.href = "/cart";
+            }
+
+            return Swal.fire({
+                title: "Order Failed",
+                text: result.message || "Unable to place order",
+                icon: "error",
+                background: '#12141a',
+                color: '#ffffff'
+            });
+        }
+
             if (response.ok) {
 
                 if(paymentMethod === "RAZORPAY"){
@@ -653,26 +684,6 @@
                 }, 2000);
                 return;
             } 
-            
-            if (response.status === 409) {
-              await Swal.fire({
-                title: "Cart Updated",
-                text: result.message || "Some items in your cart have changed. Please review before placing the order.",
-                icon: "warning",
-                background: '#12141a',
-                color: '#ffffff',
-                confirmButtonText: "Review Cart"
-              });
-              return window.location.href = "/cart";
-            }
-
-            await Swal.fire({
-              title: "Order Failed",
-              text: result.message || "Unable to place order. Please check your details.",
-              icon: "error",
-              background: '#12141a',
-              color: '#ffffff'
-            });
 
         } catch (err) {
             console.error(err);
@@ -733,18 +744,21 @@
                     body: JSON.stringify(response)
                 });
 
-                if (!verifyRes.ok) {
-                    window.location.href = `/payment-failed/${orderId}`;
-                    return;
-                }
-
                 const verifyData = await verifyRes.json();
 
-                if (verifyData.success) {
-                    window.location.href = `/order-success/${orderId}`;
-                } else {
-                    window.location.href = `/payment-failed/${orderId}`;
+                if (verifyRes.ok && verifyData.success) {
+                    return window.location.href = `/order-success/${orderId}`;
                 }
+
+                await Swal.fire({
+                    title: "Payment Verification Failed",
+                    text: verifyData.message || "Payment failed",
+                    icon: "error",
+                    background: '#12141a',
+                    color: '#ffffff'
+                });
+
+                window.location.href = `/payment-failed/${orderId}`;
             },
 
             modal: {
@@ -759,10 +773,12 @@
         };
 
         const rzp = new Razorpay(options);
-        rzp.open();
-        
-        // Close the "Initializing" Swal once the Razorpay popup appears
+        rzp.on('payment.failed', function () {
+            window.location.href = `/payment-failed/${orderId}`;
+        });
+
         Swal.close();
+        rzp.open();
 
     } catch (err) {
         console.error("Payment Error:", err);

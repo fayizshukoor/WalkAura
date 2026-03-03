@@ -9,6 +9,7 @@ import AppError from "../utils/appError.js";
 import { generateOrderId } from "../utils/generateOrderId.util.js";
 import { validateCouponForSubtotal } from "./coupon.service.js";
 import { TAX_PERCENTAGE } from "../constants/app.constants.js";
+import mongoose from "mongoose";
 
 export const buildOrderData = async ({
     userId,
@@ -162,7 +163,7 @@ export const buildOrderData = async ({
         status: paymentMethod === "WALLET" ? "PAID" : "PENDING",
         refundedAmount: 0,
       },
-      orderStatus: "PENDING",
+      orderStatus: paymentMethod === "RAZORPAY" ? "PENDING" : "PLACED",
       pricing: {
         subtotal,
         tax,
@@ -178,49 +179,49 @@ export const buildOrderData = async ({
   };
 
 
-  export const finalizeOrderAfterPayment = async ({ order, cart, session = null }) => {
-
-    if(!session){
-      throw new Error("Session is required for finalizing order");
-    }
-    // Deduct stock
-    for (const item of order.items) {
-      const updated = await Inventory.findOneAndUpdate(
-        { _id: item.inventory, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } },
-        { new: true, session }
-      );
-      if (!updated){
-        throw new AppError("Stock changed during payment finalization",409);
-      }
-    }
+  export const restoreStockAndCancel = async (order) => {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
   
-    // Increment coupon usage safely
-    if (order.appliedCoupon?.coupon) {
-        await Coupon.findOneAndUpdate(
-          {
-            _id: order.appliedCoupon.coupon,
-            $or: [
-              { usageLimit: { $exists: false } },
-              { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
-            ],
-          },
-          { $inc: { usedCount: 1 } },
+      for (const item of order.items) {
+        await Inventory.updateOne(
+          { _id: item.inventory },
+          { $inc: { stock: item.quantity } },
           { session }
         );
       }
-    // Clear cart
-    cart.items = [];
-    cart.totalItems = 0;
-    cart.totalAmount = 0;
-    await cart.save({ session });
   
-    // Mark paid if not COD
-    if (order.payment.method !== "COD") {
-      order.payment.status = "PAID";
-      order.payment.paidAt = new Date();
+      if (order.appliedCoupon?.coupon) {
+        await Coupon.updateOne(
+          { _id: order.appliedCoupon.coupon },
+          { $inc: { usedCount: -1 } },
+          { session }
+        );
+      }
+
+      const cancellableItems = order.items.filter((item) => item.status === "PENDING");
+
+      for (const item of cancellableItems) {
+            item.status = "CANCELLED";
+            item.cancellation = {
+              reason: "Payment Failed",
+              at: new Date(),
+              by: "ADMIN",
+            };
+      
+            item.statusTimeline.push({
+              status: "CANCELLED",
+              at: new Date()
+            })
+          }
+  
+      order.orderStatus = "CANCELLED";
+      order.payment.status = "FAILED";
+      await order.save({ session });
+  
+      await session.commitTransaction();
+    } finally {
+      session.endSession();
     }
-    await order.save({ session });
-  
-    return order;
-  };
+  }

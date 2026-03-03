@@ -48,6 +48,7 @@
                 <select name="status" onchange="this.form.submit()" class="bg-black border border-gray-800 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none cursor-pointer transition-colors">
                     <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All Status</option>
                     <option value="PENDING" <%= filters.status === 'PENDING' ? 'selected' : '' %>>Pending</option>
+                    <option value="PLACED" <%= filters.status === 'PLACED' ? 'selected' : '' %>>Placed</option>
                     <option value="SHIPPED" <%= filters.status === 'SHIPPED' ? 'selected' : '' %>>Shipped</option>
                     <option value="OUT_FOR_DELIVERY" <%= filters.status === 'OUT_FOR_DELIVERY' ? 'selected' : '' %>>Out For Delivery</option>
                     <option value="DELIVERED" <%= filters.status === 'DELIVERED' ? 'selected' : '' %>>Delivered</option>
@@ -127,6 +128,7 @@
                                             const status = order.orderStatus;
                                             const sColors = {
                                                 'PENDING': 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5',
+                                                'PLACED': 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5',
                                                 'SHIPPED': 'border-blue-500/30 text-blue-500 bg-blue-500/5',
                                                 'OUT_FOR_DELIVERY': 'border-indigo-500/30 text-indigo-500 bg-indigo-500/5',
                                                 'DELIVERED': 'border-green-500/30 text-green-500 bg-green-500/5',
@@ -134,7 +136,8 @@
                                                 'RETURNED': 'border-purple-500/30 text-purple-500 bg-purple-500/5'
                                             };
                                             const allowedSteps = {
-                                                'PENDING': ['SHIPPED', 'CANCELLED'],
+                                                'PENDING': ['PLACED', 'SHIPPED', 'CANCELLED'],
+                                                'PLACED': ['SHIPPED', 'CANCELLED'],
                                                 'SHIPPED': ['OUT_FOR_DELIVERY'],
                                                 'OUT_FOR_DELIVERY': ['DELIVERED'],
                                                 'DELIVERED': [], 'CANCELLED': [], 'RETURNED': []

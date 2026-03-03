@@ -142,7 +142,7 @@ const orderSchema = new mongoose.Schema(
 
     orderStatus: {
       type: String,
-      enum: ["PENDING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURNED"],
+      enum: ["PENDING", "PLACED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "RETURNED"],
       default: "PENDING",
     },
 
@@ -164,6 +164,12 @@ const orderSchema = new mongoose.Schema(
       discount: { type: Number, default: 0 },
       totalAmount: { type: Number, required: true },
     },
+
+    expiresAt:{
+      type: Date,
+      index: true
+    },
+
     deliveredAt: Date,
     cancelledAt: Date,
   },

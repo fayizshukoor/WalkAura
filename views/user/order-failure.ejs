@@ -55,104 +55,136 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 
+let isRetrying = false;
+
 async function startRazorpayPayment(orderId) {
+  if (isRetrying) return;
+  isRetrying = true;
+
   try {
-      // 1. Show "Restarting" Loading State
-      Swal.fire({
+    Swal.fire({
+      background: '#12141a',
+      color: '#fff',
+      title: 'Re-initiating Payment',
+      text: 'Connecting to secure gateway...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const response = await fetch('/razorpay/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      isRetrying = false;
+
+      // If expired or cancelled, send user back to cart
+      if (response.status === 400 || response.status === 404) {
+        await Swal.fire({
           background: '#12141a',
           color: '#fff',
-          title: 'Re-initiating Payment',
-          text: 'Connecting to secure gateway...',
-          allowOutsideClick: false,
-          didOpen: () => {
-              Swal.showLoading();
-          }
-      });
+          icon: 'warning',
+          title: 'Order Expired',
+          text: data.message || 'This order can no longer be paid.',
+          confirmButtonColor: '#4f46e5'
+        });
 
-      const response = await fetch('/razorpay/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId })
-      });
-
-      const data = await response.json();
-
-      // If creation fails, we stay on the failure page but show the error
-      if (!data.success) {
-          Swal.fire({
-              background: '#12141a',
-              color: '#fff',
-              icon: 'error',
-              title: 'Order Initialization Failed',
-              text: data.message || 'Please try again later.',
-              confirmButtonColor: '#4f46e5'
-          });
-          return;
+        return window.location.href = '/cart';
       }
 
-      const options = {
-          key: data.key,
-          amount: data.razorpayOrder.amount,
-          currency: "INR",
-          name: "WalkAura",
-          description: "Retry Payment - Order #" + orderId,
-          order_id: data.razorpayOrder.id,
-          
-          handler: async function (response) {
-              // 2. Verification Loading State
-              Swal.fire({
-                  background: '#12141a',
-                  color: '#fff',
-                  title: 'Verifying Success',
-                  text: 'Confirming your payment...',
-                  allowOutsideClick: false,
-                  didOpen: () => { Swal.showLoading(); }
-              });
+      return Swal.fire({
+        background: '#12141a',
+        color: '#fff',
+        icon: 'error',
+        title: 'Payment Initialization Failed',
+        text: data.message || 'Please try again later.',
+        confirmButtonColor: '#4f46e5'
+      });
+    }
 
-              const verifyRes = await fetch('/razorpay/verify', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(response)
-              });
+    const options = {
+      key: data.key,
+      amount: data.razorpayOrder.amount,
+      currency: "INR",
+      name: "WalkAura",
+      description: `Retry Payment - Order #${orderId}`,
+      order_id: data.razorpayOrder.id,
 
-              const verifyData = await verifyRes.json();
+      handler: async function (paymentResponse) {
+        Swal.fire({
+          background: '#12141a',
+          color: '#fff',
+          title: 'Verifying Payment',
+          text: 'Confirming your transaction...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
 
-              if (verifyData.success) {
-                  window.location.href = `/order-success/${orderId}`;
-              } else {
-                  // If verification fails, reload the failure page with the orderId
-                  window.location.href = `/payment-failed/${orderId}`;
-              }
-          },
+        const verifyRes = await fetch('/razorpay/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentResponse)
+        });
 
-          modal: {
-              ondismiss: function () {
-                  // Close the loader so they can click 'Retry' again if they closed the modal
-                  Swal.close();
-              }
-          },
+        const verifyData = await verifyRes.json();
 
-          theme: {
-              color: "#4f46e5" // Indigo primary
-          }
-      };
+        if (verifyRes.ok && verifyData.success) {
+          return window.location.href = `/order-success/${orderId}`;
+        }
 
-      const rzp = new Razorpay(options);
-      rzp.open();
-      
-      // Hide initialization loader once the Razorpay window is active
-      Swal.close();
+        isRetrying = false;
 
-  } catch (err) {
-      console.error("Retry Error:", err);
-      Swal.fire({
+        await Swal.fire({
           background: '#12141a',
           color: '#fff',
           icon: 'error',
-          title: 'Connection Error',
-          text: 'Could not connect to the payment server.',
+          title: 'Payment Failed',
+          text: verifyData.message || 'Verification failed.',
           confirmButtonColor: '#4f46e5'
-      });
+        });
+
+        window.location.href = `/payment-failed/${orderId}`;
+      },
+
+      modal: {
+        ondismiss: function () {
+          isRetrying = false;
+          Swal.close();
+        }
+      },
+
+      theme: {
+        color: "#4f46e5"
+      }
+    };
+
+    const rzp = new Razorpay(options);
+
+    //  Important: Listen to payment failure event
+    rzp.on('payment.failed', function () {
+      isRetrying = false;
+      window.location.href = `/payment-failed/${orderId}`;
+    });
+
+    Swal.close();
+    rzp.open();
+
+  } catch (err) {
+    console.error("Retry Error:", err);
+    isRetrying = false;
+
+    Swal.fire({
+      background: '#12141a',
+      color: '#fff',
+      icon: 'error',
+      title: 'Connection Error',
+      text: 'Could not connect to the payment server.',
+      confirmButtonColor: '#4f46e5'
+    });
   }
 }
 
