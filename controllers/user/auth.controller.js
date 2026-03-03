@@ -245,6 +245,11 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
     return res.redirect("/verify-otp");
   }
 
+  if(user?.googleId && !user?.password){
+    req.flash("error", "Google users cannot reset password");
+    return res.redirect("/forgot-password");
+  }
+
   req.flash("error", "Invalid Email");
   return res.redirect("/forgot-password");
 });
