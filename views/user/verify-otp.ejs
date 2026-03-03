@@ -231,14 +231,69 @@ otpInputs.forEach((input, index) => {
 });
 
 /* ---------------- FORM SUBMIT ---------------- */
-otpForm.addEventListener("submit", (e) => {
+/* ---------------- UPDATED FORM SUBMIT (FETCH) ---------------- */
+otpForm.addEventListener("submit", async (e) => {
+  e.preventDefault(); // Prevent page reload
+
+  // 1. Gather the OTP
   let code = "";
   otpInputs.forEach(input => code += input.value);
   finalOtpInput.value = code;
 
+  // 2. Basic Validation
   if (code.length < 6) {
-    e.preventDefault();
     showError("Please enter the full 6-digit code");
+    return;
+  }
+
+  // 3. Disable button to prevent double submission
+  const submitBtn = otpForm.querySelector('button[type="submit"]');
+  const originalBtnText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Verifying...";
+
+  try {
+    const response = await fetch(otpForm.action, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ otp: code }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      // Show success message briefly before redirecting
+      showSuccess(data.message || "Verified successfully!");
+      
+      // Clear interval and storage so timer doesn't persist on next visit
+      clearInterval(countdownInterval);
+      localStorage.removeItem(STORAGE_KEY);
+
+      // Redirect user to the path provided by backend
+      setTimeout(() => {
+        window.location.href = data.redirectUrl;
+      }, 1000); 
+    } else {
+      // Show error returned from backend
+      showError(data.message || "Verification failed");
+      // 2. Clear all input fields
+      otpInputs.forEach(input => input.value = "");
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+
+      // 4. Focus back to the first input for UX
+      otpInputs[0].focus();
+    }
+  } catch (err) {
+    showError("Network error. Please try again.");
+    // Also clear inputs on network failure
+    otpInputs.forEach(input => input.value = "");
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
+    otpInputs[0].focus();
   }
 });
 
@@ -271,7 +326,7 @@ function startTimer(seconds, isNew = true) {
 
     if (secondsLeft <= 0) {
       clearInterval(countdownInterval);
-      localStorage.removeItem(STORAGE_KEY);
+      // localStorage.removeItem(STORAGE_KEY);
       timerWrapper.classList.add("hidden");
       resendMessage.classList.remove("hidden");
       resendBtn.disabled = false;
@@ -293,9 +348,25 @@ function startTimer(seconds, isNew = true) {
 }
 
 const savedTime = localStorage.getItem(STORAGE_KEY);
-if (savedTime && parseInt(savedTime, 10) > Date.now()) {
-  startTimer(null, false);
+const currentTime = Date.now();
+
+if (savedTime) {
+  const targetTime = parseInt(savedTime, 10);
+  
+  if (targetTime > currentTime) {
+    // Timer is still active, resume it
+    startTimer(null, false);
+  } else {
+    // Timer was started previously but is now expired
+    // Force the UI into the "Resend" state without starting a new timer
+    timerWrapper.classList.add("hidden");
+    resendMessage.classList.remove("hidden");
+    resendBtn.disabled = false;
+    resendBtn.classList.remove("opacity-40", "cursor-not-allowed");
+    resendBtn.classList.add("hover:underline");
+  }
 } else {
+  // Brand new visit (no timer ever started)
   startTimer(TIMER_DURATION, true);
 }
 

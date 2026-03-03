@@ -15,26 +15,22 @@ export const showVerifyOTP = (req, res) => {
 export const verifyOTP = asyncHandler(async (req, res) => {
   const email = req.session.email;
   const purpose = req.session.otpPurpose;
-
-  if (!email || !purpose) {
-    return res.redirect("/signup");
-  }
   const { otp } = req.body;
 
-  const otpRecord = await OTP.findOne({
-    email,
-    purpose,
-  }).sort({ createdAt: -1 });
+  if (!email || !purpose) {
+    return res.status(400).json({ success: false, message: "Session expired. Please signup again.", redirectUrl: "/signup" });
+  }
 
+  const otpRecord = await OTP.findOne({ email, purpose }).sort({ createdAt: -1 });
+
+  // Handle Too Many Attempts
   if (otpRecord?.attempts >= 5) {
     await OTP.deleteOne({ _id: otpRecord._id });
-    req.flash("error", "Too many failed attempts. Please request a new OTP");
-    return res.redirect("/verify-otp");
+    return res.status(429).json({ success: false, message: "Too many failed attempts. Please request a new OTP" });
   }
 
   if (!otpRecord) {
-    req.flash("error", "OTP invalid or expired");
-    return res.redirect("/verify-otp");
+    return res.status(400).json({ success: false, message: "OTP invalid or expired" });
   }
 
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
@@ -42,35 +38,89 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   if (otpRecord.otp !== hashedOtp) {
     otpRecord.attempts += 1;
     await otpRecord.save();
-    req.flash(
-      "error",
-      `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
-    );
-    return res.redirect("/verify-otp");
+    return res.status(400).json({ 
+      success: false, 
+      message: `OTP invalid. ${5 - otpRecord.attempts} attempts remaining` 
+    });
   }
 
+  // logic for SUCCESS
+  await OTP.deleteMany({ email, purpose });
+
   if (purpose === "SIGNUP") {
-    await User.findOneAndUpdate(
-      { email },
-      { isVerified: true },
-      { new: true },
-    );
-    req.flash("success", "Email verified Successfully.Please Login.");
-    return res.redirect("/login");
+    await User.findOneAndUpdate({ email }, { isVerified: true });
+    return res.json({ success: true, message: "Email verified. Please Login.", redirectUrl: "/login" });
   }
 
   if (purpose === "FORGOT_PASSWORD") {
     req.session.allowPasswordReset = true;
-    return res.redirect("/reset-password"); // goes to auth controller
+    return res.json({ success: true, redirectUrl: "/reset-password" });
   }
-
-  await OTP.deleteMany({ email, purpose });
 
   delete req.session.email;
   delete req.session.otpPurpose;
-
-  return res.redirect("/signup");
+  return res.json({ success: true, redirectUrl: "/signup" });
 });
+
+// export const verifyOTP = asyncHandler(async (req, res) => {
+//   const email = req.session.email;
+//   const purpose = req.session.otpPurpose;
+
+//   if (!email || !purpose) {
+//     return res.redirect("/signup");
+//   }
+//   const { otp } = req.body;
+
+//   const otpRecord = await OTP.findOne({
+//     email,
+//     purpose,
+//   }).sort({ createdAt: -1 });
+
+//   if (otpRecord?.attempts >= 5) {
+//     await OTP.deleteOne({ _id: otpRecord._id });
+//     req.flash("error", "Too many failed attempts. Please request a new OTP");
+//     return res.redirect("/verify-otp");
+//   }
+
+//   if (!otpRecord) {
+//     req.flash("error", "OTP invalid or expired");
+//     return res.redirect("/verify-otp");
+//   }
+
+//   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+//   if (otpRecord.otp !== hashedOtp) {
+//     otpRecord.attempts += 1;
+//     await otpRecord.save();
+//     req.flash(
+//       "error",
+//       `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
+//     );
+//     return res.redirect("/verify-otp");
+//   }
+
+//   if (purpose === "SIGNUP") {
+//     await User.findOneAndUpdate(
+//       { email },
+//       { isVerified: true },
+//       { new: true },
+//     );
+//     req.flash("success", "Email verified Successfully.Please Login.");
+//     return res.redirect("/login");
+//   }
+
+//   if (purpose === "FORGOT_PASSWORD") {
+//     req.session.allowPasswordReset = true;
+//     return res.redirect("/reset-password"); // goes to auth controller
+//   }
+
+//   await OTP.deleteMany({ email, purpose });
+
+//   delete req.session.email;
+//   delete req.session.otpPurpose;
+
+//   return res.redirect("/signup");
+// });
 
 export const resendOTP = async (req, res) => {
   try {

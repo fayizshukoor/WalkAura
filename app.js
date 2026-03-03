@@ -59,13 +59,6 @@ app.use(ensureNotBlocked);
 app.use(userContext);
 app.use(getGlobalCounts);
 
-
-app.use((req, res, next) => {
-  console.log("req.secure:", req.secure);
-  console.log("x-forwarded-proto:", req.headers["x-forwarded-proto"]);
-  next();
-});
-
 app.use(flash());
 
 app.use(passport.initialize());

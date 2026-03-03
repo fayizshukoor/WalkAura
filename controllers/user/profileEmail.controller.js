@@ -6,7 +6,7 @@ import { sendOTP } from "../../utils/generateAndSendOtp.util.js";
 
 // Change Email
 export const showChangeEmail = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req?.user?.userId);
 
   if (user.googleId) {
     req.flash("error", "Google users cannot change Email");
@@ -74,63 +74,101 @@ export const verifyEmailChangeOTP = asyncHandler(async (req, res) => {
   const { otp } = req.body;
   const user = await User.findById(req.user.userId);
 
-  if (!otp) {
-    req.flash("error", "OTP is required");
-    return res.redirect("/profile/verify-email-change");
-  }
-
   if (!user || !user.pendingEmail) {
-    req.flash("error", "No email change request found");
-    return res.redirect("/profile/change-email");
+    return res.status(400).json({ success: false, message: "No email change request found", redirectUrl: "/profile/change-email" });
   }
 
   const email = user.pendingEmail;
   const purpose = "EMAIL_CHANGE";
-
-  // Fetch latest OTP
-  const otpRecord = await OTP.findOne({
-    email,
-    purpose,
-  }).sort({ createdAt: -1 });
+  const otpRecord = await OTP.findOne({ email, purpose }).sort({ createdAt: -1 });
 
   if (otpRecord?.attempts >= 5) {
     await OTP.deleteMany({ email, purpose });
-    req.flash("error", "Too many failed attempts. Please request a new OTP");
-    return res.redirect("/profile/change-email");
+    return res.status(429).json({ success: false, message: "Too many attempts. Request a new OTP", redirectUrl: "/profile/change-email" });
   }
 
-  // OTP not found
   if (!otpRecord) {
-    req.flash("error", "OTP invalid or expired");
-    return res.redirect("/profile/verify-email-change");
+    return res.status(400).json({ success: false, message: "OTP invalid or expired" });
   }
 
-  // Hash and Compare
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
-
   if (otpRecord.otp !== hashedOtp) {
     otpRecord.attempts += 1;
     await otpRecord.save();
-
-    req.flash(
-      "error",
-      `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
-    );
-    return res.redirect("/profile/verify-email-change");
+    return res.status(400).json({ success: false, message: `Invalid OTP. ${5 - otpRecord.attempts} attempts left.` });
   }
 
-  //Email updating
+  // Update Email
   user.email = user.pendingEmail;
   user.pendingEmail = undefined;
   user.isVerified = true;
   await user.save();
-
-  // Delete OTPs
   await OTP.deleteMany({ email: user.email, purpose });
 
-  req.flash("success", "Email updated successfully");
-  return res.redirect("/profile");
+  return res.json({ success: true, message: "Email updated successfully", redirectUrl: "/profile" });
 });
+
+// export const verifyEmailChangeOTP = asyncHandler(async (req, res) => {
+//   const { otp } = req.body;
+//   const user = await User.findById(req.user.userId);
+
+//   if (!otp) {
+//     req.flash("error", "OTP is required");
+//     return res.redirect("/profile/verify-email-change");
+//   }
+
+//   if (!user || !user.pendingEmail) {
+//     req.flash("error", "No email change request found");
+//     return res.redirect("/profile/change-email");
+//   }
+
+//   const email = user.pendingEmail;
+//   const purpose = "EMAIL_CHANGE";
+
+//   // Fetch latest OTP
+//   const otpRecord = await OTP.findOne({
+//     email,
+//     purpose,
+//   }).sort({ createdAt: -1 });
+
+//   if (otpRecord?.attempts >= 5) {
+//     await OTP.deleteMany({ email, purpose });
+//     req.flash("error", "Too many failed attempts. Please request a new OTP");
+//     return res.redirect("/profile/change-email");
+//   }
+
+//   // OTP not found
+//   if (!otpRecord) {
+//     req.flash("error", "OTP invalid or expired");
+//     return res.redirect("/profile/verify-email-change");
+//   }
+
+//   // Hash and Compare
+//   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+
+//   if (otpRecord.otp !== hashedOtp) {
+//     otpRecord.attempts += 1;
+//     await otpRecord.save();
+
+//     req.flash(
+//       "error",
+//       `OTP invalid or expired. ${5 - otpRecord.attempts} attempts remaining`,
+//     );
+//     return res.redirect("/profile/verify-email-change");
+//   }
+
+//   //Email updating
+//   user.email = user.pendingEmail;
+//   user.pendingEmail = undefined;
+//   user.isVerified = true;
+//   await user.save();
+
+//   // Delete OTPs
+//   await OTP.deleteMany({ email: user.email, purpose });
+
+//   req.flash("success", "Email updated successfully");
+//   return res.redirect("/profile");
+// });
 
 export const resendEmailChangeOTP = async (req, res) => {
   try {
