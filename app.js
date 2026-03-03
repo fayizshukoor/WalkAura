@@ -38,12 +38,6 @@ app.use(methodOverride("_method"));
 
 app.use(cookieParser());
 
-app.use(authenticateUser);
-app.use(silentRefresh);
-app.use(ensureNotBlocked);
-app.use(userContext);
-app.use(getGlobalCounts);
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -58,6 +52,13 @@ app.use(
     },
   })
 );
+
+app.use(authenticateUser);
+app.use(silentRefresh);
+app.use(ensureNotBlocked);
+app.use(userContext);
+app.use(getGlobalCounts);
+
 
 app.use((req, res, next) => {
   console.log("req.secure:", req.secure);
