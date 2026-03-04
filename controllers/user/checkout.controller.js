@@ -199,7 +199,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
 
     const expiresAt =
       paymentMethod === "RAZORPAY"
-        ? new Date(Date.now() + 1 * 60 * 1000)
+        ? new Date(Date.now() + 15 * 60 * 1000)
         : undefined;
 
     const orderArr = await Order.create(
