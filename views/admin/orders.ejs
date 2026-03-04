@@ -137,8 +137,8 @@
                                             };
                                             const allowedSteps = {
                                                 'PENDING': ['PLACED', 'SHIPPED', 'CANCELLED'],
-                                                'PLACED': ['SHIPPED', 'CANCELLED'],
-                                                'SHIPPED': ['OUT_FOR_DELIVERY'],
+                                                'PLACED': ['SHIPPED', 'OUT_FOR_DELIVERY', 'CANCELLED'],
+                                                'SHIPPED': ['OUT_FOR_DELIVERY', 'DELIVERED'],
                                                 'OUT_FOR_DELIVERY': ['DELIVERED'],
                                                 'DELIVERED': [], 'CANCELLED': [], 'RETURNED': []
                                             };

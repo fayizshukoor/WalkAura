@@ -96,8 +96,8 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 // Allowed admin status transitions
 const ALLOWED_TRANSITIONS = {
   PENDING: ["PLACED", "SHIPPED", "CANCELLED"],
-  PLACED: ["SHIPPED", "CANCELLED"],
-  SHIPPED: ["OUT_FOR_DELIVERY"],
+  PLACED: ["SHIPPED", "OUT_FOR_DELIVERY", "CANCELLED"],
+  SHIPPED: ["OUT_FOR_DELIVERY", "DELIVERED"],
   OUT_FOR_DELIVERY: ["DELIVERED"],
   DELIVERED: [],
   CANCELLED: [],
