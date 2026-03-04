@@ -177,10 +177,34 @@ export const addProduct = asyncHandler(async (req, res) => {
 
   /* ---------------- Basic Validation ---------------- */
 
-  if (!name || !description || !category || !gender) {
+  const cleanName = name ? name.trim() : "";
+
+  if (!cleanName || !description || !category || !gender) {
     return res
       .status(HTTP_STATUS.BAD_REQUEST)
       .json({ message: "All required fields must be provided" });
+  }
+
+  if (!/[a-zA-Z0-9]/.test(cleanName)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Product name must contain at least one letter or number" 
+    });
+  }
+
+  // B. Balanced Regex for Shoes
+  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots (for sizes/versions)
+  const shoeNameRegex = /^[a-zA-Z0-9\s&\-\.]+$/;
+  if (!shoeNameRegex.test(cleanName)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Name can only contain letters, numbers, spaces, hyphens, dots, and ampersands" 
+    });
+  }
+
+  // C. Length Check
+  if (cleanName.length < 5) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Product name is too short (Minimum 5 characters)" 
+    });
   }
 
   const parsedPrice = Number(price);
@@ -240,7 +264,7 @@ export const addProduct = asyncHandler(async (req, res) => {
   /* ---------------- Duplicate Name Check ---------------- */
 
   const nameExists = await Product.findOne({
-    name: new RegExp(`^${name.trim()}$`, "i"),
+    name: new RegExp(`^${cleanName}$`, "i"),
   });
 
   if (nameExists) {
@@ -251,10 +275,11 @@ export const addProduct = asyncHandler(async (req, res) => {
 
   /* ---------------- Slug Generation ---------------- */
 
-  const baseSlug = name
+  const baseSlug = cleanName
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")         
     .replace(/(^-|-$)/g, "");
 
   let slug = baseSlug;
@@ -267,7 +292,7 @@ export const addProduct = asyncHandler(async (req, res) => {
   /* ---------------- Save Product ---------------- */
 
   const product = new Product({
-    name: name.trim(),
+    name: cleanName,
     slug,
     description: description.trim(),
     category,
@@ -330,10 +355,34 @@ export const editProduct = asyncHandler(async (req, res) => {
     return res.redirect("/admin/products");
   }
 
-  if (!name || !description || !category || !gender) {
+  const cleanName = name ? name.trim() : "";
+
+  if (!cleanName || !description || !category || !gender) {
     return res
       .status(HTTP_STATUS.BAD_REQUEST)
       .json({ message: "Please fill all Required Details" });
+  }
+
+  if (!/[a-zA-Z0-9]/.test(cleanName)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Product name must contain at least one letter or number" 
+    });
+  }
+
+  // B. Balanced Regex for Shoes
+  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots (for sizes/versions)
+  const shoeNameRegex = /^[a-zA-Z0-9\s&\-\.]+$/;
+  if (!shoeNameRegex.test(cleanName)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Name can only contain letters, numbers, spaces, hyphens, dots, and ampersands" 
+    });
+  }
+
+  // C. Length Check
+  if (cleanName.length < 5 || cleanName.length > 50) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+      message: "Product name should be between 5 and 50 characters" 
+    });
   }
 
   const parsedPrice = Number(price);
@@ -366,10 +415,10 @@ export const editProduct = asyncHandler(async (req, res) => {
 
   /* ---------------- Name & Slug Update ---------------- */
 
-  if (name.trim() !== product.name) {
+  if (cleanName !== product.name) {
     const nameExists = await Product.findOne({
       _id: { $ne: productId },
-      name: new RegExp(`^${name.trim()}$`, "i"),
+      name: new RegExp(`^${cleanName}$`, "i"),
     });
 
     if (nameExists) {
@@ -378,9 +427,9 @@ export const editProduct = asyncHandler(async (req, res) => {
         .json({ message: "Product name already exists" });
     }
 
-    product.name = name.trim();
+    product.name = cleanName;
 
-    const baseSlug = name
+    const baseSlug = cleanName
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")

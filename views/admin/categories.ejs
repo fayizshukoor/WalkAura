@@ -115,57 +115,101 @@
     </div>
 
     <div id="addModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
-        <div class="modal-backdrop fixed inset-0"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
-                <form id="addCategoryForm">
-                    <div class="p-6 border-b border-gray-800 flex justify-between">
-                        <h3 class="text-xl font-bold">Add New Category</h3>
-                        <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+    <div class="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+            <form id="addCategoryForm">
+                <div class="p-6 border-b border-gray-800 flex justify-between">
+                    <h3 class="text-xl font-bold text-white">Add New Category</h3>
+                    <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-500 hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label for="addName" class="block text-sm font-medium text-gray-400 mb-2">Category Name</label>
+                        <input type="text" id="addName" name="name" placeholder="e.g. Electronics" 
+                            class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] transition-all">
                     </div>
-                    <div class="p-6 space-y-4">
-                        <input type="text" name="name" placeholder="Category Name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6]">
-                        <textarea name="description" placeholder="Description (Optional)" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] resize-none"></textarea>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="addOffer" name="offerPercent" placeholder="Offer % (0-90)" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
-                            <input type="date" id="addExpiry" name="offerExpiry" disabled class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none opacity-50 cursor-not-allowed">
-                        </div>
-                    </div>
-                    <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
-                        <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-400 font-bold">Cancel</button>
-                        <button type="submit" class="bg-[#5c56f6] px-6 py-2.5 rounded-xl font-bold submit-btn">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <div id="editModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
-        <div class="modal-backdrop fixed inset-0"></div>
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
-                <form id="editCategoryForm">
-                    <input type="hidden" id="editCategoryId">
-                    <div class="p-6 border-b border-gray-800 flex justify-between">
-                        <h3 class="text-xl font-bold">Edit Category</h3>
-                        <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-500 hover:text-white"><span class="material-symbols-outlined">close</span></button>
+                    <div>
+                        <label for="addDescription" class="block text-sm font-medium text-gray-400 mb-2">Description (Optional)</label>
+                        <textarea id="addDescription" name="description" rows="3" placeholder="Briefly describe this category..." 
+                            class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] resize-none transition-all"></textarea>
                     </div>
-                    <div class="p-6 space-y-4">
-                        <input type="text" id="editName" name="name" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
-                        <textarea id="editDescription" name="description" rows="3" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none resize-none"></textarea>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="editOffer" name="offerPercent" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
-                            <input type="date" id="editExpiry" name="offerExpiry" class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="addOffer" class="block text-sm font-medium text-gray-400 mb-2">Offer (%)</label>
+                            <input type="number" id="addOffer" name="offerPercent" placeholder="0-90" min="0" max="90"
+                                class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] transition-all">
+                        </div>
+                        <div>
+                            <label for="addExpiry" class="block text-sm font-medium text-gray-400 mb-2">Expiry Date</label>
+                            <input type="date" id="addExpiry" name="offerExpiry" disabled 
+                                class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none opacity-50 cursor-not-allowed">
                         </div>
                     </div>
-                    <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
-                        <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-400 font-bold">Cancel</button>
-                        <button type="submit" class="bg-[#5c56f6] px-6 py-2.5 rounded-xl font-bold submit-btn">Update</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
+                    <button type="button" onclick="toggleModal('addModal', false)" class="text-gray-400 hover:text-white font-bold transition-colors">Cancel</button>
+                    <button type="submit" class="bg-[#5c56f6] hover:bg-[#4a44d4] px-6 py-2.5 rounded-xl font-bold text-white transition-all submit-btn">Create Category</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+<div id="editModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+    <div class="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCategoryId">
+                <div class="p-6 border-b border-gray-800 flex justify-between">
+                    <h3 class="text-xl font-bold text-white">Edit Category</h3>
+                    <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-500 hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label for="editName" class="block text-sm font-medium text-gray-400 mb-2">Category Name</label>
+                        <input type="text" id="editName" name="name" 
+                            class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] transition-all">
+                    </div>
+
+                    <div>
+                        <label for="editDescription" class="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                        <textarea id="editDescription" name="description" rows="3" 
+                            class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] resize-none transition-all"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="editOffer" class="block text-sm font-medium text-gray-400 mb-2">Offer (%)</label>
+                            <input type="number" id="editOffer" name="offerPercent" min="0" max="90"
+                                class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] transition-all">
+                        </div>
+                        <div>
+                            <label for="editExpiry" class="block text-sm font-medium text-gray-400 mb-2">Expiry Date</label>
+                            <input type="date" id="editExpiry" name="offerExpiry" 
+                                class="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-3 px-4 text-white outline-none focus:border-[#5c56f6] focus:ring-1 focus:ring-[#5c56f6] transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-[#0a0a0a] flex justify-end gap-3 rounded-b-2xl">
+                    <button type="button" onclick="toggleModal('editModal', false)" class="text-gray-400 hover:text-white font-bold transition-colors">Cancel</button>
+                    <button type="submit" class="bg-[#5c56f6] hover:bg-[#4a44d4] px-6 py-2.5 rounded-xl font-bold text-white transition-all submit-btn">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     <script>
         let searchVal = '';

@@ -81,6 +81,21 @@ export const addVariant = asyncHandler(async (req, res) => {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Product, color, and sizes are required" });
   }
 
+  const colorRegex = /^[a-zA-Z\s\-]+$/;
+
+  if (!colorRegex.test(color.trim())) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+          message: "Color name can only contain letters, spaces, and hyphens" 
+      });
+  }
+
+  // 3. Length check
+  if (color.trim().length < 3 || color.trim().length > 20) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+          message: "Color name should be between 3 and 20 characters" 
+      });
+  }
+
   const product = await Product.findById(productId);
   if (!product) {
     return res.status(404).json({ message: "Product not found" });
@@ -188,6 +203,21 @@ export const updateVariant = asyncHandler(async (req, res) => {
 
   /* ---------- Color Update ---------- */
   if (color) {
+    const colorRegex = /^[a-zA-Z\s\-]+$/;
+
+  if (!colorRegex.test(color.trim())) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+          message: "Color name can only contain letters, spaces, and hyphens" 
+      });
+  }
+
+  // 3. Length check
+  if (color.trim().length < 3 || color.trim().length > 20) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+          message: "Color name should be between 3 and 20 characters" 
+      });
+  }
+
     const exists = await ProductVariant.findOne({
       _id: { $ne: variantId },
       product: variant.product._id,

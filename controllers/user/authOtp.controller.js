@@ -23,14 +23,22 @@ export const verifyOTP = asyncHandler(async (req, res) => {
 
   const otpRecord = await OTP.findOne({ email, purpose }).sort({ createdAt: -1 });
 
-  // Handle Too Many Attempts
+  if (!otpRecord) {
+    return res.status(400).json({ success: false, message: "OTP invalid or expired" });
+  }
+
+  const expirationTime = 5 * 60 * 1000; 
+  const isExpired = Date.now() - new Date(otpRecord.createdAt).getTime() > expirationTime;
+
+if (isExpired) {
+  await OTP.deleteOne({ _id: otpRecord._id });
+  return res.status(400).json({ success: false, message: "OTP has expired" });
+}
+
+// Handle Too Many Attempts
   if (otpRecord?.attempts >= 5) {
     await OTP.deleteOne({ _id: otpRecord._id });
     return res.status(429).json({ success: false, message: "Too many failed attempts. Please request a new OTP" });
-  }
-
-  if (!otpRecord) {
-    return res.status(400).json({ success: false, message: "OTP invalid or expired" });
   }
 
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");

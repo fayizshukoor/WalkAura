@@ -71,6 +71,13 @@ export const addCategory = asyncHandler(async(req,res)=>{
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Category name is required"});    
     }
 
+    const nameRegex = /^[a-zA-Z0-9 ]+$/;
+    if (!nameRegex.test(name)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+            message: "Category name should only contain letters and numbers" 
+        });
+    }
+
     if(offerPercent < 0 || offerPercent > 90){
         return res.status(HTTP_STATUS.BAD_REQUEST).json({message:"Offer should be between 0 and 90"});
     }

@@ -26,8 +26,10 @@ export const handleChangePassword = asyncHandler(async (req, res) => {
     return res.redirect("/profile/change-password");
   }
 
-  if (newPassword.length < 6) {
-    req.flash("error", "Password must be at least 6 characters");
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  if (!passwordRegex.test(newPassword)) {
+    req.flash("error", "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character.");
     return res.redirect("/profile/change-password");
   }
 
