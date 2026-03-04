@@ -42,7 +42,7 @@ export const handleSignup = asyncHandler(async (req, res) => {
     });
   }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
 
 if (!passwordRegex.test(password)) {
   return res.render("user/signup", {
@@ -270,7 +270,7 @@ export const handleResetPassword = asyncHandler(async (req, res) => {
     return res.redirect("/forgot-password");
   }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
 
   if (!passwordRegex.test(password)) {
     req.flash("error", "Password must be at least 8 characters long and include uppercase, lowercase, a number, and a special character.");
