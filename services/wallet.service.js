@@ -94,7 +94,7 @@ export const creditToWallet = async ({
     const wallet = await Wallet.findOne({ user: userId }).session(session);
   
     if (!wallet){
-      throw new AppError("Wallet not found",400);
+      throw new AppError("Wallet not found or Insufficient balance",400);
     } 
   
     if (wallet.balance < amount) {

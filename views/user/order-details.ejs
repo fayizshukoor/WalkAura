@@ -312,9 +312,9 @@
                 const terminalItemStatuses = ['CANCELLED', 'RETURNED', 'RETURN_REJECTED'];
                 const allItemsFinalized = order.items.every(item => terminalItemStatuses.includes(item.status));
                 
-                const canCancelOrder = order.orderStatus === ('PENDING' || 'PLACED') && !allItemsFinalized;
+                const canCancelOrder = (order.orderStatus === 'PENDING' || order.orderStatus === 'PLACED') && !allItemsFinalized;
                 const canReturnOrder = order.orderStatus === 'DELIVERED' && !allItemsFinalized;
-                const canDownloadInvoice = order.payment.status !== 'PENDING';
+                const canDownloadInvoice = order.payment.status !== 'PENDING' && order.payment.status !== 'FAILED';
 
                 // New condition for Retry Payment
                 const canRetryPayment = order.payment.method === "RAZORPAY" &&
@@ -748,7 +748,7 @@ async function handleRetryPayment(orderId) {
 
         const rzp = new Razorpay(options);
 
-        // 🔥 Important — handle gateway failure event
+        //  Important — handle gateway failure event
         rzp.on('payment.failed', function () {
             isRetryingPayment = false;
             Swal.fire({

@@ -28,6 +28,13 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   if (order.payment.status === "PAID"){
     return res.status(400).json({ success: false, message: "Already paid" });
   }
+
+  if (order.orderStatus !== "PENDING") {
+    return res.status(400).json({
+      success: false,
+      message: "Order not in payable state",
+    });
+  }
   
   const razorpayOrder = await createRazorpayOrder({
     amount: order.pricing.totalAmount,
