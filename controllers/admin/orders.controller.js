@@ -231,7 +231,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  if(newStatus === "DELIVERED" && order.payment.method === "COD" && order.payment.status === "PLACED"){
+  if(newStatus === "DELIVERED" && order.payment.method === "COD" && order.payment.status === "PENDING"){
     order.payment.status = "PAID";
   }
 
