@@ -265,15 +265,6 @@ export const updateVariant = asyncHandler(async (req, res) => {
     });
   }
 
-  // Delete removed images from Cloudinary
-  const removedImages = variant.images.filter(
-    img => !keptImages.includes(img.url)
-  );
-
-  for (const img of removedImages) {
-    await deleteFromCloudinary(img.publicId);
-  }
-
   variant.images = finalImages;
 
   /* ---------- Inventory Update ---------- */
