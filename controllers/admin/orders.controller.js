@@ -172,7 +172,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     }
 
     // Refund if already paid
-    if (order.payment.status === "PAID") {
+    if (order.payment.status === "PAID" || order.payment.status === "PARTIALLY_REFUNDED") {
 
       const remainingRefund =
         order.pricing.totalAmount - order.payment.refundedAmount;

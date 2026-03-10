@@ -166,7 +166,7 @@ export const cancelEntireOrder = asyncHandler(async (req, res) => {
     }
 
   // Refund if Paid
-  if(order.payment.status === "PAID"){
+  if(order.payment.status === "PAID" || order.payment.status === "PARTIALLY_REFUNDED"){
     const remainingFund = order.pricing.totalAmount - order.payment.refundedAmount;
 
     if(remainingFund > 0){
