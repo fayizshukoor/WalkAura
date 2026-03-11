@@ -474,7 +474,6 @@ export const editProduct = asyncHandler(async (req, res) => {
     product.offerPercent = null;
     product.offerExpiry = null;
   }
-
   
   /* ---------------- Save ---------------- */
 

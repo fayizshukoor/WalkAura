@@ -148,7 +148,7 @@
                     <td class="p-5 font-medium text-white"><%= customer.name %></td>
                     <td class="p-5 text-gray-400"><%= customer.email %></td>
                     <td class="p-5 text-gray-400"><%= customer.phone || "—" %></td>
-                    <td class="p-5">
+                    <td class="p-5" id="status-badge-<%= customer._id %>">
                       <% if (!customer.isBlocked) { %>
                       <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs bg-green-500/10 text-green-500">
                         Active
@@ -159,13 +159,15 @@
                       </span>
                       <% } %>
                     </td>
+                    
                     <td class="p-5 text-center">
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input 
+                          id="toggle-<%= customer._id %>"
                           type="checkbox" 
                           class="sr-only peer" 
                           <%= !customer.isBlocked ? "checked" : "" %>
-                          onclick="confirmToggleStatus(event, '<%= customer._id %>', '<%= customer.isBlocked %>', '<%= customer.name %>')"
+                          onclick="confirmToggleStatus(event, '<%= customer._id %>', '<%= customer.name %>')"
                         />
                         <div class="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:bg-[#5c56f6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
@@ -208,53 +210,71 @@
     backdrop: `rgba(0,0,0,0.8) blur(4px)`
   });
 
-  async function confirmToggleStatus(event, userId, isBlockedString, userName) {
-    event.preventDefault();
-    
-    const isCurrentlyBlocked = isBlockedString === 'true';
-    const actionName = isCurrentlyBlocked ? 'unblock' : 'block';
-    const accentColor = isCurrentlyBlocked ? '#10b981' : '#ef4444'; // Green for unblock, Red for block
+  async function confirmToggleStatus(event, userId, userName) {
+  event.preventDefault(); // Prevent the checkbox from moving until confirmed
 
-    const result = await WalkAuraSwal.fire({
-      title: `${isCurrentlyBlocked ? 'Unblock' : 'Block'} User?`,
-      text: `Are you sure you want to change the status of ${userName}?`,
-      icon: 'warning',
-      iconColor: accentColor,
-      showCancelButton: true,
-      confirmButtonText: `Yes, ${actionName}`,
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: accentColor,
-    });
+  const toggleInput = document.getElementById(`toggle-${userId}`);
+  const isCurrentlyActive = toggleInput.checked; // If checked, user is NOT blocked
+  
+  const actionName = isCurrentlyActive ? 'block' : 'unblock';
+  const accentColor = isCurrentlyActive ? '#ef4444' : '#10b981';
 
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch(`/admin/customers/${userId}/toggle-status`, {
-          method: "PATCH"
-        });
+  const result = await WalkAuraSwal.fire({
+    title: `${isCurrentlyActive ? 'Block' : 'Unblock'} User?`,
+    text: `Are you sure you want to change the status of ${userName}?`,
+    icon: 'warning',
+    iconColor: accentColor,
+    showCancelButton: true,
+    confirmButtonText: `Yes, ${actionName}`,
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: accentColor,
+  });
 
-        if (response.ok) {
-          await WalkAuraSwal.fire({
-            title: 'Success!',
-            text: `${userName} has been ${isCurrentlyBlocked ? 'unblocked' : 'blocked'}.`,
-            icon: 'success',
-            iconColor: '#10b981',
-            timer: 1500,
-            showConfirmButton: false
-          });
-          location.reload();
+  if (result.isConfirmed) {
+    try {
+      const response = await fetch(`/admin/customers/${userId}/toggle-status`, {
+        method: "PATCH",
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // --- LIVE UI UPDATE (No Reload) ---
+        
+        // 1. Sync the toggle based on the ACTUAL isBlocked value from backend
+        toggleInput.checked = !data.isBlocked;
+
+        // 2. Update the badge text and colors
+        const badgeContainer = document.getElementById(`status-badge-${userId}`);
+        if (data.isBlocked) {
+          badgeContainer.innerHTML = `<span class="inline-flex px-2.5 py-0.5 rounded-full text-xs bg-red-500/10 text-red-500">Blocked</span>`;
         } else {
-          throw new Error();
+          badgeContainer.innerHTML = `<span class="inline-flex px-2.5 py-0.5 rounded-full text-xs bg-green-500/10 text-green-500">Active</span>`;
         }
-      } catch (error) {
+
+        // 3. Success Toast
         WalkAuraSwal.fire({
-          title: 'Error!',
-          text: 'Failed to update customer status.',
-          icon: 'error',
-          confirmButtonText: 'Try Again'
+          title: 'Updated!',
+          text: `${userName} is now ${data.isBlocked ? 'blocked' : 'active'}.`,
+          icon: 'success',
+          iconColor: '#10b981',
+          timer: 1500,
+          showConfirmButton: false
         });
+      } else {
+        throw new Error("Failed to update");
       }
+    } catch (error) {
+      WalkAuraSwal.fire({
+        title: 'Error!',
+        text: 'Something went wrong. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'Okay'
+      });
     }
   }
+}
 </script>
 </body>
 </html>

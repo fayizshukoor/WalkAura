@@ -216,6 +216,14 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   }
 
+  // order status will be PLACED after Payment
+  if(order.orderStatus === "PENDING" && order.payment.method === "RAZORPAY"){
+    return res.status(400).json({
+      success: false,
+      message: `Cannot change status to ${newStatus} before Payment`
+    })
+  }
+
   //  Update item-level status
   for (const item of order.items) {
     // Skip cancelled or returned items
