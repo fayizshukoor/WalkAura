@@ -200,6 +200,28 @@
             return [year, month, day].join('-');
         };
 
+        const todayStr = formatDate(new Date());
+
+        // --- NEW: Validation Logic ---
+        const updateDateConstraints = () => {
+            // 1. No date can ever be in the future
+            fromInput.max = todayStr;
+            toInput.max = todayStr;
+
+            // 2. 'From' date cannot be after 'To' date
+            if (toInput.value) {
+                fromInput.max = toInput.value;
+            }
+
+            // 3. 'To' date cannot be before 'From' date
+            if (fromInput.value) {
+                toInput.min = fromInput.value;
+            }
+        };
+
+        // Initialize constraints on load
+        updateDateConstraints();
+
         const setDatesForRange = (range) => {
             const today = new Date();
             let fromDate = new Date();
@@ -222,19 +244,24 @@
             }
             fromInput.value = formatDate(fromDate);
             toInput.value = formatDate(today);
+            updateDateConstraints();
         };
 
-        // EVENT: Only triggers when user interacts. 
-        // This prevents the page from resetting backend values on reload.
         rangeSelect.addEventListener('change', (e) => {
             if (e.target.value === 'custom') {
                 dateContainer.classList.remove('hidden');
+                updateDateConstraints();
             } else {
                 dateContainer.classList.add('hidden');
                 setDatesForRange(e.target.value);
                 filterForm.submit(); 
             }
         });
+
+        // Listen for manual changes to update constraints dynamically
+        fromInput.addEventListener('change', updateDateConstraints);
+        toInput.addEventListener('change', updateDateConstraints);
+
 
         // --- 2. Data Preparation ---
         const revenueData = <%- JSON.stringify(data.revenueChart || []) %>;
@@ -277,7 +304,7 @@
             revCtx.style.display = 'none';
         }
 
-        // --- 4. Payment Chart with Counts ---
+        // --- 4. Payment Chart ---
         const payCtx = document.getElementById('paymentChart');
         if (paymentData.length > 0) {
             const total = paymentData.reduce((sum, d) => sum + d.count, 0);
@@ -287,7 +314,7 @@
                 data: {
                     labels: paymentData.map(d => {
                         const label = d._id.charAt(0).toUpperCase() + d._id.slice(1).toLowerCase();
-                        return `${label} (${d.count})`; // Showing count in legend
+                        return `${label} (${d.count})`;
                     }),
                     datasets: [{
                         data: paymentData.map(d => d.count),
