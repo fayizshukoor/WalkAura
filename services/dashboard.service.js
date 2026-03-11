@@ -3,7 +3,7 @@ import Order from "../models/Order.model.js";
 export const getDashboardStatsService = async ({ startDate, endDate }) => {
   const matchStage = {
     createdAt: { $gte: startDate, $lte: endDate },
-    "payment.status": { $in: ["PAID", "REFUNDED"] }
+    "payment.status": { $in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] }
   };
 
   const stats = await Order.aggregate([
@@ -149,7 +149,7 @@ export const getTopSellingProductsService = async ({ startDate, endDate }) => {
   }) => {
     const matchStage = {
       createdAt: { $gte: startDate, $lte: endDate },
-      "payment.status": { $in: ["PAID", "REFUNDED"] }
+      "payment.status": { $in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] }
     };
   
     const skip = (page - 1) * limit;
