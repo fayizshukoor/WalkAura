@@ -61,7 +61,7 @@
                                                      alt="" 
                                                      onerror="this.src='https://placehold.co/400x400/111/444?text=Broken+Link'"
                                                      class="w-12 h-12 rounded-lg object-cover bg-gray-900 border border-gray-800">
-                                                <span class="font-medium text-white"><%= product.name %></span>
+                                                <span class="font-medium text-white"><%= product.name.slice(1,4) %></span>
                                             </div>
                                         </td>
                                         <td class="p-5 text-center">
@@ -175,7 +175,7 @@
                             <img src="${displayImg}" 
                                  onerror="this.src='${PLACEHOLDER_IMG}'" 
                                  class="w-12 h-12 rounded-lg object-cover bg-gray-900 border border-gray-800">
-                            <span class="font-medium text-white">${prod.name}</span>
+                            <span class="font-medium text-white">${prod.name.slice(1,4)}</span>
                         </div>
                     </td>
                     <td class="p-5 text-center">

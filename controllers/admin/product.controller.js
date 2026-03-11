@@ -475,6 +475,7 @@ export const editProduct = asyncHandler(async (req, res) => {
     product.offerExpiry = null;
   }
 
+  
   /* ---------------- Save ---------------- */
 
   product.description = description.trim();
