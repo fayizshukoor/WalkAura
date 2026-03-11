@@ -1,7 +1,9 @@
-    import { HTTP_STATUS } from "../constants/httpStatus.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
+import { logger } from "../utils/logger.util.js";
 
     const errorHandler = (err,req,res,next)=>{
-        console.error("error:",err);
+        
+        logger.error(`${err?.message || "Unexpected error"} - ${req.method} ${req.originalUrl}`);
 
         if (res.headersSent) {
         return next(err);
