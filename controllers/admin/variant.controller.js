@@ -81,7 +81,7 @@ export const addVariant = asyncHandler(async (req, res) => {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Product, color, and sizes are required" });
   }
 
-  const colorRegex = /^[a-zA-Z\s\-]+$/;
+  const colorRegex = /^[a-zA-Z\s-]+$/;
 
   if (!colorRegex.test(color.trim())) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -203,8 +203,8 @@ export const updateVariant = asyncHandler(async (req, res) => {
 
   /* ---------- Color Update ---------- */
   if (color) {
-    const colorRegex = /^[a-zA-Z\s\-]+$/;
-
+    const colorRegex = /^[a-zA-Z\s-]+$/;
+    
   if (!colorRegex.test(color.trim())) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
           message: "Color name can only contain letters, spaces, and hyphens" 

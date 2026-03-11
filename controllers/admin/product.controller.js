@@ -191,9 +191,9 @@ export const addProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // B. Balanced Regex for Shoes
-  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots (for sizes/versions)
-  const shoeNameRegex = /^[a-zA-Z0-9\s&\-\.]+$/;
+
+  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots 
+  const shoeNameRegex = /^[a-zA-Z0-9\s&.-]+$/;
   if (!shoeNameRegex.test(cleanName)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
       message: "Name can only contain letters, numbers, spaces, hyphens, dots, and ampersands" 
@@ -369,9 +369,8 @@ export const editProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // B. Balanced Regex for Shoes
-  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots (for sizes/versions)
-  const shoeNameRegex = /^[a-zA-Z0-9\s&\-\.]+$/;
+  // Allows: Letters, Numbers, Spaces, Hyphens, Ampersands, and Dots
+  const shoeNameRegex = /^[a-zA-Z0-9\s&.-]+$/;
   if (!shoeNameRegex.test(cleanName)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
       message: "Name can only contain letters, numbers, spaces, hyphens, dots, and ampersands" 

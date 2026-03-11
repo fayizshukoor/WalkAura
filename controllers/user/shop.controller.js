@@ -166,7 +166,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   const totalProducts = countResult[0]?.count || 0;
 
-  let wishlistSet = new Set();
+  const wishlistSet = new Set();
 
   if(req?.user){
     const wishlist = await Wishlist.findOne({user: req.user.userId})
@@ -260,7 +260,7 @@ export const getProductDetails = asyncHandler(async (req, res) => {
 
 
   // Fetch wishlist
-  let wishlistSet = new Set();
+  const wishlistSet = new Set();
 
   if(req.user){
     const wishlist = await Wishlist.findOne({user: req.user.userId})

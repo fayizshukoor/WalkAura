@@ -100,7 +100,7 @@ export const getCheckoutPage = asyncHandler(async (req, res) => {
 
       discount = couponResult.pricing.discount;
       appliedCoupon = couponResult.coupon;
-    } catch (err) {
+    } catch {
       // Coupon no longer valid
       req.session.appliedCoupon = null;
     }

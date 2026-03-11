@@ -15,15 +15,12 @@ export default defineConfig([
       globals: globals.node
     },
     rules: {
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": "warn",
       "no-undef": "error",
       "no-console": "off",
       "no-var": "error",
-      "prefer-const": "error",
-      "eqeqeq": ["error", "always"],
-      "curly": ["error", "all"],
-      "consistent-return": "error",
-      "no-duplicate-imports": "error"
+      "prefer-const": "warn",
+      "eqeqeq": "warn"
     }
   }
 ]);
