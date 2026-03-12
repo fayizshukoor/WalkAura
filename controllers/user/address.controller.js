@@ -2,7 +2,7 @@ import Address from "../../models/Address.model.js";
 import asyncHandler from "../../utils/asyncHandler.util.js";
 import pincodeLookup from "india-pincode-lookup";
 
-// Show address Page (Initial Render)
+// Show address Page
 export const showAddressManagement = asyncHandler(async (req, res) => {
   const userId = req?.user?.userId;
   const page = parseInt(req.query.page) || 1;
