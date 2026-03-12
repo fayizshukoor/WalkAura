@@ -61,7 +61,7 @@ export const getRevenueChartService = async ({ startDate, endDate }) => {
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
-          "payment.status": { $in: ["PAID", "REFUNDED"] }
+          "payment.status": { $in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] }
         }
       },
   
@@ -91,7 +91,7 @@ export const getPaymentMethodStatsService = async ({ startDate, endDate }) => {
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
-          "payment.status": { $in: ["PAID", "REFUNDED"] }
+          "payment.status": { $in: ["PAID", "PARTIALLY_REFUNDED", "REFUNDED"] }
         }
       },
   

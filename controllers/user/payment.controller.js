@@ -18,8 +18,7 @@ export const createRazorpayPaymentOrder = asyncHandler(async (req, res) => {
   }
 
   if (order.expiresAt && order.expiresAt < new Date()) {
-    await restoreStockAndCancel(order);
-    return res.status(400).json({ message: "Order expired" });
+    return res.status(400).json({ success: false, message: "Order expired" });
  }
 
   if (order.payment.method !== "RAZORPAY"){
@@ -88,7 +87,6 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   // Expiry check
   if (order.expiresAt && order.expiresAt < new Date()) {
-    await restoreStockAndCancel(order);
     return res.status(400).json({
       success: false,
       message: "Order expired",
